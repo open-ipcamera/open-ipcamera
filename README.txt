@@ -9,18 +9,26 @@
 # Beerware License: If I saved you a few hours of your life fiddling with this crap buy me a beer ;-)
 #	paypal.me/TerrenceHoulahan
 
-PREREQUISITES:
-Raspberry Pi running Raspbian with a camera attached. 
 
-OPTIONAL: (BUT HGHLY RECOMMENDED)
-- An SMTP server to relay alerts the Pi will send.  Most sensible SMTP servers wont talk to the rudimentary one on your Pi ;-)
+# SCRIPT FEATURES:
+# This script does a basic setup to get your Pi Cam up and running quickly. It configures the following
+# - "usbmount" to automount USB Storage
+# - Downloads "Dropbox_Uploader" to enable you to shoft video/pics to the cloud
+# - "Motion" Video Camera Software
+# - "MSMTP" for email alerts
+# - Sets Kernel driver for camera to load on boot
+# - Changes default editor FROM crappy nano TO VIM
+
+# Please note "security" isn't a feature in list! No firewall config is done to protect camera from remote snoopers!
+# It's the user's responsibility to tailor their security to their local network environment.
+
+SCRIPT PREREQUISITES:
+Raspberry Pi running Raspbian with a camera attached and Internet connection.
+
+OPTIONAL: (BUT RECOMMENDED)
+- An SMTP server to relay alerts Pi will send. Most sensible SMTP servers wont talk to the rudimentary one on your Pi ;-)
 - Dropbox account configured to use their API which enables getting video/pics off the Pi & safely into the Cloud:
 	https://www.raspberrypi.org/magpi/dropbox-raspberry-pi/
-
-
-SCRIPT FUNCTION:
-This script creates a very *GENERAL* configuration to get your Pi Cam up and running quickly.
-After script executes, edit the relevant config files and tailor them to your specific use-case.
 
 
 INSTALLATION:
