@@ -35,5 +35,5 @@ As user "pi" execute following commands:
 	vi /home/pi/pi-cam-config.sh
 
 4. Execute the script:
-	sudo sh ./pi-cam-config.sh
+	sudo ./pi-cam-config.sh
 

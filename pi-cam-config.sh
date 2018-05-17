@@ -1,8 +1,8 @@
 #!/bin/bash
- 
+
 # "pi-cam-config.sh": Installs & configs Raspberry Pi camera application, drivers and Kernel module
 # Compatibility:      Tested and known to work with Raspian "Stretch" running on a Pi3+ as of 20180514
- 
+
 # Author:  Terrence Houlahan, LPIC2 Certified Linux Engineer
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
@@ -37,9 +37,9 @@ DROPBOXACCESSTOKEN='ABCD1234'
 
 
 ###### DELETE DETRITUS FROM PRIOR INSTALLS ######
-
-### Delete any files which this script created and/or configured from previous install to ensure host in predictable state:
-
+echo ''
+echo  '### Delete any files which this script created and/or configured from previous install to ensure host in predictable state:'
+echo ''
 if [ -f /home/pi/.vimrc ]; then
 	rm /home/pi/.vimrc
 fi
@@ -69,54 +69,57 @@ fi
 
 
 ###### BEGIN INSTALLATION ######
-
-### Install our Applications
+echo ''
+echo '### Install Applications'
+echo ''
 
 apt-get update&
 wait $!
- 
+
+echo ''
 echo '###### Configure Camera Application "Motion" ######'
 # https://motion-project.github.io/motion_config.html
 # https://www.bouvet.no/bouvet-deler/utbrudd/building-a-motion-activated-security-camera-with-the-raspberry-pi-zero
 
+echo ''
 # If "command -v application" returns nothing install the it: 
-if [ $(command -v motion) = '' ]; then
+if [[ $(command -v motion) = '' ]]; then
 apt-get install -q -y motion&
 wait $!
 fi
 
-if [ $(command -v msmtp) = '' ]; then
+if [[ $(command -v msmtp) = '' ]]; then
 apt-get install -q -y msmtp&
 wait $!
 fi
 
-if [ $(command -v mutt) = '' ]; then
+if [[ $(command -v mutt) = '' ]]; then
 apt-get install -q -y mutt&
 wait $!
 fi
 
-if [ $(command -v vim) = '' ]; then
+if [[ $(command -v vim) = '' ]]; then
 apt-get install -q -y vim&
 wait $!
 fi
 
-if [ $(command -v git) = '' ]; then
+if [[ $(command -v git) = '' ]]; then
 apt-get install -q -y git&
 wait $!
 fi
 
 # NOTE: following are not required but just included because they are useful
-if [ $(command -v mtr) = '' ]; then
+if [[ $(command -v mtr) = '' ]]; then
 apt-get install -q -y mtr&
 wait $!
 fi
 
-if [ $(command -v tcpdump) = '' ]; then
+if [[ $(command -v tcpdump) = '' ]]; then
 apt-get install -q -y tcpdump&
 wait $!
 fi
 
- 
+
 # Nano is a piece of crap: change default editor to something sensible
 update-alternatives --set editor /usr/bin/vim.basic
 
@@ -124,16 +127,16 @@ cp /usr/share/vim/vimrc /home/pi/.vimrc
 
 # Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
 sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       " Enable mouse usage (all modes)|' /home/pi/.vimrc
- 
+
 # Set "motion" to start on boot:
 systemctl enable motion
- 
+
 # Load Kernel module for Pi camera on boot:
 cat <<'EOF'> /etc/modules-load.d/bcm2835-v4l2.conf
 bcm2835-v4l2
- 
+
 EOF
- 
+
 # Configure *BASIC* Settings (just enough to get things generally working):
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
 sed -i "s/width 320/width 640/" /etc/motion/motion.conf
@@ -146,13 +149,14 @@ sed -i "s/stream_localhost on/stream_localhost off/" /etc/motion/motion.conf
 sed -i "s/webcontrol_localhost on/webcontrol_localhost off/" /etc/motion/motion.conf
 sed -i "s/webcontrol_port 8080/webcontrol_port 8080/" /etc/motion/motion.conf
 sed -i "s/webcontrol_authentication username:password/webcontrol_authentication me: 2468aBcXyX/" /etc/motion/motion.conf
- 
+
 # Configure Motion to run by daemon:
 # Remark the path is different to the target of foregoing sed expressions
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
- 
- 
+
+echo ''
 echo '###### Configure Mail for Alerts ######'
+echo ''
 # References:
 # http://msmtp.sourceforge.net/doc/msmtp.html
 # https://wiki.archlinux.org/index.php/Msmtp
@@ -189,30 +193,33 @@ port        587
 from        $GMAILADDRESS
 user        $GMAILADDRESS
 password    $GMAILPASSWD
- 
+
 account default : $SMTPRELAYFQDN
- 
+
 EOF
 
- 
+
 cat <<EOF> /home/pi/.muttrc
- 
+
 set sendmail="/usr/bin/msmtp"
 set use_from=yes
 set realname="Alert From PiCam "
 set from=$SMTPRELAYFROM
 set envelope_from=yes
- 
-EOF
- 
-echo '###### Install "Dropbox_Uploader" for Cloud Storage ######'
 
+EOF
+
+echo ''
+echo '###### Install "Dropbox_Uploader" for Cloud Storage ######'
 # "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
 # https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md
-git clone https://github.com/andreafabrizi/Dropbox-Uploader.git&
-wait $!
+echo ''
 
- 
+if [ ! -d /home/pi/Dropbox-Uploader ]; then
+	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git&
+	wait $!
+fi
+echo ''
 echo "###### Post Config Diagnostics: ######"
 echo ''
 echo "Check Host Timekeeping is OK:"
@@ -225,7 +232,7 @@ echo "After host reboots in 15 seconds check all is correct."
 echo "In a browser open: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8081 "
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
- 
+
 sleep 15
- 
-systemctl reboot
+
+#systemctl reboot
