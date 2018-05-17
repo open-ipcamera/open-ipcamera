@@ -14,9 +14,36 @@
 
 ######  Variables: ######
 #
+# Variables are expanded in sed expressions and 
 # Change or delete specimen values below as appropriate:
 
-### Auth Variables for SMTP to Send Alerts:
+### Variables: Motion
+# NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
+IPV6ENABLED='on'
+USER='terrence'
+PASSWD='xF9e4Ld'
+WIDTH='640'
+HEIGHT='480'
+FRAMERATE='4'
+MMALCAMNAME='vc.ril.camera'
+AUTOBRIGHTNESS='on'
+QUALITY='75'
+FFMPEGOUTPUTMOVIES='on'
+MAXMOVIETIME='120'
+FFMPEGVIDEOCODEC='mpeg4'
+LOCATEMOTIONMODE='on'
+LOCATEMOTIONSTYLE='redbox'
+TARGETDIR='/var/lib/motion'
+STREAMPORT='8081'
+STREAMQUALITY='50'
+STREAMMOTION='1'
+STREAMLOCALHOST='off'
+STREAMAUTHMETHOD='0'
+WEBCONTROLLOCALHOST='off'
+WEBCONTROLPORT='8080'
+
+
+### Variables: MSMTP (to send alerts):
 # SELF-HOSTED SMTP Relay Mail Server:
 SMTPRELAYPORT='25'
 SASLUSER='terrence'
@@ -35,10 +62,15 @@ GMAILPASSWD='ABCD1234'
 DROPBOXACCESSTOKEN='ABCD1234'
 
 
+#############################################################
+#                                                           #
+# ONLY EDIT BELOW THIS LINE IF YOU KNOW WHAT YOU ARE DOING! #
+#                                                           #
+#############################################################
 
 ###### DELETE DETRITUS FROM PRIOR INSTALLS ######
 echo ''
-echo  '### Delete files which this script created and/or edited from a previous install to place host in predictable known state:'
+echo  '### Delete files which this script created and/or edited from a previous install to restore host to predictable known state:'
 echo ''
 
 if [ -d /etc/usbmount ]; then
@@ -149,17 +181,30 @@ bcm2835-v4l2
 EOF
 
 # Configure *BASIC* Settings (just enough to get things generally working):
+sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
-sed -i "s/width 320/width 640/" /etc/motion/motion.conf
-sed -i "s/height 240/height 480/" /etc/motion/motion.conf
-sed -i "s/framerate 2/framerate 4/" /etc/motion/motion.conf
-sed -i "s/; mmalcam_name vc.ril.camera/mmalcam_name vc.ril.camera/" /etc/motion/motion.conf
-sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies on/" /etc/motion/motion.conf
-sed -i "s/target_dir \/var\/lib\/motion/target_dir \/home\/pi\/Videos/" /etc/motion/motion.conf
-sed -i "s/stream_localhost on/stream_localhost off/" /etc/motion/motion.conf
-sed -i "s/webcontrol_localhost on/webcontrol_localhost off/" /etc/motion/motion.conf
-sed -i "s/webcontrol_port 8080/webcontrol_port 8080/" /etc/motion/motion.conf
-sed -i "s/webcontrol_authentication username:password/webcontrol_authentication me: 2468aBcXyX/" /etc/motion/motion.conf
+sed -i "s/width 320/width $WIDTH/" /etc/motion/motion.conf
+sed -i "s/height 240/height $HEIGHT/" /etc/motion/motion.conf
+sed -i "s/framerate 2/framerate $FRAMERATE/" /etc/motion/motion.conf
+sed -i "s/; mmalcam_name vc.ril.camera/mmalcam_name $MMALCAMNAME/" /etc/motion/motion.conf
+sed -i "s/auto_brightness off/auto_brightness $AUTOBRIGHTNESS/" /etc/motion/motion.conf
+sed -i 's/quality 75/quality $QUALITY/' /etc/motion/motion.conf
+sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies $FFMPEGOUTPUTMOVIES/" /etc/motion/motion.conf
+sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME" /etc/motion/motion.conf
+sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
+sed -i "s/locate_motion_mode off/locate_motion_mode $LOCATEMOTIONMODE/" /etc/motion/motion.conf
+sed -i "s/locate_motion_style box/locate_motion_style $LOCATEMOTIONSTYLE/" /etc/motion/motion.conf
+sed -i "s|target_dir /var/lib/motion|target_dir $TARGETDIR|" /etc/motion/motion.conf
+sed -i "s/stream_port 8081/stream_port $STREAMPORT/" /etc/motion/motion.conf
+sed -i "s/stream_quality 50/stream_quality $STREAMQUALITY/" /etc/motion/motion.conf
+sed -i "s/stream_motion off/stream_motion $STREAMMOTION/" /etc/motion/motion.conf
+sed -i "s/stream_localhost on/stream_localhost $STREAMLOCALHOST/" /etc/motion/motion.conf
+sed -i "s/stream_auth_method 0/stream_auth_method $STREAMAUTHMETHOD/" /etc/motion/motion.conf
+sed -i "s/; stream_authentication username:password/stream_authentication $USER:$PASSWD/" /etc/motion/motion.conf
+sed -i "s/webcontrol_localhost on/webcontrol_localhost $WEBCONTROLLOCALHOST/" /etc/motion/motion.conf
+sed -i "s/webcontrol_port 8080/webcontrol_port $WEBCONTROLPORT/" /etc/motion/motion.conf
+sed -i "s/webcontrol_authentication username:password/webcontrol_authentication $USER:$PASSWD/" /etc/motion/motion.conf
+
 
 # Configure Motion to run by daemon:
 # Remark the path is different to the target of foregoing sed expressions
@@ -187,7 +232,7 @@ fi
 
 sed -i 's/ENABLED=0/ENABLED=1/' /etc/usbmount/usbmount.conf
 sed -i 's/FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus"/FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus fuseblk exfat"/' /etc/usbmount/usbmount.conf
-sed -i 's/FS_MOUNTOPTIONS=""/FS_MOUNTOPTIONS="-fstype=auto,sync,gid=users"/' /etc/usbmount/usbmount.conf
+sed -i 's/FS_MOUNTOPTIONS=""/FS_MOUNTOPTIONS="-fstype=auto,gid=users"/' /etc/usbmount/usbmount.conf
 sed -i 's/VERBOSE=no/VERBOSE=yes/' /etc/usbmount/usbmount.conf
 
 
@@ -253,13 +298,16 @@ echo '' >> /etc/motd
 echo "Video Camera Status: $(sudo systemctl motion)" >> /etc/motd
 echo '' >> /etc/motd
 echo '' >> /etc/motd
-echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 "
+echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 "  >> /etc/motd
+echo '' >> /etc/motd
+echo '' >> /etc/motd
+echo 'To stop/start/reload the Motion daemon:' >> /etc/motd
+echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo '' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
 echo '' >> /etc/motd
 echo '' >> /etc/motd
-
 echo ''
 echo '###### Install "Dropbox_Uploader" for Cloud Storage ######'
 # "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
