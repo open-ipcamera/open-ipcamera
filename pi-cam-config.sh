@@ -65,6 +65,9 @@ if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
 	rm /etc/modules-load.d/bcm2835-v4l2.conf
 fi
 
+# Messages are added by this script to MOTD which need to wiped
+truncate -s 0 /etc/motd
+
 
 # Blow-away any config files for "Motion" using "apt-get purge" :
 if [ ! $(command -v motion) = '' ]; then
@@ -250,6 +253,9 @@ echo '' >> /etc/motd
 echo "Video Camera Status: $(sudo systemctl motion)" >> /etc/motd
 echo '' >> /etc/motd
 echo '' >> /etc/motd
+echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 "
+echo '' >> /etc/motd
+echo '' >> /etc/motd
 echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
 echo '' >> /etc/motd
 echo '' >> /etc/motd
@@ -273,8 +279,8 @@ echo ''
 echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is reported"
 echo ''
 echo ''
-echo "After host reboots in 15 seconds check all is correct."
-echo "In a browser open: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8081 "
+echo "Host will reboot in 10 seconds"
+
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
 
