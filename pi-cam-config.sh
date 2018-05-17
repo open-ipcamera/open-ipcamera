@@ -169,7 +169,10 @@ echo ''
 
 # If "usbmount" directory not present install"usbmount":
 if [ ! -d /etc/usbmount  ]; then
-	apt-get install -q -y usbmount
+	apt-get purge -q -y usbmount&
+	wait $!
+	apt-get install -q -y usbmount&
+	wait $!
 fi
 
 
