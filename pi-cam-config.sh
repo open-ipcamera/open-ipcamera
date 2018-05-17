@@ -38,8 +38,14 @@ DROPBOXACCESSTOKEN='ABCD1234'
 
 ###### DELETE DETRITUS FROM PRIOR INSTALLS ######
 echo ''
-echo  '### Delete any files which this script created and/or configured from previous install to ensure host in predictable state:'
+echo  '### Delete files which this script created and/or edited from a previous install to place host in predictable known state:'
 echo ''
+
+if [ -d /etc/usbmount ]; then
+	rm -r /etc/usbmount
+fi
+
+
 if [ -f /home/pi/.vimrc ]; then
 	rm /home/pi/.vimrc
 fi
@@ -66,6 +72,7 @@ apt-get purge -q -y motion&
 wait $!
 fi
 
+chown -R pi:pi /home/pi
 
 
 ###### BEGIN INSTALLATION ######
@@ -80,8 +87,9 @@ echo ''
 echo '###### Configure Camera Application "Motion" ######'
 # https://motion-project.github.io/motion_config.html
 # https://www.bouvet.no/bouvet-deler/utbrudd/building-a-motion-activated-security-camera-with-the-raspberry-pi-zero
-
 echo ''
+
+
 # If "command -v application" returns nothing install the it: 
 if [[ $(command -v motion) = '' ]]; then
 apt-get install -q -y motion&
@@ -144,7 +152,7 @@ sed -i "s/height 240/height 480/" /etc/motion/motion.conf
 sed -i "s/framerate 2/framerate 4/" /etc/motion/motion.conf
 sed -i "s/; mmalcam_name vc.ril.camera/mmalcam_name vc.ril.camera/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies on/" /etc/motion/motion.conf
-sed -i "s/target_dir \/var\/lib\/motion/target_dir \/home\/pi\/Video/" /etc/motion/motion.conf
+sed -i "s/target_dir \/var\/lib\/motion/target_dir \/home\/pi\/Videos/" /etc/motion/motion.conf
 sed -i "s/stream_localhost on/stream_localhost off/" /etc/motion/motion.conf
 sed -i "s/webcontrol_localhost on/webcontrol_localhost off/" /etc/motion/motion.conf
 sed -i "s/webcontrol_port 8080/webcontrol_port 8080/" /etc/motion/motion.conf
@@ -153,6 +161,30 @@ sed -i "s/webcontrol_authentication username:password/webcontrol_authentication 
 # Configure Motion to run by daemon:
 # Remark the path is different to the target of foregoing sed expressions
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
+
+
+echo ''
+echo '###### Configure USB Storage ######'
+echo ''
+
+# If "usbmount" directory not present install"usbmount":
+if [ ! -d /etc/usbmount  ]; then
+	apt-get install -q -y usbmount
+fi
+
+
+if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
+apt-get install -q -y exfat-fuse&
+wait $!
+fi
+
+
+sed -i 's/ENABLED=0/ENABLED=1/' /etc/usbmount/usbmount.conf
+sed -i 's/FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus"/FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus fuseblk exfat"/' /etc/usbmount/usbmount.conf
+sed -i 's/FS_MOUNTOPTIONS=""/FS_MOUNTOPTIONS="-fstype=auto,sync,gid=users"/' /etc/usbmount/usbmount.conf
+sed -i 's/VERBOSE=no/VERBOSE=yes/' /etc/usbmount/usbmount.conf
+
+
 
 echo ''
 echo '###### Configure Mail for Alerts ######'
@@ -208,6 +240,16 @@ set from=$SMTPRELAYFROM
 set envelope_from=yes
 
 EOF
+
+
+echo '' >> /etc/motd
+echo '' >> /etc/motd
+echo "Video Camera Status: $(sudo systemctl motion)" >> /etc/motd
+echo '' >> /etc/motd
+echo '' >> /etc/motd
+echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
+echo '' >> /etc/motd
+echo '' >> /etc/motd
 
 echo ''
 echo '###### Install "Dropbox_Uploader" for Cloud Storage ######'
