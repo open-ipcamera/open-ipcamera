@@ -119,7 +119,7 @@ apt-get update&
 wait $!
 
 echo ''
-echo '###### Configure Camera Application "Motion" ######'
+echo '###### Configure Camera Application Motion ######'
 # https://motion-project.github.io/motion_config.html
 # https://www.bouvet.no/bouvet-deler/utbrudd/building-a-motion-activated-security-camera-with-the-raspberry-pi-zero
 echo ''
@@ -246,7 +246,7 @@ sed -i "s/height 240/height $HEIGHT/" /etc/motion/motion.conf
 sed -i "s/framerate 2/framerate $FRAMERATE/" /etc/motion/motion.conf
 sed -i "s/; mmalcam_name vc.ril.camera/mmalcam_name $MMALCAMNAME/" /etc/motion/motion.conf
 sed -i "s/auto_brightness off/auto_brightness $AUTOBRIGHTNESS/" /etc/motion/motion.conf
-sed -i 's/quality 75/quality $QUALITY/' /etc/motion/motion.conf
+sed -i "s/quality 75/quality $QUALITY/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies $FFMPEGOUTPUTMOVIES/" /etc/motion/motion.conf
 sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME" /etc/motion/motion.conf
 sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
@@ -269,7 +269,7 @@ sed -i "s/webcontrol_authentication username:password/webcontrol_authentication 
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
 
 # Set "motion" to start on boot:
-systemctl enable motion
+systemctl enable motion.service
 
 
 echo ''
@@ -321,13 +321,14 @@ cat <<EOF> /home/pi/.muttrc
 
 set sendmail="/usr/bin/msmtp"
 set use_from=yes
-set realname="Alert From PiCam "
+set realname="Alert From PiCam"
 set from=$SMTPRELAYFROM
 set envelope_from=yes
 
 EOF
-
-echo '"pi-cam-config.sh" script is "Beer-ware": Buy me a beer if you like it!' >> /etc/motd
+echo ''
+echo ''
+echo 'pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it!' >> /etc/motd
 echo 'paypal.me/TerrenceHoulahan' >> /etc/motd
 echo ''
 echo '' >> /etc/motd
@@ -358,6 +359,6 @@ echo "Host will reboot in 10 seconds"
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
 
-sleep 15
+sleep 1o
 
 systemctl reboot
