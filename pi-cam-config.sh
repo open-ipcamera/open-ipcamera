@@ -33,7 +33,6 @@ MAXMOVIETIME='120'
 FFMPEGVIDEOCODEC='mpeg4'
 LOCATEMOTIONMODE='on'
 LOCATEMOTIONSTYLE='redbox'
-TARGETDIR='/var/lib/motion'
 STREAMPORT='8081'
 STREAMQUALITY='50'
 STREAMMOTION='1'
@@ -96,6 +95,8 @@ fi
 if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
 	rm /etc/modules-load.d/bcm2835-v4l2.conf
 fi
+
+sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
 
 # Messages are added by this script to MOTD which need to wiped
 truncate -s 0 /etc/motd
@@ -163,22 +164,83 @@ wait $!
 fi
 
 
-# Nano is a piece of crap: change default editor to something sensible
-update-alternatives --set editor /usr/bin/vim.basic
+echo ''
+echo '###### Configure Storage ######'
+echo ''
 
-cp /usr/share/vim/vimrc /home/pi/.vimrc
+# We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
+if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
+apt-get install -q -y exfat-fuse&
+wait $!
+fi
 
-# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
-sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       " Enable mouse usage (all modes)|' /home/pi/.vimrc
 
-# Set "motion" to start on boot:
-systemctl enable motion
+# "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
+# https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md
+echo ''
+
+if [ ! -d /home/pi/Dropbox-Uploader ]; then
+	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git&
+	wait $!
+fi
+
+mkdir -p /home/pi/scripts/backup
+
+cat <<EOF > /home/pi/scripts/backup/Dropbox-Uploader.sh
+#!/bin/bash
+
+cd /home/pi/Dropbox-Uploader
+./dropbox_uploader.sh $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )/* .
+
+EOF
+
+chmod 700 /home/pi/scripts/backup/Dropbox-Uploader.sh
+
+
+# Create crontab entry in user "pi" crontab to schedule uploading copies off local files up to cloud:
+cat <<'EOF'> /var/spool/cron/crontabs/pi
+# /2 runs script every 2 minutes
+/2 * * * * /home/pi/scripts/backup/Dropbox-Uploader.sh
+
+EOF
+
+chmod 600 /var/spool/cron/crontabs/pi
+chown pi:crontab /var/spool/cron/crontabs/pi
+
+
+echo ''
+echo '###### Configure Camera Kernel Driver ######'
+echo ''
+
 
 # Load Kernel module for Pi camera on boot:
 cat <<'EOF'> /etc/modules-load.d/bcm2835-v4l2.conf
 bcm2835-v4l2
 
 EOF
+
+echo ''
+echo '###### Configure Default Editor ######'
+echo ''
+
+
+# Nano is a piece of crap: change default editor to something sensible
+update-alternatives --set editor /usr/bin/vim.basic
+sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
+
+cp /usr/share/vim/vimrc /home/pi/.vimrc
+
+# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
+sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       " Enable mouse usage (all modes)|' /home/pi/.vimrc
+
+
+echo ''
+echo '###### Configure "Motion" ######'
+echo ''
+
+# Set "motion" to start on boot:
+systemctl enable motion
+
 
 # Configure *BASIC* Settings (just enough to get things generally working):
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
@@ -194,7 +256,7 @@ sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME" /etc/motion/motion.conf
 sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
 sed -i "s/locate_motion_mode off/locate_motion_mode $LOCATEMOTIONMODE/" /etc/motion/motion.conf
 sed -i "s/locate_motion_style box/locate_motion_style $LOCATEMOTIONSTYLE/" /etc/motion/motion.conf
-sed -i "s|target_dir /var/lib/motion|target_dir $TARGETDIR|" /etc/motion/motion.conf
+sed -i "s|target_dir /var/lib/motion|target_dir $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )|" /etc/motion/motion.conf
 sed -i "s/stream_port 8081/stream_port $STREAMPORT/" /etc/motion/motion.conf
 sed -i "s/stream_quality 50/stream_quality $STREAMQUALITY/" /etc/motion/motion.conf
 sed -i "s/stream_motion off/stream_motion $STREAMMOTION/" /etc/motion/motion.conf
@@ -209,32 +271,6 @@ sed -i "s/webcontrol_authentication username:password/webcontrol_authentication 
 # Configure Motion to run by daemon:
 # Remark the path is different to the target of foregoing sed expressions
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
-
-
-echo ''
-echo '###### Configure USB Storage ######'
-echo ''
-
-# If "usbmount" directory not present install"usbmount":
-if [ ! -d /etc/usbmount  ]; then
-	apt-get purge -q -y usbmount&
-	wait $!
-	apt-get install -q -y usbmount&
-	wait $!
-fi
-
-
-if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-apt-get install -q -y exfat-fuse&
-wait $!
-fi
-
-
-sed -i 's/ENABLED=0/ENABLED=1/' /etc/usbmount/usbmount.conf
-sed -i 's/FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus"/FILESYSTEMS="vfat ext2 ext3 ext4 hfsplus fuseblk exfat"/' /etc/usbmount/usbmount.conf
-sed -i 's/FS_MOUNTOPTIONS=""/FS_MOUNTOPTIONS="-fstype=auto,gid=users"/' /etc/usbmount/usbmount.conf
-sed -i 's/VERBOSE=no/VERBOSE=yes/' /etc/usbmount/usbmount.conf
-
 
 
 echo ''
@@ -292,32 +328,24 @@ set envelope_from=yes
 
 EOF
 
-
+echo '"pi-cam-config.sh" script is "Beer-ware": Buy me a beer if you like it!' >> /etc/motd
+echo 'paypal.me/TerrenceHoulahan' >> /etc/motd
+echo ''
 echo '' >> /etc/motd
-echo '' >> /etc/motd
-echo "Video Camera Status: $(sudo systemctl motion)" >> /etc/motd
-echo '' >> /etc/motd
+echo "Video Camera Status: $(echo "sudo systemctl motion")" >> /etc/motd
 echo '' >> /etc/motd
 echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 "  >> /etc/motd
-echo '' >> /etc/motd
 echo '' >> /etc/motd
 echo 'To stop/start/reload the Motion daemon:' >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo '' >> /etc/motd
-echo '' >> /etc/motd
 echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
 echo '' >> /etc/motd
-echo '' >> /etc/motd
 echo ''
-echo '###### Install "Dropbox_Uploader" for Cloud Storage ######'
-# "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
-# https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md
+echo 'Instructions for Configuring Dropbox-Uploader:' >> /etc/motd
+echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md' >> /etc/motd
 echo ''
 
-if [ ! -d /home/pi/Dropbox-Uploader ]; then
-	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git&
-	wait $!
-fi
 echo ''
 echo "###### Post Config Diagnostics: ######"
 echo ''
@@ -326,7 +354,6 @@ systemctl status systemd-timesyncd.service
 echo ''
 echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is reported"
 echo ''
-echo ''
 echo "Host will reboot in 10 seconds"
 
 echo ''
@@ -334,4 +361,4 @@ echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
 
 sleep 15
 
-#systemctl reboot
+systemctl reboot
