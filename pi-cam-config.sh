@@ -25,7 +25,7 @@ PASSWD='xF9e4Ld'
 WIDTH='640'
 HEIGHT='480'
 FRAMERATE='4'
-AUTOBRIGHTNESS='on'
+AUTOBRIGHTNESS='off'
 QUALITY='75'
 FFMPEGOUTPUTMOVIES='on'
 MAXMOVIETIME='120'
@@ -227,7 +227,6 @@ systemctl enable media-pi.mount
 
 # Housekeeping: Do not let images accumulate infinitely.  Prune them:
 
-
 cat <<EOF> /home/pi/scripts/housekeeping.sh
 #!/bin/bash
 
@@ -243,7 +242,7 @@ chmod 700 /home/pi/scripts/housekeeping.sh
 # Create crontab entry in user "pi" crontab to schedule deleting local files:
 cat <<'EOF'> /var/spool/cron/crontabs/pi
 # /2 runs script every 2 minutes
-/60 * * * * /home/pi/scripts/backup/housekeeping.sh
+/60 * * * * /home/pi/scripts/housekeeping.sh
 
 EOF
 
