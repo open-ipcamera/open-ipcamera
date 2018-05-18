@@ -12,8 +12,8 @@
 
 # SCRIPT FEATURES:
 # This script does a basic setup to get your Pi Cam up and running quickly. It configures the following
-# - "usbmount" to automount USB Storage
-# - Downloads "Dropbox_Uploader" to enable you to shoft video/pics to the cloud
+# - Abstracts data from OS to live on USB storage automagically
+# - Downloads "Dropbox_Uploader" to enable you to shift video/pics to the cloud
 # - "Motion" Video Camera Software
 # - "MSMTP" for email alerts
 # - Sets Kernel driver for camera to load on boot
