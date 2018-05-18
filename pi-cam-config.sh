@@ -25,14 +25,16 @@ PASSWD='xF9e4Ld'
 WIDTH='640'
 HEIGHT='480'
 FRAMERATE='4'
-MMALCAMNAME='vc.ril.camera'
 AUTOBRIGHTNESS='on'
 QUALITY='75'
 FFMPEGOUTPUTMOVIES='on'
 MAXMOVIETIME='120'
 FFMPEGVIDEOCODEC='mpeg4'
-LOCATEMOTIONMODE='on'
+ONEVENTSTART="echo "Motion Detected" | msmtp terrence.houlahan.devices@gmail.com"
+THRESHOLD='1500'
+LOCATEMOTIONMODE='preview'
 LOCATEMOTIONSTYLE='redbox'
+$OUTPUTPICTURES='center'
 STREAMPORT='8081'
 STREAMQUALITY='50'
 STREAMMOTION='1'
@@ -94,6 +96,7 @@ fi
 
 if [ -f /var/spool/cron/crontabs/pi ]; then
 sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
+sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
 fi
 
 
@@ -107,7 +110,11 @@ apt-get purge -q -y motion&
 wait $!
 fi
 
-chown -R pi:pi /home/pi
+# apt-get purge does not blow-away the log: Lets just truncate it to show only activity related to most recent build:
+if [ -f /var/log/motion/motion.log ]; then
+	truncate -s 0 /var/log/motion/motion.log
+fi
+
 
 
 ###### BEGIN INSTALLATION ######
@@ -167,12 +174,83 @@ echo ''
 echo '###### Configure Storage ######'
 echo ''
 
+# Interesting thread on auto mounting choices:
+# https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
+
 # We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
 apt-get install -q -y exfat-fuse&
 wait $!
 fi
 
+# Disable automounting by the default Filemanager "pcmanfm": it steps on systemd automount which gives enables us to change mount options:
+sed -i 's/mount_removable=1/mount_removable=0/' /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
+
+
+# The filename should match mount point path in "Where":
+cat <<EOF> /etc/systemd/system/media-pi.automount
+[Unit]
+Description=Automount USBstorage
+
+[Automount]
+Where=/media/pi
+DirectoryMode=0755
+TimeoutIdleSec=15
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+# The filename should match mount point path in "Where":
+cat <<EOF> /etc/systemd/system/media-pi.mount
+[Unit]
+Description=USBstorage
+#Before=
+
+[Mount]
+What=/dev/sda1
+Where=/media/pi
+Type=exfat
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+systemctl enable media-pi.mount
+#systemctl daemon-reload
+#systemctl start media-pi.mount
+
+
+# Housekeeping: Do not let images accumulate infinitely.  Prune them:
+
+
+cat <<EOF> /home/pi/scripts/housekeeping.sh
+#!/bin/bash
+
+if [[ \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null) ]]; then
+rm \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null)
+fi
+
+EOF
+
+chmod 700 /home/pi/scripts/housekeeping.sh
+
+
+# Create crontab entry in user "pi" crontab to schedule deleting local files:
+cat <<'EOF'> /var/spool/cron/crontabs/pi
+# /2 runs script every 2 minutes
+/60 * * * * /home/pi/scripts/backup/housekeeping.sh
+
+EOF
+
+
+echo ''
+echo '###### Configure Cloud Storage ######'
+echo ''
 
 # "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
 # https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md
@@ -183,9 +261,9 @@ if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	wait $!
 fi
 
-mkdir -p /home/pi/scripts/backup
+mkdir -p /home/pi/scripts
 
-cat <<EOF> /home/pi/scripts/backup/Dropbox-Uploader.sh
+cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
 
 cd /home/pi/Dropbox-Uploader
@@ -193,14 +271,14 @@ cd /home/pi/Dropbox-Uploader
 
 EOF
 
-chmod 700 /home/pi/scripts/backup/Dropbox-Uploader.sh
-chown pi:pi /home/pi/scripts/backup/Dropbox-Uploader.sh
+chmod 700 /home/pi/scripts/Dropbox-Uploader.sh
+chown pi:pi /home/pi/scripts/Dropbox-Uploader.sh
 
 
 # Create crontab entry in user "pi" crontab to schedule uploading copies off local files up to cloud:
 cat <<'EOF'> /var/spool/cron/crontabs/pi
 # /2 runs script every 2 minutes
-/2 * * * * /home/pi/scripts/backup/Dropbox-Uploader.sh
+/2 * * * * /home/pi/scripts/Dropbox-Uploader.sh
 
 EOF
 
@@ -244,14 +322,16 @@ sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
 sed -i "s/width 320/width $WIDTH/" /etc/motion/motion.conf
 sed -i "s/height 240/height $HEIGHT/" /etc/motion/motion.conf
 sed -i "s/framerate 2/framerate $FRAMERATE/" /etc/motion/motion.conf
-sed -i "s/; mmalcam_name vc.ril.camera/mmalcam_name $MMALCAMNAME/" /etc/motion/motion.conf
 sed -i "s/auto_brightness off/auto_brightness $AUTOBRIGHTNESS/" /etc/motion/motion.conf
 sed -i "s/quality 75/quality $QUALITY/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies $FFMPEGOUTPUTMOVIES/" /etc/motion/motion.conf
 sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
+sed -i "s|; on_event_start value|on_event_start $ONEVENTSTART|" /etc/motion/motion.conf
+sed -i "s/threshold 1500/threshold $THRESHOLD/" /etc/motion/motion.conf
 sed -i "s/locate_motion_mode off/locate_motion_mode $LOCATEMOTIONMODE/" /etc/motion/motion.conf
 sed -i "s/locate_motion_style box/locate_motion_style $LOCATEMOTIONSTYLE/" /etc/motion/motion.conf
+sed -i "s/output_pictures on/output_pictures $OUTPUTPICTURES/" /etc/motion/motion.conf
 sed -i "s|target_dir /var/lib/motion|target_dir $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )|" /etc/motion/motion.conf
 sed -i "s/stream_port 8081/stream_port $STREAMPORT/" /etc/motion/motion.conf
 sed -i "s/stream_quality 50/stream_quality $STREAMQUALITY/" /etc/motion/motion.conf
@@ -326,13 +406,18 @@ set from=$SMTPRELAYFROM
 set envelope_from=yes
 
 EOF
+
+# Change ownership of all files created by this script FROM "root" TO user "pi":
+chown -R pi:pi /home/pi
+
+
 echo ''
 echo ''
 echo 'pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it!' >> /etc/motd
 echo 'paypal.me/TerrenceHoulahan' >> /etc/motd
 echo ''
 echo '' >> /etc/motd
-echo "Video Camera Status: $(echo "sudo systemctl motion")" >> /etc/motd
+echo "Video Camera Status: $(echo "sudo systemctl status motion")" >> /etc/motd
 echo '' >> /etc/motd
 echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 "  >> /etc/motd
 echo '' >> /etc/motd
