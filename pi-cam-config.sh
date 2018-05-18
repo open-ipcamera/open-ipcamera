@@ -248,7 +248,7 @@ sed -i "s/; mmalcam_name vc.ril.camera/mmalcam_name $MMALCAMNAME/" /etc/motion/m
 sed -i "s/auto_brightness off/auto_brightness $AUTOBRIGHTNESS/" /etc/motion/motion.conf
 sed -i "s/quality 75/quality $QUALITY/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies $FFMPEGOUTPUTMOVIES/" /etc/motion/motion.conf
-sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME" /etc/motion/motion.conf
+sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
 sed -i "s/locate_motion_mode off/locate_motion_mode $LOCATEMOTIONMODE/" /etc/motion/motion.conf
 sed -i "s/locate_motion_style box/locate_motion_style $LOCATEMOTIONSTYLE/" /etc/motion/motion.conf
@@ -350,7 +350,8 @@ echo ''
 echo "###### Post Config Diagnostics: ######"
 echo ''
 echo "Check Host Timekeeping is OK:"
-systemctl status systemd-timesyncd.service
+systemctl status systemd-timesyncd.service&
+wait $!
 echo ''
 echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is reported"
 echo ''
@@ -359,6 +360,6 @@ echo "Host will reboot in 10 seconds"
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
 
-sleep 1o
+sleep 10
 
 systemctl reboot
