@@ -72,10 +72,6 @@ echo ''
 echo  '### Delete files which this script created and/or edited from a previous install to restore host to predictable known state:'
 echo ''
 
-if [ -d /etc/usbmount ]; then
-	rm -r /etc/usbmount
-fi
-
 
 if [ -f /home/pi/.vimrc ]; then
 	rm /home/pi/.vimrc
@@ -96,7 +92,10 @@ if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
 	rm /etc/modules-load.d/bcm2835-v4l2.conf
 fi
 
+if [ -f /var/spool/cron/crontabs/pi ]; then
 sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
+fi
+
 
 # Messages are added by this script to MOTD which need to wiped
 truncate -s 0 /etc/motd
@@ -195,6 +194,7 @@ cd /home/pi/Dropbox-Uploader
 EOF
 
 chmod 700 /home/pi/scripts/backup/Dropbox-Uploader.sh
+chown pi:pi /home/pi/scripts/backup/Dropbox-Uploader.sh
 
 
 # Create crontab entry in user "pi" crontab to schedule uploading copies off local files up to cloud:
