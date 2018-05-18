@@ -185,7 +185,7 @@ fi
 
 mkdir -p /home/pi/scripts/backup
 
-cat <<EOF > /home/pi/scripts/backup/Dropbox-Uploader.sh
+cat <<EOF> /home/pi/scripts/backup/Dropbox-Uploader.sh
 #!/bin/bash
 
 cd /home/pi/Dropbox-Uploader
@@ -238,10 +238,6 @@ echo ''
 echo '###### Configure "Motion" ######'
 echo ''
 
-# Set "motion" to start on boot:
-systemctl enable motion
-
-
 # Configure *BASIC* Settings (just enough to get things generally working):
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
@@ -271,6 +267,9 @@ sed -i "s/webcontrol_authentication username:password/webcontrol_authentication 
 # Configure Motion to run by daemon:
 # Remark the path is different to the target of foregoing sed expressions
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
+
+# Set "motion" to start on boot:
+systemctl enable motion
 
 
 echo ''
