@@ -29,8 +29,8 @@ AUTOBRIGHTNESS='off'
 QUALITY='75'
 FFMPEGOUTPUTMOVIES='on'
 MAXMOVIETIME='120'
-FFMPEGVIDEOCODEC='mpeg4'
-ONEVENTSTART="echo "Motion Detected" | msmtp terrence.houlahan.devices@gmail.com"
+FFMPEGVIDEOCODEC='mp4'
+ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp terrence.houlahan.devices@gmail.com'
 THRESHOLD='1500'
 LOCATEMOTIONMODE='preview'
 LOCATEMOTIONSTYLE='redbox'
@@ -94,13 +94,23 @@ if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
 	rm /etc/modules-load.d/bcm2835-v4l2.conf
 fi
 
+
+if [ -f /home/pi/scripts/housekeeping.sh ]; then
+	rm /home/pi/scripts/housekeeping.sh
+fi
+
+
+if [ -f /home/pi/scripts/Dropbox-Uploader.sh ]; then
+	rm /home/pi/scripts/Dropbox-Uploader.sh
+fi
+
+
 if [ -f /var/spool/cron/crontabs/pi ]; then
 sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
 sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
 fi
 
-
-# Messages are added by this script to MOTD which need to wiped
+# Messages are added by this script to MOTD: wipe for new rebuild
 truncate -s 0 /etc/motd
 
 
@@ -128,7 +138,6 @@ wait $!
 echo ''
 echo '###### Configure Camera Application Motion ######'
 # https://motion-project.github.io/motion_config.html
-# https://www.bouvet.no/bouvet-deler/utbrudd/building-a-motion-activated-security-camera-with-the-raspberry-pi-zero
 echo ''
 
 
@@ -176,6 +185,7 @@ echo ''
 
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
+
 
 # We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
@@ -241,8 +251,7 @@ chmod 700 /home/pi/scripts/housekeeping.sh
 
 # Create crontab entry in user "pi" crontab to schedule deleting local files:
 cat <<'EOF'> /var/spool/cron/crontabs/pi
-# /2 runs script every 2 minutes
-/60 * * * * /home/pi/scripts/housekeeping.sh
+*/59 * * * * /home/pi/scripts/housekeeping.sh
 
 EOF
 
@@ -266,7 +275,11 @@ cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
 
 cd /home/pi/Dropbox-Uploader
-./dropbox_uploader.sh $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )/* .
+./dropbox_uploader.sh upload $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )/*.jpg .&
+wait \$!
+
+./dropbox_uploader.sh upload $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )/*.$FFMPEGVIDEOCODEC .&
+wait \$!
 
 EOF
 
@@ -275,11 +288,8 @@ chown pi:pi /home/pi/scripts/Dropbox-Uploader.sh
 
 
 # Create crontab entry in user "pi" crontab to schedule uploading copies off local files up to cloud:
-cat <<'EOF'> /var/spool/cron/crontabs/pi
-# /2 runs script every 2 minutes
-/2 * * * * /home/pi/scripts/Dropbox-Uploader.sh
+echo '*/2 * * * * /home/pi/scripts/Dropbox-Uploader.sh'  >> /var/spool/cron/crontabs/pi
 
-EOF
 
 chmod 600 /var/spool/cron/crontabs/pi
 chown pi:crontab /var/spool/cron/crontabs/pi
@@ -326,7 +336,7 @@ sed -i "s/quality 75/quality $QUALITY/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies $FFMPEGOUTPUTMOVIES/" /etc/motion/motion.conf
 sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
-sed -i "s|; on_event_start value|on_event_start $ONEVENTSTART|" /etc/motion/motion.conf
+sed -i "s/; on_event_start value/on_event_start $ONEVENTSTART/" /etc/motion/motion.conf
 sed -i "s/threshold 1500/threshold $THRESHOLD/" /etc/motion/motion.conf
 sed -i "s/locate_motion_mode off/locate_motion_mode $LOCATEMOTIONMODE/" /etc/motion/motion.conf
 sed -i "s/locate_motion_style box/locate_motion_style $LOCATEMOTIONSTYLE/" /etc/motion/motion.conf
@@ -357,8 +367,6 @@ echo ''
 # References:
 # http://msmtp.sourceforge.net/doc/msmtp.html
 # https://wiki.archlinux.org/index.php/Msmtp
-# https://hostpresto.com/community/tutorials/how-to-send-email-from-the-command-line-with-msmtp-and-mutt/
-
 
 # MSMTP does not provide a default config file so we will create one:
 cat <<EOF> /etc/msmtprc
@@ -410,25 +418,27 @@ EOF
 chown -R pi:pi /home/pi
 
 
-echo ''
-echo ''
-echo 'pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it!' >> /etc/motd
-echo 'paypal.me/TerrenceHoulahan' >> /etc/motd
-echo ''
+echo '##########################################################################' >> /etc/motd
+echo '##  pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it! ##' >> /etc/motd
+echo '##                      paypal.me/TerrenceHoulahan                      ## ' >> /etc/motd
+echo '##########################################################################' >> /etc/motd
 echo '' >> /etc/motd
 echo "Video Camera Status: $(echo "sudo systemctl status motion")" >> /etc/motd
 echo '' >> /etc/motd
-echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 "  >> /etc/motd
+echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 " >> /etc/motd
+echo '' >> /etc/motd
+echo "Local Images Stored: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) " >> /etc/motd
 echo '' >> /etc/motd
 echo 'To stop/start/reload the Motion daemon:' >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
 echo '' >> /etc/motd
-echo ''
 echo 'Instructions for Configuring Dropbox-Uploader:' >> /etc/motd
 echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md' >> /etc/motd
-echo ''
+echo '' >> /etc/motd
+echo 'To edit or delete these login messages goto: /etc/motd' >> /etc/motd
+echo '##########################################################################' >> /etc/motd
 
 echo ''
 echo "###### Post Config Diagnostics: ######"
@@ -439,11 +449,18 @@ wait $!
 echo ''
 echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is reported"
 echo ''
-echo "Host will reboot in 10 seconds"
-
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
 
-sleep 10
+
+echo ''
+echo '###### Expand Filesystem ######'
+echo ''
+
+raspi-config --expand-rootfs& # Useful if installing Raspbian from an image smaller than your SD card capacity:
+wait $!
+
+sed -i '/raspi-config --expand-rootfs&/{N;d}' $0
+# Delete the command expanding the filesystem after running it once:
 
 systemctl reboot

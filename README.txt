@@ -11,16 +11,20 @@
 
 
 # SCRIPT FEATURES:
-# This script does a basic setup to get your Pi Cam up and running quickly. It configures the following
-# - Abstracts data from OS to live on USB storage automagically
-# - Downloads "Dropbox_Uploader" to enable you to shift video/pics to the cloud
-# - "Motion" Video Camera Software
-# - "MSMTP" for email alerts
+# This script does a pretty decent but nonetheless basic setup to get your Pi Cam up and running quickly. It configures the following
 # - Sets Kernel driver for camera to load on boot
+# -Expands the filesystem to ensure if you installed from an image smaller than your SD card you get to use full capacity of the card
+# - Installs & configures "Motion" Video Camera Software
+# - Installs & configures "MSMTP" for email alerts
+# - Downloads "Dropbox_Uploader" to enable you to shift video/pics to the cloud (Please note, you need to configure this)
+# - Abstracts data from OS to live on USB storage automagically
+# - Sets up a cron to upload images on the removable USB storage to your DropBox Account.
+# - Sets up a 2nd cron to delete media from *LOCAL* USB storage older than 1 hour to stop Motion from filling up storage to 100%
+# - Sends Motion Detection Alerts with the hostname of the Pi sending them in the Subject Line
 # - Changes default editor FROM crappy nano TO VIM
 
-# Please note "security" isn't a feature in list! No firewall config is done to protect camera from remote snoopers!
-# It's the user's responsibility to tailor their security to their local network environment.
+# Please note "security" isn't a feature in list! No firewall config is done to protect the Pi camera from remote snoopers!
+# It's the *USER'S* responsibility to tailor their security to their local network environment.
 
 SCRIPT PREREQUISITES:
 Raspberry Pi running Raspbian with a camera attached and Internet connection.
