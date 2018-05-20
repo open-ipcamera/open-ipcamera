@@ -214,9 +214,9 @@ if [ -f /home/pi/scripts/housekeeping.sh ]; then
 	rm /home/pi/scripts/housekeeping.sh
 fi
 
-
-if [ -f /home/pi/scripts/Dropbox-Uploader.sh ]; then
-	rm /home/pi/scripts/Dropbox-Uploader.sh
+# This is NOT part of the Dropbox-uploader script- it just uses it:
+if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
+	rm -r /home/pi/scripts/Dropbox-Uploader
 fi
 
 
