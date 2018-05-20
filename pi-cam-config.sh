@@ -69,7 +69,43 @@ DROPBOXACCESSTOKEN='ABCD1234'
 #                                                           #
 #############################################################
 
-###### DELETE DETRITUS FROM PRIOR INSTALLS ######
+
+echo ''
+echo '###### Check EXFAT Formatted USB Storage Attached ######'
+echo ''
+echo 'Check USB storage attached to be a target for the video app:'
+echo ''
+echo 'We do NOT store video with the OS!'
+echo ''
+
+# Exit script if NO USB storage attached:
+if [[ $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) = '' ]]; then
+	echo ''
+	echo 'ERROR: Attach an EXFAT formatted USB thumb drive to be a target for video to be written'
+	echo 'Re-run script after minimum storage requirements met. Exiting'
+	echo ''
+	exit
+else
+	echo ''
+	echo 'USB STORAGE FOUND'
+fi
+
+# Exit script USB storage attached but not formatted for EXFAT filesystem:
+if [[ $(lsblk -f|grep sda1|awk '{print $2}') = '' ]]; then
+	echo ''
+	echo 'ERROR: USB thumb drive NOT formatted for * EXFAT * filesystem'
+	echo 'Re-run script after minimum storage requirements met. Exiting'
+	echo ''
+	exit
+else
+	echo ''
+	echo 'USB STORAGE IS EXFAT:'
+	echo 'Script will proceed'
+	echo ''
+fi
+
+
+echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
 echo ''
 echo  '### Delete files which this script created and/or edited from a previous install to restore host to predictable known state:'
 echo ''
@@ -106,18 +142,18 @@ fi
 
 
 if [ -f /var/spool/cron/crontabs/pi ]; then
-sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
-sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
+	sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
+	sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
 fi
 
 # Messages are added by this script to MOTD: wipe for new rebuild
 truncate -s 0 /etc/motd
 
 
-# Blow-away any config files for "Motion" using "apt-get purge" :
-if [ ! $(command -v motion) = '' ]; then
-apt-get purge -q -y motion&
-wait $!
+# Delete "motion and any related config files for using "apt-get purge" :
+if [ ! $(dpkg -l | grep motion) = '' ]; then
+	apt-get purge -q -y motion&
+	wait $!
 fi
 
 # apt-get purge does not blow-away the log: Lets just truncate it to show only activity related to most recent build:
@@ -128,9 +164,6 @@ fi
 
 
 ###### BEGIN INSTALLATION ######
-echo ''
-echo '### Install Applications'
-echo ''
 
 apt-get update&
 wait $!
@@ -141,39 +174,38 @@ echo '###### Configure Camera Application Motion ######'
 echo ''
 
 
-# If "command -v application" returns nothing install the it: 
-if [[ $(command -v motion) = '' ]]; then
+if [[ $(dpkg -l | grep motion) = '' ]]; then
 apt-get install -q -y motion&
 wait $!
 fi
 
-if [[ $(command -v msmtp) = '' ]]; then
+if [[ $(dpkg -l | grep msmtp) = '' ]]; then
 apt-get install -q -y msmtp&
 wait $!
 fi
 
-if [[ $(command -v mutt) = '' ]]; then
+if [[ $(dpkg -l | grep mutt) = '' ]]; then
 apt-get install -q -y mutt&
 wait $!
 fi
 
-if [[ $(command -v vim) = '' ]]; then
+if [[ $(dpkg -l | grep vim) = '' ]]; then
 apt-get install -q -y vim&
 wait $!
 fi
 
-if [[ $(command -v git) = '' ]]; then
+if [[ $(dpkg -l | grep git) = '' ]]; then
 apt-get install -q -y git&
 wait $!
 fi
 
 # NOTE: following are not required but just included because they are useful
-if [[ $(command -v mtr) = '' ]]; then
+if [[ $(dpkg -l | grep mtr) = '' ]]; then
 apt-get install -q -y mtr&
 wait $!
 fi
 
-if [[ $(command -v tcpdump) = '' ]]; then
+if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
 apt-get install -q -y tcpdump&
 wait $!
 fi
@@ -185,6 +217,12 @@ echo ''
 
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
+
+
+if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
+apt-get purge -q -y usbmount&
+wait $!
+fi
 
 
 # We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
@@ -259,9 +297,10 @@ EOF
 echo ''
 echo '###### Configure Cloud Storage ######'
 echo ''
+echo "https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md"
+echo ''
 
 # "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
-# https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md
 echo ''
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
@@ -311,7 +350,7 @@ echo '###### Configure Default Editor ######'
 echo ''
 
 
-# Nano is a piece of crap: change default editor to something sensible
+# Nano is a piece of crap: change default editor to something more sensible
 update-alternatives --set editor /usr/bin/vim.basic
 sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
 
@@ -418,6 +457,24 @@ EOF
 chown -R pi:pi /home/pi
 
 
+echo ''
+echo '###### Expand Filesystem ######'
+echo ''
+
+# Below "raspi-config --expand-rootfs" command will be deleted from this script after it has been run once:
+
+raspi-config --expand-rootfs& # Useful if installing Raspbian from an image smaller than your SD card capacity:
+wait $!
+
+sed -i '/raspi-config --expand-rootfs&/{N;d}' $0
+# Delete the command expanding the filesystem after running it once:
+
+
+echo ''
+echo '###### Config /etc/motd Messages: ######'
+echo ''
+
+
 echo '##########################################################################' >> /etc/motd
 echo '##  pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it! ##' >> /etc/motd
 echo '##                      paypal.me/TerrenceHoulahan                      ## ' >> /etc/motd
@@ -451,16 +508,5 @@ echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is report
 echo ''
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
-
-
-echo ''
-echo '###### Expand Filesystem ######'
-echo ''
-
-raspi-config --expand-rootfs& # Useful if installing Raspbian from an image smaller than your SD card capacity:
-wait $!
-
-sed -i '/raspi-config --expand-rootfs&/{N;d}' $0
-# Delete the command expanding the filesystem after running it once:
 
 systemctl reboot
