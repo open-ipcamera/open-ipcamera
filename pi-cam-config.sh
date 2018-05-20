@@ -71,12 +71,70 @@ DROPBOXACCESSTOKEN='ABCD1234'
 
 
 echo ''
-echo '###### Check EXFAT Formatted USB Storage Attached ######'
+echo '###### Configure LOCAL Storage ######'
 echo ''
-echo 'Check USB storage attached to be a target for the video app:'
-echo ''
-echo 'We do NOT store video with the OS!'
-echo ''
+
+# Interesting thread on auto mounting choices:
+# https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
+
+
+if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
+apt-get purge -q -y usbmount&
+wait $!
+fi
+
+
+# We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
+if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
+apt-get install -q -y exfat-fuse&
+wait $!
+fi
+
+# Disable automounting by the default Filemanager "pcmanfm": it steps on systemd automount which gives enables us to change mount options:
+if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
+	sed -i 's/mount_removable=1/mount_removable=0/' /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
+fi
+
+
+# The filename should match mount point path in "Where":
+cat <<EOF> /etc/systemd/system/media-pi.automount
+[Unit]
+Description=Automount USBstorage
+
+[Automount]
+Where=/media/pi
+DirectoryMode=0755
+TimeoutIdleSec=15
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+# The filename should match mount point path in "Where":
+cat <<EOF> /etc/systemd/system/media-pi.mount
+[Unit]
+Description=USBstorage
+#Before=
+
+[Mount]
+What=/dev/sda1
+Where=/media/pi
+Type=exfat
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+systemctl enable media-pi.mount
+systemctl daemon-reload&
+wait $!
+systemctl start media-pi.mount&
+wait $!
+
 
 # Exit script if NO USB storage attached:
 if [[ $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) = '' ]]; then
@@ -103,6 +161,27 @@ else
 	echo 'Script will proceed'
 	echo ''
 fi
+
+
+# Housekeeping: Do not let images accumulate infinitely.  Prune them:
+
+cat <<EOF> /home/pi/scripts/housekeeping.sh
+#!/bin/bash
+
+if [[ \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null) ]]; then
+rm \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null)
+fi
+
+EOF
+
+chmod 700 /home/pi/scripts/housekeeping.sh
+
+
+# Create crontab entry in user "pi" crontab to schedule deleting local files:
+cat <<'EOF'> /var/spool/cron/crontabs/pi
+*/59 * * * * /home/pi/scripts/housekeeping.sh
+
+EOF
 
 
 echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
@@ -210,88 +289,6 @@ apt-get install -q -y tcpdump&
 wait $!
 fi
 
-
-echo ''
-echo '###### Configure Storage ######'
-echo ''
-
-# Interesting thread on auto mounting choices:
-# https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
-
-
-if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-apt-get purge -q -y usbmount&
-wait $!
-fi
-
-
-# We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
-if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-apt-get install -q -y exfat-fuse&
-wait $!
-fi
-
-# Disable automounting by the default Filemanager "pcmanfm": it steps on systemd automount which gives enables us to change mount options:
-sed -i 's/mount_removable=1/mount_removable=0/' /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
-
-
-# The filename should match mount point path in "Where":
-cat <<EOF> /etc/systemd/system/media-pi.automount
-[Unit]
-Description=Automount USBstorage
-
-[Automount]
-Where=/media/pi
-DirectoryMode=0755
-TimeoutIdleSec=15
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-# The filename should match mount point path in "Where":
-cat <<EOF> /etc/systemd/system/media-pi.mount
-[Unit]
-Description=USBstorage
-#Before=
-
-[Mount]
-What=/dev/sda1
-Where=/media/pi
-Type=exfat
-Options=defaults
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-systemctl enable media-pi.mount
-#systemctl daemon-reload
-#systemctl start media-pi.mount
-
-
-# Housekeeping: Do not let images accumulate infinitely.  Prune them:
-
-cat <<EOF> /home/pi/scripts/housekeeping.sh
-#!/bin/bash
-
-if [[ \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null) ]]; then
-rm \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null)
-fi
-
-EOF
-
-chmod 700 /home/pi/scripts/housekeeping.sh
-
-
-# Create crontab entry in user "pi" crontab to schedule deleting local files:
-cat <<'EOF'> /var/spool/cron/crontabs/pi
-*/59 * * * * /home/pi/scripts/housekeeping.sh
-
-EOF
 
 
 echo ''
