@@ -31,6 +31,8 @@
 # 4. SCRIPT FEATURES:
 # This script does a very comprehensive configuration but you'll almost certainly want to tailor it to your specific use-case.
 # The following is configured for you:
+# - Enables camera in Raspbian
+# - Disables Camera's red LED light
 # - Sets Kernel driver for camera to automatically load on every boot
 # - Expands Pi's filesystem to ensure if it was installed from an image smaller than the SD card you recover the remainder of the space
 # - Installs & configures "Motion" Video Camera Software
@@ -41,6 +43,9 @@
 # - Sets up a 2nd cron to delete media from *LOCAL* USB storage older than 1 hour to stop Motion from filling up storage to 100%
 # - Sends Motion Detection Alerts with the hostname of the Pi sending them in the email's Subject Line
 # - Changes default editor FROM vile nano TO lovely VIM
+# - Sets hostname
+# - Disables Autologin
+# - Disables the boot Splash Screen so errors can be observed as host rises-up
 
 # Please note "security" isn't a feature in list! No firewall config is done to protect the Pi camera from remote snoopers!
 # It's the *USER'S* responsibility to tailor their security to their local network environment.
