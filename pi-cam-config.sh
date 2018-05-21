@@ -17,6 +17,9 @@
 # Variables are expanded in sed expressions and 
 # Change or delete specimen values below as appropriate:
 
+### Variables: Linux
+OURHOSTNAME='raspberrypi3zero1'
+
 ### Variables: Motion
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
 IPV6ENABLED='on'
@@ -77,6 +80,9 @@ echo ''
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
 
+apt-get update&
+wait $!
+
 
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
 apt-get purge -q -y usbmount&
@@ -115,7 +121,7 @@ EOF
 # The filename should match mount point path in "Where":
 cat <<EOF> /etc/systemd/system/media-pi.mount
 [Unit]
-Description=USBstorage
+Description=Automount USBstorage
 #Before=
 
 [Mount]
@@ -244,12 +250,37 @@ fi
 
 ###### BEGIN INSTALLATION ######
 
-apt-get update&
+echo ''
+echo '###### Configure Sensible Defaults: ######'
+echo ''
+
+# Enable the camera (there is no raspi-config option to do this):
+echo 'start_x=1' >> /boot/config.txt
+echo 'disable_camera_led=1' >> /boot/config.txt
+
+echo 'Camera enabled'
+echo 'Camera LED light disabled'
+
+# We like to see if there is anything in error while booting:
+echo 'disable_splash=1' >> /boot/config.txt
+
+echo 'Disabled boot splash screen so we can see errors while host is rising up.'
+
+systemctl disable autologin@.service&
+wait $!
+echo 'Disabled autologin.'
+
+
+echo ''
+echo '###### Set New Hostname: ######'
+echo ''
+
+hostnamectl set-hostname $OURHOSTNAME
+systemctl restart systemd-hostnamed&
 wait $!
 
 echo ''
-echo '###### Configure Camera Application Motion ######'
-# https://motion-project.github.io/motion_config.html
+echo '###### Install Software ######'
 echo ''
 
 
@@ -358,7 +389,12 @@ sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       
 
 
 echo ''
-echo '###### Configure "Motion" ######'
+echo '###### Configure Camera Application Motion ######'
+echo ''
+
+echo ''
+echo 'Further Info: https://motion-project.github.io/motion_config.html'
+echo ''
 echo ''
 
 # Configure *BASIC* Settings (just enough to get things generally working):
@@ -465,7 +501,6 @@ wait $!
 
 sed -i '/raspi-config --expand-rootfs&/{N;d}' $0
 # Delete the command expanding the filesystem after running it once:
-
 
 echo ''
 echo '###### Config /etc/motd Messages: ######'
