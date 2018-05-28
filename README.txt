@@ -54,6 +54,7 @@
 # 5. INSTALLATION INSTRUCTIONS:
 #	1. Login to Raspberry Pi to be configured as a web security camera
 #	2. Insert a USB thumb drive into any of the Pi's USB ports.
+	NOTE: If installing to a Pi Zero you'll need to keep that micro USB port free for the USB storage if you have anything in it!
 
 As user "pi" execute following commands:
 

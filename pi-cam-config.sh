@@ -18,7 +18,9 @@
 # Change or delete specimen values below as appropriate:
 
 ### Variables: Linux
-OURHOSTNAME='raspberrypi3zero1'
+#OURHOSTNAME='raspberrypi3zero1'
+OURHOSTNAME='raspberrypi3-2'
+
 
 ### Variables: Motion
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
@@ -65,6 +67,10 @@ GMAILPASSWD='ABCD1234'
 # Click "Generate" button under the heading "Generated access token" in the "Developer section of your Dropbox account
 DROPBOXACCESSTOKEN='ABCD1234'
 
+
+# USEFUL RESOURCES:
+# https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
+# https://projects.raspberrypi.org/en/projects/getting-started-with-picamera/5
 
 #############################################################
 #                                                           #
@@ -135,7 +141,7 @@ WantedBy=multi-user.target
 
 EOF
 
-systemctl enable media-pi.mount
+
 systemctl daemon-reload&
 wait $!
 systemctl start media-pi.mount&
@@ -168,14 +174,18 @@ else
 	echo ''
 fi
 
+systemctl enable media-pi.mount
 
-# Housekeeping: Do not let images accumulate infinitely.  Prune them:
+mkdir -p /home/pi/scripts
 
-cat <<EOF> /home/pi/scripts/housekeeping.sh
+# Housekeeping: Prune images them after being shifted to Dropbox:
+cat <<'EOF'> /home/pi/scripts/housekeeping.sh
 #!/bin/bash
 
-if [[ \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null) ]]; then
-rm \$(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +59 2>/dev/null)
+# Test for valid Internet connection before proceeding to delete local image copies order then 8 min to ensure they can finish uploading prior to pruning:
+ping -c 1 8.8.8.8
+if [  $? -eq 0 ]; then
+rm $(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +8 2>/dev/null)
 fi
 
 EOF
@@ -192,8 +202,9 @@ EOF
 
 echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
 echo ''
-echo  '### Delete files which this script created and/or edited from a previous install to restore host to predictable known state:'
+echo '### Delete files which this script created and/or edited from a previous install to restore host to predictable known state:'
 echo ''
+
 
 
 if [ -f /home/pi/.vimrc ]; then
@@ -236,7 +247,7 @@ truncate -s 0 /etc/motd
 
 
 # Delete "motion and any related config files for using "apt-get purge" :
-if [ ! $(dpkg -l | grep motion) = '' ]; then
+if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	apt-get purge -q -y motion&
 	wait $!
 fi
@@ -254,14 +265,35 @@ echo ''
 echo '###### Configure Sensible Defaults: ######'
 echo ''
 
+# raspian-config: How to interface from the CLI:
+# https://raspberrypi.stackexchange.com/questions/28907/how-could-one-automate-the-raspbian-raspi-config-setup
+
+# We first clear any boot param added during a previous build and then we add each parameter back with the most current value set:
 # Enable the camera (there is no raspi-config option to do this):
+sed -i '/start_x=1/d' /boot/config.txt
 echo 'start_x=1' >> /boot/config.txt
+
+sed -i '/disable_camera_led=1/d' /boot/config.txt
 echo 'disable_camera_led=1' >> /boot/config.txt
+
+
+if [ $(cat /proc/device-tree/model | awk '{ print $3 }') != 'Zero' ]; then
+	echo "NOT PI ZERO!"
+	sed -i '/gpu_mem=128/d' /boot/config.txt
+	echo 'gpu_mem=128' >> /boot/config.txt
+else
+	echo "PI ZERO"
+#	sed -i '/gpu_mem=512/d' /boot/config.txt
+#	echo 'gpu_mem=512' >> /boot/config.txt
+fi
+
+
 
 echo 'Camera enabled'
 echo 'Camera LED light disabled'
 
 # We like to see if there is anything in error while booting:
+sed -i '/disable_splash=1/d' /boot/config.txt
 echo 'disable_splash=1' >> /boot/config.txt
 
 echo 'Disabled boot splash screen so we can see errors while host is rising up.'
@@ -278,6 +310,10 @@ echo ''
 hostnamectl set-hostname $OURHOSTNAME
 systemctl restart systemd-hostnamed&
 wait $!
+
+# hostnamectl does NOT update its own entry in /etc/hosts so have to do it separately:
+sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME/" /etc/hosts
+
 
 echo ''
 echo '###### Install Software ######'
@@ -299,7 +335,8 @@ apt-get install -q -y mutt&
 wait $!
 fi
 
-if [[ $(dpkg -l | grep vim) = '' ]]; then
+# vim-tiny- which is crap like nano- will also match unless grep-ed with boundaries:
+if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
 apt-get install -q -y vim&
 wait $!
 fi
@@ -336,7 +373,6 @@ if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	wait $!
 fi
 
-mkdir -p /home/pi/scripts
 
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
@@ -373,6 +409,9 @@ bcm2835-v4l2
 
 EOF
 
+modprobe modprobe bcm2835-v4l2
+
+
 echo ''
 echo '###### Configure Default Editor ######'
 echo ''
@@ -380,7 +419,10 @@ echo ''
 
 # Nano is a piece of crap: change default editor to something more sensible
 update-alternatives --set editor /usr/bin/vim.basic
-sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
+
+if [ -f /home/pi/.selected_editor ]; then
+	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
+fi
 
 cp /usr/share/vim/vimrc /home/pi/.vimrc
 
@@ -391,7 +433,6 @@ sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       
 echo ''
 echo '###### Configure Camera Application Motion ######'
 echo ''
-
 echo ''
 echo 'Further Info: https://motion-project.github.io/motion_config.html'
 echo ''
@@ -422,7 +463,7 @@ sed -i "s/stream_auth_method 0/stream_auth_method $STREAMAUTHMETHOD/" /etc/motio
 sed -i "s/; stream_authentication username:password/stream_authentication $USER:$PASSWD/" /etc/motion/motion.conf
 sed -i "s/webcontrol_localhost on/webcontrol_localhost $WEBCONTROLLOCALHOST/" /etc/motion/motion.conf
 sed -i "s/webcontrol_port 8080/webcontrol_port $WEBCONTROLPORT/" /etc/motion/motion.conf
-sed -i "s/webcontrol_authentication username:password/webcontrol_authentication $USER:$PASSWD/" /etc/motion/motion.conf
+sed -i "s/; webcontrol_authentication username:password/webcontrol_authentication $USER:$PASSWD/" /etc/motion/motion.conf
 
 
 # Configure Motion to run by daemon:
@@ -490,14 +531,9 @@ EOF
 chown -R pi:pi /home/pi
 
 
-echo ''
-echo '###### Expand Filesystem ######'
-echo ''
-
-# Below "raspi-config --expand-rootfs" command will be deleted from this script after it has been run once:
-
-raspi-config --expand-rootfs& # Useful if installing Raspbian from an image smaller than your SD card capacity:
-wait $!
+# Raspbian now expands the filesystem on first boot making below superfluous
+##raspi-config --expand-rootfs& # Useful if installing Raspbian from an image smaller than your SD card capacity:
+##wait $!
 
 sed -i '/raspi-config --expand-rootfs&/{N;d}' $0
 # Delete the command expanding the filesystem after running it once:
@@ -532,6 +568,15 @@ echo '##########################################################################
 echo ''
 echo "###### Post Config Diagnostics: ######"
 echo ''
+echo "Output of command 'vcgencmd get_camera' below should report: supported=1 detected=1"
+vcgencmd get_camera
+echo ''
+echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not your camera will be down:'
+lsmod |grep v4l2
+echo''
+echo "Device 'video0' should be shown below. If not your camera will be down"
+ls -al /dev | grep video0
+echo''
 echo "Check Host Timekeeping is OK:"
 systemctl status systemd-timesyncd.service&
 wait $!
