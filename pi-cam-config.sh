@@ -20,7 +20,8 @@
 ### Variables: Linux
 #OURHOSTNAME='raspberrypi3zero1'
 OURHOSTNAME='raspberrypi3-2'
-
+PASSWDPI='Tbh11b2pc'
+PASSWDROOT='Tbh11b2pc'
 
 ### Variables: Motion
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
@@ -78,6 +79,14 @@ DROPBOXACCESSTOKEN='ABCD1234'
 #                                                           #
 #############################################################
 
+echo ''
+echo '###### Set Passwords for Users pi and root ######'
+echo ''
+
+# Pi has no passwords set by default: Set them for users 'pi' and 'root'
+echo "pi:$PASSWDPI"|chpasswd
+echo "root:$PASSWDROOT"|chpasswd
+
 
 echo ''
 echo '###### Configure LOCAL Storage ######'
@@ -102,7 +111,7 @@ apt-get install -q -y exfat-fuse&
 wait $!
 fi
 
-# Disable automounting by the default Filemanager "pcmanfm": it steps on systemd automount which gives enables us to change mount options:
+# Disable automounting by the default Filemanager "pcmanfm": it steps on the systemd automount which gives us the flexibility to change mount options:
 if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
 	sed -i 's/mount_removable=1/mount_removable=0/' /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
 fi
@@ -124,7 +133,7 @@ WantedBy=multi-user.target
 EOF
 
 
-# The filename should match mount point path in "Where":
+# Filename below should match mount point path in "Where":
 cat <<EOF> /etc/systemd/system/media-pi.mount
 [Unit]
 Description=Automount USBstorage
@@ -178,11 +187,11 @@ systemctl enable media-pi.mount
 
 mkdir -p /home/pi/scripts
 
-# Housekeeping: Prune images them after being shifted to Dropbox:
+# Housekeeping: Prune images after being copied off the device to Dropbox:
 cat <<'EOF'> /home/pi/scripts/housekeeping.sh
 #!/bin/bash
 
-# Test for valid Internet connection before proceeding to delete local image copies order then 8 min to ensure they can finish uploading prior to pruning:
+# Test for valid Internet connection before deleting local images older than 8 minutes ensuring they were shifted to cloud before deletion:
 ping -c 1 8.8.8.8
 if [  $? -eq 0 ]; then
 rm $(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +8 2>/dev/null)
@@ -202,9 +211,8 @@ EOF
 
 echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
 echo ''
-echo '### Delete files which this script created and/or edited from a previous install to restore host to predictable known state:'
+echo '### Delete files which this script created or edited from a previous installs to restore the Pi to predictable known state:'
 echo ''
-
 
 
 if [ -f /home/pi/.vimrc ]; then
@@ -242,7 +250,7 @@ if [ -f /var/spool/cron/crontabs/pi ]; then
 	sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
 fi
 
-# Messages are added by this script to MOTD: wipe for new rebuild
+# Messages are appended to MOTD by this script:truncate the file to wipe existing messages to stop being repeatedly appended
 truncate -s 0 /etc/motd
 
 
@@ -252,7 +260,7 @@ if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	wait $!
 fi
 
-# apt-get purge does not blow-away the log: Lets just truncate it to show only activity related to most recent build:
+# apt-get purge does not delete log which will contain errors from previous builds: We truncate it to show only new stuff related to most recent build:
 if [ -f /var/log/motion/motion.log ]; then
 	truncate -s 0 /var/log/motion/motion.log
 fi
@@ -288,11 +296,10 @@ else
 fi
 
 
-
 echo 'Camera enabled'
 echo 'Camera LED light disabled'
 
-# We like to see if there is anything in error while booting:
+# Disable the splash screen to stop it hiding errors as the Pi rises up on boot:
 sed -i '/disable_splash=1/d' /boot/config.txt
 echo 'disable_splash=1' >> /boot/config.txt
 
@@ -365,7 +372,7 @@ echo ''
 echo "https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md"
 echo ''
 
-# "Dropbox-Uploader.sh" enables you to shift pics into cloud- ensuring evidence not destroyed with Pi Cam
+# "Dropbox-Uploader.sh" enables you to copy images to cloud- ensuring evidence not lost if PiCam destroyed or stolen
 echo ''
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
@@ -409,7 +416,7 @@ bcm2835-v4l2
 
 EOF
 
-modprobe modprobe bcm2835-v4l2
+modprobe bcm2835-v4l2
 
 
 echo ''
@@ -433,9 +440,7 @@ sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       
 echo ''
 echo '###### Configure Camera Application Motion ######'
 echo ''
-echo ''
 echo 'Further Info: https://motion-project.github.io/motion_config.html'
-echo ''
 echo ''
 
 # Configure *BASIC* Settings (just enough to get things generally working):
@@ -481,7 +486,7 @@ echo ''
 # http://msmtp.sourceforge.net/doc/msmtp.html
 # https://wiki.archlinux.org/index.php/Msmtp
 
-# MSMTP does not provide a default config file so we will create one:
+# MSMTP does not provide a default config file so we create one below:
 cat <<EOF> /etc/msmtprc
 defaults
 auth           on
@@ -489,8 +494,8 @@ tls            on
 tls_starttls   on
 logfile        ~/.msmtp.log
 
-# For TLS uncomment either "tls_trustfile_file" *OR* "tls_fingerprint".  NOT BOTH
-# Note that "tls_trust_file" wont work with self-signed certs: use "tls_fingerprint" directive in lieu
+# For TLS support uncomment either "tls_trustfile_file" *OR* "tls_fingerprint": NOT BOTH
+# Note: "tls_trust_file" wont work with self-signed certs: use the "tls_fingerprint" directive instead
 
 #tls_trust_file /etc/ssl/certs/ca-certificates.crt
 tls_fingerprint $(msmtp --host=$SMTPRELAYFQDN --serverinfo --tls --tls-certcheck=off | grep SHA256 | awk '{ print $2 }')
@@ -529,14 +534,6 @@ EOF
 
 # Change ownership of all files created by this script FROM "root" TO user "pi":
 chown -R pi:pi /home/pi
-
-
-# Raspbian now expands the filesystem on first boot making below superfluous
-##raspi-config --expand-rootfs& # Useful if installing Raspbian from an image smaller than your SD card capacity:
-##wait $!
-
-sed -i '/raspi-config --expand-rootfs&/{N;d}' $0
-# Delete the command expanding the filesystem after running it once:
 
 echo ''
 echo '###### Config /etc/motd Messages: ######'
@@ -577,7 +574,7 @@ echo''
 echo "Device 'video0' should be shown below. If not your camera will be down"
 ls -al /dev | grep video0
 echo''
-echo "Check Host Timekeeping is OK:"
+echo "Check Host Timekeeping both correct and automated:"
 systemctl status systemd-timesyncd.service&
 wait $!
 echo ''
@@ -585,5 +582,9 @@ echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is report
 echo ''
 echo ''
 echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
+echo ''
+echo 'Dont forget to delete this script after done iterating through different installs: it contains passwords so wipe it after you are done!'
+echo ''
+
 
 systemctl reboot
