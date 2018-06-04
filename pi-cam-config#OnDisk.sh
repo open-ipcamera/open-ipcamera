@@ -345,12 +345,15 @@ wait $!
 fi
 
 
+
 # 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
 apt-get install -q -y exiv2&
 wait $!
 fi
+
+
 
 
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
