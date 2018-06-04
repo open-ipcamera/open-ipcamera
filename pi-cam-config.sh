@@ -14,12 +14,12 @@
 
 ######  Variables: ######
 #
-# Variables are expanded in sed expressions and 
+# Variables are expanded in sed expressions and auto-populating variables.
 # Change or delete specimen values below as appropriate:
 
 ### Variables: Linux
-#OURHOSTNAME='raspberrypi3zero1'
-OURHOSTNAME='raspberrypi3-2'
+#OURHOSTNAME='raspberrypizerow1'
+OURHOSTNAME='raspberrypi3-3'
 PASSWDPI='Tbh11b2pc'
 PASSWDROOT='Tbh11b2pc'
 
@@ -28,11 +28,15 @@ PASSWDROOT='Tbh11b2pc'
 IPV6ENABLED='on'
 USER='terrence'
 PASSWD='xF9e4Ld'
-WIDTH='640'
-HEIGHT='480'
+
+# Max VIDEO Resolution PiCam v2: 1080p30, 720p60, 640x480p90
+# Max IMAGE Resolution PiCam v2: 3280 x 2464
+WIDTH='3280'
+HEIGHT='2464'
 FRAMERATE='4'
+# Autobrightness can cause wild fluctuations causing it PiCam to register each change as a motion detection creating a gazillion images. Suggested value= "off"
 AUTOBRIGHTNESS='off'
-QUALITY='75'
+QUALITY='70'
 FFMPEGOUTPUTMOVIES='on'
 MAXMOVIETIME='120'
 FFMPEGVIDEOCODEC='mp4'
@@ -332,6 +336,26 @@ apt-get install -q -y motion&
 wait $!
 fi
 
+
+# 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
+# http://owl.phy.queensu.ca/~phil/exiftool/
+if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
+apt-get install -q -y libimage-exiftool-perl&
+wait $!
+fi
+
+
+
+# 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
+# http://www.exiv2.org/
+if [[ $(dpkg -l | grep exiv2) = '' ]]; then
+apt-get install -q -y exiv2&
+wait $!
+fi
+
+
+
+
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
 apt-get install -q -y msmtp&
 wait $!
@@ -555,6 +579,17 @@ echo 'To stop/start/reload the Motion daemon:' >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
+echo '' >> /etc/motd
+echo "$(v4l2-ctl -V)" >> /etc/motd
+echo '' >> /etc/motd
+echo 'To manually change *VIDEO* resolution using Video4Linux driver tailor below example to your use case:' >> /etc/motd
+echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
+echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
+echo 'To obtain resolution and other data from an image file:' >> /etc/motd
+echo 'exiv2 /media/pi/imageName.jpg' >> /etc/motd
+echo '' >> /etc/motd
+echo 'To see metadata for an image or video:' >> /etc/motd
+echo 'exiftool /media/pi/01-20180524224313.mp4' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Instructions for Configuring Dropbox-Uploader:' >> /etc/motd
 echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md' >> /etc/motd
