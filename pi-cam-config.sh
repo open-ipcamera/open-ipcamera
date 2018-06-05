@@ -83,13 +83,111 @@ DROPBOXACCESSTOKEN='ABCD1234'
 #                                                           #
 #############################################################
 
+
+echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
 echo ''
-echo '###### Set Passwords for Users pi and root ######'
+echo '### Restore Pi to a predictable known configuration state by deleting debris from prior installs:'
 echo ''
 
-# Pi has no passwords set by default: Set them for users 'pi' and 'root'
+# Delete "motion and any related config files for using "apt-get purge" :
+if [[ ! $(dpkg -l | grep motion) = '' ]]; then
+	apt-get purge -q -y motion&
+	wait $!
+fi
+
+if [ -f /etc/systemd/system/media-pi.automount ]; then
+	rm /etc/systemd/system/media-pi.automount
+fi
+
+if [ -f /etc/systemd/system/media-pi.mount ]; then
+	rm /etc/systemd/system/media-pi.mount
+fi
+
+if [ -f /home/pi/scripts/housekeeping.sh ]; then
+	rm /home/pi/scripts/housekeeping.sh
+fi
+
+# This is NOT part of the Dropbox-uploader script- it just uses it:
+if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
+	rm -r /home/pi/scripts/Dropbox-Uploader
+fi
+
+if [ -f /var/spool/cron/crontabs/pi ]; then
+	sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
+	sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
+fi
+
+if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
+	rm /etc/modules-load.d/bcm2835-v4l2.conf
+fi
+
+if [ -f /home/pi/.vimrc ]; then
+	rm /home/pi/.vimrc
+fi
+
+if [ -f /etc/msmtprc ]; then
+	rm /etc/msmtprc
+fi
+
+if [ -f /home/pi/.muttrc ]; then
+	rm /home/pi/.muttrc
+fi
+
+# apt-get purge does not delete log which will contain errors from previous builds: We truncate it to show only new stuff related to most recent build:
+if [ -f /var/log/motion/motion.log ]; then
+	truncate -s 0 /var/log/motion/motion.log
+fi
+
+# Messages are appended to MOTD by this script:truncate the file to wipe existing messages to stop being repeatedly appended
+truncate -s 0 /etc/motd
+
+
+
+echo ''
+echo '###### Configure A Minimum Security baseline:  ######'
+echo ''
+
+# By default no passwords set for users 'pi' and 'root'
+echo " *** Set passwd for user 'pi' ***"
 echo "pi:$PASSWDPI"|chpasswd
+
+echo "*** Set passwd for user 'pi' ***"
 echo "root:$PASSWDROOT"|chpasswd
+
+echo ''
+
+# Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
+if [ ! -d /home/pi/.ssh ]; then
+	mkdir /home/pi/.ssh
+	touch /home/pi/.ssh/authorized_keys
+
+	# https://www.ssh.com/ssh/keygen/
+	sudo -u pi -i ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -N ""&
+	wait $!
+
+	chmod 700 /home/pi/.ssh
+	chmod 600 /home/pi/.ssh/id_rsa
+	chmod 644 /home/pi/.ssh/id_rsa.pub
+	chown -R /home/pi/
+
+	echo "ECDSA 521 bit keypair created for user pi"
+fi
+
+# There are more options that could be tweaked or course in /etc/ssh/sshd_config
+sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
+sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
+sed -i "s|#SyslogFacility AUTH|SyslogFacility AUTH|" /etc/ssh/sshd_config
+sed -i "s|#LogLevel INFO|LogLevel INFO|" /etc/ssh/sshd_config
+sed -i "s|#LoginGraceTime 2m|LoginGraceTime 1m|" /etc/ssh/sshd_config
+sed -i "s|#MaxAuthTries 6|MaxAuthTries 3|" /etc/ssh/sshd_config
+sed -i "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|" /etc/ssh/sshd_config
+sed -i "s|#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2|AuthorizedKeysFile     .ssh/authorized_keys|" /etc/ssh/sshd_config
+sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|" /etc/ssh/sshd_config
+sed -i "s|#PermitEmptyPasswords no|#PermitEmptyPasswords no|" /etc/ssh/sshd_config
+sed -i "s|#X11Forwarding yes|X11Forwarding yes|" /etc/ssh/sshd_config
+sed -i "s|PrintMotd no|PrintMotd yes|" /etc/ssh/sshd_config
+sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
+sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
 
 echo ''
@@ -189,7 +287,9 @@ fi
 
 systemctl enable media-pi.mount
 
+if [ ! -d /home/pi/scripts ]; then
 mkdir -p /home/pi/scripts
+fi
 
 # Housekeeping: Prune images after being copied off the device to Dropbox:
 cat <<'EOF'> /home/pi/scripts/housekeeping.sh
@@ -205,70 +305,11 @@ EOF
 
 chmod 700 /home/pi/scripts/housekeeping.sh
 
-
 # Create crontab entry in user "pi" crontab to schedule deleting local files:
 cat <<'EOF'> /var/spool/cron/crontabs/pi
 */59 * * * * /home/pi/scripts/housekeeping.sh
 
 EOF
-
-
-echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
-echo ''
-echo '### Delete files which this script created or edited from a previous installs to restore the Pi to predictable known state:'
-echo ''
-
-
-if [ -f /home/pi/.vimrc ]; then
-	rm /home/pi/.vimrc
-fi
-
-
-if [ -f /etc/msmtprc ]; then
-	rm /etc/msmtprc
-fi
-
-
-if [ -f /home/pi/.muttrc  ]; then
-	rm /home/pi/.muttrc 
-fi
-
-
-if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
-	rm /etc/modules-load.d/bcm2835-v4l2.conf
-fi
-
-
-if [ -f /home/pi/scripts/housekeeping.sh ]; then
-	rm /home/pi/scripts/housekeeping.sh
-fi
-
-# This is NOT part of the Dropbox-uploader script- it just uses it:
-if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
-	rm -r /home/pi/scripts/Dropbox-Uploader
-fi
-
-
-if [ -f /var/spool/cron/crontabs/pi ]; then
-	sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
-	sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
-fi
-
-# Messages are appended to MOTD by this script:truncate the file to wipe existing messages to stop being repeatedly appended
-truncate -s 0 /etc/motd
-
-
-# Delete "motion and any related config files for using "apt-get purge" :
-if [[ ! $(dpkg -l | grep motion) = '' ]]; then
-	apt-get purge -q -y motion&
-	wait $!
-fi
-
-# apt-get purge does not delete log which will contain errors from previous builds: We truncate it to show only new stuff related to most recent build:
-if [ -f /var/log/motion/motion.log ]; then
-	truncate -s 0 /var/log/motion/motion.log
-fi
-
 
 
 ###### BEGIN INSTALLATION ######
