@@ -23,6 +23,8 @@ OURHOSTNAME='raspberrypi3-3'
 PASSWDPI='Tbh11b2pc'
 PASSWDROOT='Tbh11b2pc'
 
+MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
+
 ### Variables: Motion
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
 IPV6ENABLED='on'
@@ -83,7 +85,8 @@ DROPBOXACCESSTOKEN='ABCD1234'
 #                                                           #
 #############################################################
 
-
+echo ''
+echo ''
 echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
 echo ''
 echo '### Restore Pi to a predictable known configuration state by deleting debris from prior installs:'
@@ -94,6 +97,9 @@ if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	apt-get purge -q -y motion&
 	wait $!
 fi
+
+# Delete the pub key or every time we run the key it will just continue to append a new copy of the key:
+sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
 
 if [ -f /etc/systemd/system/media-pi.automount ]; then
 	rm /etc/systemd/system/media-pi.automount
@@ -148,12 +154,15 @@ echo '###### Configure A Minimum Security baseline:  ######'
 echo ''
 
 # By default no passwords set for users 'pi' and 'root'
-echo " *** Set passwd for user 'pi' ***"
+echo "*** Set passwd for user 'pi' ***"
 echo "pi:$PASSWDPI"|chpasswd
 
-echo "*** Set passwd for user 'pi' ***"
+echo "*** Set passwd for user 'root' ***"
 echo "root:$PASSWDROOT"|chpasswd
 
+echo ''
+echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
+echo "Added Your Public Key to 'authorized_keys' file"
 echo ''
 
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
@@ -162,7 +171,7 @@ if [ ! -d /home/pi/.ssh ]; then
 	touch /home/pi/.ssh/authorized_keys
 
 	# https://www.ssh.com/ssh/keygen/
-	sudo -u pi -i ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -N ""&
+	sudo -u pi -i ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -N "''"&
 	wait $!
 
 	chmod 700 /home/pi/.ssh
@@ -623,16 +632,18 @@ echo '' >> /etc/motd
 echo 'To manually change *VIDEO* resolution using Video4Linux driver tailor below example to your use case:' >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
 echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
+echo '' >> /etc/motd
 echo 'To obtain resolution and other data from an image file:' >> /etc/motd
 echo 'exiv2 /media/pi/imageName.jpg' >> /etc/motd
 echo '' >> /etc/motd
 echo 'To see metadata for an image or video:' >> /etc/motd
-echo 'exiftool /media/pi/01-20180524224313.mp4' >> /etc/motd
+echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Instructions for Configuring Dropbox-Uploader:' >> /etc/motd
 echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md' >> /etc/motd
 echo '' >> /etc/motd
 echo 'To edit or delete these login messages goto: /etc/motd' >> /etc/motd
+echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 
 echo ''
@@ -644,7 +655,8 @@ echo ''
 echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not your camera will be down:'
 lsmod |grep v4l2
 echo''
-echo "Device 'video0' should be shown below. If not your camera will be down"
+echo "Device 'video0' should be shown below. If not your camera will be down:"
+echo '------------------------------------------------------------------------'
 ls -al /dev | grep video0
 echo''
 echo "Check Host Timekeeping both correct and automated:"
