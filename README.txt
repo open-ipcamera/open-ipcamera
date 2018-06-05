@@ -44,6 +44,8 @@
 # - Changes default editor FROM evil nano TO lovely VIM !
 # - Sets hostname
 # - Sets passwords for users 'pi' and 'root' with variables
+# - Configures an ECDSA 521 bit SSH Keypair
+# - Configures /etc/ssh/sshd_config for public key access
 # - Disables Autologin
 # - Disables boot Splash Screen so errors can be observed as host rises-up
 
