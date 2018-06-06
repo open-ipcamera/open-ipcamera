@@ -170,7 +170,9 @@ echo "root:$PASSWDROOT"|chpasswd
 if [ ! -d /home/pi/.ssh ]; then
 	mkdir /home/pi/.ssh
 	chmod 700 /home/pi/.ssh
+	chown pi:pi /home/pi/.ssh
 	touch /home/pi/.ssh/authorized_keys
+	chown pi:pi /home/pi/.ssh/authorized_keys
 
 	# https://www.ssh.com/ssh/keygen/
 	sudo -u pi ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -q -P ''&
@@ -178,7 +180,7 @@ if [ ! -d /home/pi/.ssh ]; then
 
 	chmod 600 /home/pi/.ssh/id_ecdsa
 	chmod 644 /home/pi/.ssh/id_ecdsa.pub
-	chown -R /home/pi/
+	chown -R pi:pi /home/pi/
 
 	echo "ECDSA 521 bit keypair created for user pi"
 fi
