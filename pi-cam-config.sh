@@ -33,14 +33,14 @@ PASSWD='xF9e4Ld'
 
 # Max VIDEO Resolution PiCam v2: 1080p30, 720p60, 640x480p90
 # Max IMAGE Resolution PiCam v2: 3280 x 2464
-WIDTH='3280'
-HEIGHT='2464'
-FRAMERATE='4'
+WIDTH='1640'
+HEIGHT='1232'
+FRAMERATE='1'
 # Autobrightness can cause wild fluctuations causing it PiCam to register each change as a motion detection creating a gazillion images. Suggested value= "off"
 AUTOBRIGHTNESS='off'
-QUALITY='70'
+QUALITY='65'
 FFMPEGOUTPUTMOVIES='on'
-MAXMOVIETIME='120'
+MAXMOVIETIME='60'
 FFMPEGVIDEOCODEC='mp4'
 ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp terrence.houlahan.devices@gmail.com'
 THRESHOLD='1500'
@@ -60,7 +60,7 @@ WEBCONTROLPORT='8080'
 # SELF-HOSTED SMTP Relay Mail Server:
 SMTPRELAYPORT='25'
 SASLUSER='terrence'
-SASLPASSWD='vTn&G5dqYk9Lj%4R3V8z&2HapP@7Ewf6!b3Mi?47>'
+SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
 SMTPRELAYFQDN='mail.linuxengineer.co.uk'
 SMTPRELAYFROM='terrence@houlahan.co.uk'
 
@@ -171,7 +171,7 @@ if [ ! -d /home/pi/.ssh ]; then
 	touch /home/pi/.ssh/authorized_keys
 
 	# https://www.ssh.com/ssh/keygen/
-	sudo -u pi -i ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -N "''"&
+	sudo -u pi ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -q -P ''&
 	wait $!
 
 	chmod 700 /home/pi/.ssh
