@@ -306,7 +306,7 @@ cat <<'EOF'> /home/pi/scripts/housekeeping.sh
 
 # Test for valid Internet connection before deleting local images older than 8 minutes ensuring they were shifted to cloud before deletion:
 ping -c 1 8.8.8.8
-if [  $? -eq 0 ]; then
+if [ $? -eq 0 ]; then
 rm $(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +8 2>/dev/null)
 fi
 
@@ -316,7 +316,7 @@ chmod 700 /home/pi/scripts/housekeeping.sh
 
 # Create crontab entry in user "pi" crontab to schedule deleting local files:
 cat <<'EOF'> /var/spool/cron/crontabs/pi
-*/59 * * * * /home/pi/scripts/housekeeping.sh
+*/8 * * * * /home/pi/scripts/housekeeping.sh
 
 EOF
 
