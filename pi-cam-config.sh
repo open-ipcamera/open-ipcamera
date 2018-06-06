@@ -169,13 +169,13 @@ echo "root:$PASSWDROOT"|chpasswd
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
 if [ ! -d /home/pi/.ssh ]; then
 	mkdir /home/pi/.ssh
+	chmod 700 /home/pi/.ssh
 	touch /home/pi/.ssh/authorized_keys
 
 	# https://www.ssh.com/ssh/keygen/
 	sudo -u pi ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -q -P ''&
 	wait $!
 
-	chmod 700 /home/pi/.ssh
 	chmod 600 /home/pi/.ssh/id_ecdsa
 	chmod 644 /home/pi/.ssh/id_ecdsa.pub
 	chown -R /home/pi/
