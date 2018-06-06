@@ -98,6 +98,10 @@ if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	wait $!
 fi
 
+if [ -d /home/pi/.ssh ]; then
+	rm -R /home/pi/.ssh
+fi
+
 # Delete the pub key or every time we run the key it will just continue to append a new copy of the key:
 if [ -f /home/pi/.ssh/authorized_keys ]; then
 sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
@@ -172,8 +176,8 @@ if [ ! -d /home/pi/.ssh ]; then
 	wait $!
 
 	chmod 700 /home/pi/.ssh
-	chmod 600 /home/pi/.ssh/id_rsa
-	chmod 644 /home/pi/.ssh/id_rsa.pub
+	chmod 600 /home/pi/.ssh/id_ecdsa
+	chmod 644 /home/pi/.ssh/id_ecdsa.pub
 	chown -R /home/pi/
 
 	echo "ECDSA 521 bit keypair created for user pi"
