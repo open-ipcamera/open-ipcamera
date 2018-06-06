@@ -99,7 +99,9 @@ if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 fi
 
 # Delete the pub key or every time we run the key it will just continue to append a new copy of the key:
+if [ -f /home/pi/.ssh/authorized_keys ]; then
 sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
+fi
 
 if [ -f /etc/systemd/system/media-pi.automount ]; then
 	rm /etc/systemd/system/media-pi.automount
@@ -160,11 +162,6 @@ echo "pi:$PASSWDPI"|chpasswd
 echo "*** Set passwd for user 'root' ***"
 echo "root:$PASSWDROOT"|chpasswd
 
-echo ''
-echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
-echo "Added Your Public Key to 'authorized_keys' file"
-echo ''
-
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
 if [ ! -d /home/pi/.ssh ]; then
 	mkdir /home/pi/.ssh
@@ -181,6 +178,11 @@ if [ ! -d /home/pi/.ssh ]; then
 
 	echo "ECDSA 521 bit keypair created for user pi"
 fi
+
+echo ''
+echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
+echo "Added Your Public Key to 'authorized_keys' file"
+echo ''
 
 # There are more options that could be tweaked or course in /etc/ssh/sshd_config
 sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
@@ -650,9 +652,11 @@ echo ''
 echo "###### Post Config Diagnostics: ######"
 echo ''
 echo "Output of command 'vcgencmd get_camera' below should report: supported=1 detected=1"
+echo '------------------------------------------------------------------------'
 vcgencmd get_camera
 echo ''
 echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not your camera will be down:'
+echo '------------------------------------------------------------------------'
 lsmod |grep v4l2
 echo''
 echo "Device 'video0' should be shown below. If not your camera will be down:"
@@ -660,6 +664,7 @@ echo '------------------------------------------------------------------------'
 ls -al /dev | grep video0
 echo''
 echo "Check Host Timekeeping both correct and automated:"
+echo '------------------------------------------------------------------------'
 systemctl status systemd-timesyncd.service&
 wait $!
 echo ''
