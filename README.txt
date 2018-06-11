@@ -30,34 +30,34 @@
 #	Dropbox isn't required, but without it if your Pi is stolen, the video of the theft of it goes with the thief ;->
 
 # 4. SCRIPT FEATURES:
-# This script does a very comprehensive configuration but you need to tailor it to your specific use-case.
+# Note: This script performs a comprehensive configuration but requires some small degree of local tailoring to your use-case
 # - Enables camera in Raspbian
-# - Disables Camera's red LED light
-# - Sets Kernel driver for camera to automatically load on every boot
+# - Disables Camera red LED light
+# - Sets Kernel driver for camera to automatically load on boot
 # - Installs & configures "Motion" Video Camera Software
 # - Installs & configures "MSMTP" for email alerts
-# - Downloads "Dropbox_Uploader" to enable you to shift video/pics to the cloud (Note: you must configure this manually)
-# - Abstracts data from being written to the SD card containing the OS to a USB flash drive formatted for EXFAT automagically
-# - Configures a cron to upload images on the removable USB storage to your DropBox Account.
-# - Configures a 2nd cron to delete media from *LOCAL* USB storage older than 1 hour to stop Motion from filling up storage to 100%
-# - Sends Motion Detection Alerts with Pi's hostname sending the alert in the email's Subject Line
+# - Downloads "Dropbox_Uploader" to enable you to copy video/pics to the cloud (Note: requires manual configuration )
+# - Abstracts data from local SD card storage to a USB exfat formatted flash drive to separate data from OS
+# - Configures a cron to upload images on USB flash drive to a DropBox Account.
+# - Configures 2nd cron to delete media from *LOCAL* USB flash storage older than 8 minutes to stop Motion from filling up storage to 100%
+# - Sends Motion Detection Alerts with the hostname of Pi sending alert in email Subject Line
 # - Changes default editor FROM evil nano TO lovely VIM !
 # - Sets hostname
-# - Sets passwords for users 'pi' and 'root' with variables
+# - Sets passwords for users 'pi' and 'root'
 # - Configures an ECDSA 521 bit SSH Keypair
-# - Adds your Public key to ~/.ssh/authorrized_keys
+# - Add your Public key to ~/.ssh/authorized_keys
 # - Configures /etc/ssh/sshd_config for public key access
 # - Disables Autologin
 # - Disables boot Splash Screen so errors can be observed as host rises-up
 
-# Please note "security" isn't a feature in list! No firewall config is done to protect the Pi camera from remote snoopers!
-# It's the *USER'S* responsibility to tailor their security to their local network environment.
+# Please note "security" is NOT a feature in list. No firewall config is done to protect the Pi camera from remote snoopers!
+# It is *USER* responsibility to tailor their security to their local network environment.
 
 
 # 5. INSTALLATION INSTRUCTIONS:
 #	1. Login to Raspberry Pi to be configured as a web security camera
 #	2. Insert a USB thumb drive into any of the Pi's USB ports.
-	NOTE: If installing to a Pi Zero you'll need to keep that micro USB port free for the USB storage if you have anything in it!
+	NOTE: If installing to a Pi Zero W you will need to keep that micro USB port free for the USB storage if you have anything in it!
 
 As user "pi" execute following commands:
 
