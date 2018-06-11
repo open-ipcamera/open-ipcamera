@@ -1,15 +1,25 @@
 #!/bin/bash
 
-# "pi-cam-config.sh": Installs & configs Raspberry Pi camera application, drivers and Kernel module
-# Compatibility:      Tested and known to work with Raspian "Stretch" running on a Pi3+ as of 20180514
-
 # Author:  Terrence Houlahan, LPIC2 Certified Linux Engineer
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20180514
+# Date:    20180611
  
-# Beerware License: If I saved you a few hours of your life fiddling with this crap buy me a beer
+# License: Beerware. If I saved you a few hours of your life fiddling with this crap buy me a beer
 #	paypal.me/TerrenceHoulahan
+
+# "pi-cam-config.sh": Installs and configs Raspberry Pi camera application and related drivers and Kernel module
+# Known Compatibility: (as of 20180611)
+#   Hardware:   Raspberry Pi 2/3 *AND* Pi Zero W
+#   OS:         Raspbian "Stretch"
+
+# Install Instructions:
+# README.txt file distributed with this this script
+# VIDEO:  www.YouTube.com/user/LinuxEngineer
+
+# Useful Links:
+# "Motion" Config Options:         https://motion-project.github.io/motion_config.html
+# Standard PiCam vs Pi NOIR PiCam: https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
 
 
 ######  Variables: ######
@@ -23,6 +33,7 @@ OURHOSTNAME='raspberrypi3-3'
 PASSWDPI='Tbh11b2pc'
 PASSWDROOT='Tbh11b2pc'
 
+# **REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN**. If your Pi is behind a NAT I still cannot reach it but notwithstanding dont allow my key.
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 
 ### Variables: Motion
@@ -33,6 +44,7 @@ PASSWD='xF9e4Ld'
 
 # Max VIDEO Resolution PiCam v2: 1080p30, 720p60, 640x480p90
 # Max IMAGE Resolution PiCam v2: 3280 x 2464
+# NOTE: Many PiCams puking high-res images can cause bandwidth issues when copying them to Dropbox
 WIDTH='1640'
 HEIGHT='1232'
 FRAMERATE='1'
@@ -42,11 +54,12 @@ QUALITY='65'
 FFMPEGOUTPUTMOVIES='on'
 MAXMOVIETIME='60'
 FFMPEGVIDEOCODEC='mp4'
+# Change *ONLY* the email address in variable 'ONEVENTSTART' taking care not to delete the final encasing single quote mark
 ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp terrence.houlahan.devices@gmail.com'
 THRESHOLD='1500'
 LOCATEMOTIONMODE='preview'
 LOCATEMOTIONSTYLE='redbox'
-OUTPUTPICTURES='center'
+OUTPUTPICTURES='best'
 STREAMPORT='8081'
 STREAMQUALITY='50'
 STREAMMOTION='1'
@@ -74,10 +87,6 @@ GMAILPASSWD='ABCD1234'
 # Click "Generate" button under the heading "Generated access token" in the "Developer section of your Dropbox account
 DROPBOXACCESSTOKEN='ABCD1234'
 
-
-# USEFUL RESOURCES:
-# https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
-# https://projects.raspberrypi.org/en/projects/getting-started-with-picamera/5
 
 #############################################################
 #                                                           #
@@ -618,7 +627,7 @@ echo ''
 echo '###### Config /etc/motd Messages: ######'
 echo ''
 
-
+echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 echo '##  pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it! ##' >> /etc/motd
 echo '##                      paypal.me/TerrenceHoulahan                      ## ' >> /etc/motd
@@ -655,31 +664,37 @@ echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 
 echo ''
-echo "###### Post Config Diagnostics: ######"
+echo '###### Post Config Diagnostics: ######'
 echo ''
-echo "Output of command 'vcgencmd get_camera' below should report: supported=1 detected=1"
+echo 'Pi Temperature reported by "vcgencmd measure_temp" below should be between 40-60 degrees Celcius:'
 echo '------------------------------------------------------------------------'
-vcgencmd get_camera
+/opt/vc/bin/vcgencmd measure_temp&
+wait $!
 echo ''
-echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not your camera will be down:'
+echo 'Output of command "vcgencmd get_camera" below should report: supported=1 detected=1'
+echo '------------------------------------------------------------------------'
+vcgencmd get_camera&
+wait $!
+echo ''
+echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not camera will be down:'
 echo '------------------------------------------------------------------------'
 lsmod |grep v4l2
 echo''
-echo "Device 'video0' should be shown below. If not your camera will be down:"
+echo 'Device "video0" should be shown below. If not your camera will be down:'
 echo '------------------------------------------------------------------------'
 ls -al /dev | grep video0
 echo''
-echo "Check Host Timekeeping both correct and automated:"
+echo 'Check Host Timekeeping both correct and automated:'
 echo '------------------------------------------------------------------------'
 systemctl status systemd-timesyncd.service&
 wait $!
 echo ''
-echo "Open UDP/123 in Router FW if error 'Timed out waiting for reply' is reported"
+echo 'Open UDP/123 in Router FW if error "Timed out waiting for reply" is reported'
 echo ''
 echo ''
-echo "*** Dont forget to configure Dropbox-Uploader.sh ***"
+echo '*** Dont forget to configure Dropbox-Uploader.sh ***'
 echo ''
-echo 'Dont forget to delete this script after done iterating through different installs: it contains passwords so wipe it after you are done!'
+echo 'Dont forget to delete this script after done iterating through different install configs: it contains passwords so wipe it after you are done!'
 echo ''
 
 
