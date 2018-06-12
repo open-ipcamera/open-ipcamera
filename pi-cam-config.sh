@@ -20,6 +20,15 @@
 # Useful Links:
 # "Motion" Config Options:         https://motion-project.github.io/motion_config.html
 # Standard PiCam vs Pi NOIR PiCam: https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
+# Pi NoIR: https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/
+# Pi NoIR: Infrared light modules
+# Pi NoIR: Powering infrared lights via GPIO pins:
+#     https://www.sparkfun.com/news/1396
+#     https://learn.adafruit.com/cloud-cam-connected-raspberry-pi-security-camera/enclosure
+#     https://www.raspberrypi.org/forums/viewtopic.php?t=93350
+#     https://projects.raspberrypi.org/en/projects/infrared-bird-box/6
+#     https://www.makerspace.marlborougharea.org/Public%2Bprojects%2B-%2BBird%2Bbox%2Bweb%2Bcam%2Bproject
+#     http://www.haydnallbutt.com.au/2009/02/18/how-to-assemble-your-own-140-led-infrared-light-source-part-2/
 
 
 ######  Variables: ######
