@@ -542,6 +542,8 @@ Description=Upload images to cloud
 Before=housekeeping.service
 
 [Service]
+User=pi
+Group=pi
 Type=simple
 ExecStart=/home/pi/scripts/Dropbox-Uploader.sh
 
