@@ -93,7 +93,7 @@ GMAILPASSWD='ABCD1234'
 #### Dropbox-Uploader Variables:
 
 # Dropbox can be used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
-# Click "Generate" button under the heading "Generated access token" in the "Developer section of your Dropbox account
+# In "Developers" section of DropBox account go to "OAuth 2" > "Generated access token" > "Generate" to create an access token and replace "'ABCD11234' with it
 DROPBOXACCESSTOKEN='ABCD1234'
 
 
