@@ -5,7 +5,7 @@
 # Contact: houlahan@F1Linux.com
 # Date:    20180611
  
-# License: Beerware. If I saved you a few hours of your life fiddling with this crap buy me a beer
+# License: Beerware. If I saved you a few hours of manually configuring one or more pi-cams I wouldn't say "no" to a beer ;-)
 #	paypal.me/TerrenceHoulahan
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application and related drivers and Kernel module
@@ -112,8 +112,7 @@ echo ''
 
 # Delete "motion and any related config files for using "apt-get purge" :
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
-	apt-get purge -q -y motion&
-	wait $!
+	apt-get purge -q -y motion
 fi
 
 if [ -d /home/pi/.ssh ]; then
@@ -225,55 +224,37 @@ sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
 sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
 
+
 echo ''
-echo '###### Configure LOCAL Storage ######'
+echo '###### Configure *LOCAL* Storage ######'
 echo ''
 
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
 
-apt-get update&
-wait $!
+apt-get update
 
 
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-apt-get purge -q -y usbmount&
-wait $!
+	apt-get purge -q -y usbmount
 fi
 
 
-# We want EXFAT because it supports large file sizes and can read be read on Macs and Windows machines:
+# We want EXFAT because it supports large file sizes and can be read on Mac and Windows:
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-apt-get install -q -y exfat-fuse&
-wait $!
+	apt-get install -q -y exfat-fuse
 fi
 
-# Disable automounting by the default Filemanager "pcmanfm": it steps on the systemd automount which gives us the flexibility to change mount options:
+# Disable automounting by the default Filemanager "pcmanfm": it steps on the SystemD automount which gives us flexibility to change mount options:
 if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
 	sed -i 's/mount_removable=1/mount_removable=0/' /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
 fi
 
 
-# The filename should match mount point path in "Where":
-cat <<EOF> /etc/systemd/system/media-pi.automount
-[Unit]
-Description=Automount USBstorage
-
-[Automount]
-Where=/media/pi
-DirectoryMode=0755
-TimeoutIdleSec=15
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-# Filename below should match mount point path in "Where":
+# SystemD mount file created below should be named same as its mountpoint as specified in "Where" directive below:
 cat <<EOF> /etc/systemd/system/media-pi.mount
 [Unit]
-Description=Automount USBstorage
+Description=Create mount for USB storage
 #Before=
 
 [Mount]
@@ -288,16 +269,30 @@ WantedBy=multi-user.target
 EOF
 
 
-systemctl daemon-reload&
-wait $!
-systemctl start media-pi.mount&
-wait $!
+# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in "Where" directive below:
+cat <<EOF> /etc/systemd/system/media-pi.automount
+[Unit]
+Description=Automount the USB storage mount
+
+[Automount]
+Where=/media/pi
+DirectoryMode=0755
+TimeoutIdleSec=15
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+systemctl daemon-reload
+systemctl start media-pi.mount
 
 
 # Exit script if NO USB storage attached:
 if [[ $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) = '' ]]; then
 	echo ''
-	echo 'ERROR: Attach an EXFAT formatted USB thumb drive to be a target for video to be written'
+	echo 'ERROR: Attach an EXFAT formatted USB flash drive to be a target for video to be written'
 	echo 'Re-run script after minimum storage requirements met. Exiting'
 	echo ''
 	exit
@@ -309,7 +304,7 @@ fi
 # Exit script USB storage attached but not formatted for EXFAT filesystem:
 if [[ $(lsblk -f|grep sda1|awk '{print $2}') = '' ]]; then
 	echo ''
-	echo 'ERROR: USB thumb drive NOT formatted for * EXFAT * filesystem'
+	echo 'ERROR: USB flash drive NOT formatted for * EXFAT * filesystem'
 	echo 'Re-run script after minimum storage requirements met. Exiting'
 	echo ''
 	exit
@@ -326,11 +321,19 @@ if [ ! -d /home/pi/scripts ]; then
 mkdir -p /home/pi/scripts
 fi
 
-# Housekeeping: Prune images after being copied off the device to Dropbox:
+
+
+echo ''
+echo '###### Configure Housekeeping on *LOCAL* Storage ######'
+echo ''
+
+
+
+# Housekeeping: Prune images after being copied from local USB storage to Dropbox:
 cat <<'EOF'> /home/pi/scripts/housekeeping.sh
 #!/bin/bash
 
-# Test for valid Internet connection before deleting local images older than 8 minutes ensuring they were shifted to cloud before deletion:
+# Test for correct Internet connection before deleting local images older than 8 minutes ensuring they were shifted to cloud before deletion:
 ping -c 1 8.8.8.8
 if [ $? -eq 0 ]; then
 rm $(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +8 2>/dev/null)
@@ -340,11 +343,55 @@ EOF
 
 chmod 700 /home/pi/scripts/housekeeping.sh
 
-# Create crontab entry in user "pi" crontab to schedule deleting local files:
-cat <<'EOF'> /var/spool/cron/crontabs/pi
-*/8 * * * * /home/pi/scripts/housekeeping.sh
+
+
+# "simple" used below in lieu of "oneshot" in "Type" directive to avoid blocking behaviour
+# Ref: https://stackoverflow.com/questions/39032100/what-is-the-difference-between-systemd-service-type-oneshot-and-simple
+
+# NOTE: We use the "After" directive below to ensure image pruning does not happen before being copied to cloud by Dropbox-Uploader.service (created further down this script)
+
+cat <<EOF> /etc/systemd/system/housekeeping.service
+[Unit]
+Description=Prune images from local storage after being uploaded to cloud
+After=Dropbox-Uploader.service
+
+[Service]
+Type=simple
+ExecStart=/home/pi/scripts/housekeeping.sh
+
+[Install]
+WantedBy=multi-user.target
 
 EOF
+
+
+
+# Useful SystemD Timer References to help you Transition from using Cron: 
+#	https://wiki.archlinux.org/index.php/Systemd/Timers
+#	https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
+#	https://www.freedesktop.org/software/systemd/man/systemd.time.html
+#	https://unix.stackexchange.com/questions/427346/im-writing-a-systemd-timer-what-value-should-i-use-for-wantedby
+
+cat <<EOF> /etc/systemd/system/housekeeping.timer
+[Unit]
+Description=Execute housekeeping script every 8 min to stop local storage from filling to 100 percent
+
+[Timer]
+OnCalendar=*:0/8
+Unit=housekeeping.service
+
+[Install]
+WantedBy=timers.target
+
+EOF
+
+
+systemctl daemon-reload
+systemctl enable housekeeping.service
+systemctl enable housekeeping.timer
+systemctl list-timers --all
+
+
 
 
 ###### BEGIN INSTALLATION ######
@@ -356,8 +403,8 @@ echo ''
 # raspian-config: How to interface from the CLI:
 # https://raspberrypi.stackexchange.com/questions/28907/how-could-one-automate-the-raspbian-raspi-config-setup
 
-# We first clear any boot param added during a previous build and then we add each parameter back with the most current value set:
-# Enable the camera (there is no raspi-config option to do this):
+# We first clear any boot param added during a previous build and then add each back with most current value set:
+# Enable camera (there is no raspi-config option for this):
 sed -i '/start_x=1/d' /boot/config.txt
 echo 'start_x=1' >> /boot/config.txt
 
@@ -379,15 +426,16 @@ fi
 echo 'Camera enabled'
 echo 'Camera LED light disabled'
 
-# Disable the splash screen to stop it hiding errors as the Pi rises up on boot:
+# Disable splash screen to stop it hiding any errors as Pi rises up on boot:
 sed -i '/disable_splash=1/d' /boot/config.txt
 echo 'disable_splash=1' >> /boot/config.txt
 
 echo 'Disabled boot splash screen so we can see errors while host is rising up.'
 
-systemctl disable autologin@.service&
-wait $!
+systemctl disable autologin@.service
 echo 'Disabled autologin.'
+
+
 
 
 echo ''
@@ -398,8 +446,10 @@ hostnamectl set-hostname $OURHOSTNAME
 systemctl restart systemd-hostnamed&
 wait $!
 
-# hostnamectl does NOT update its own entry in /etc/hosts so have to do it separately:
+# hostnamectl does NOT update its own entry in /etc/hosts so must do separately:
 sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME/" /etc/hosts
+
+
 
 
 echo ''
@@ -408,73 +458,63 @@ echo ''
 
 
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-apt-get install -q -y motion&
-wait $!
+apt-get install -q -y motion
 fi
 
 
 # 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
 if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
-apt-get install -q -y libimage-exiftool-perl&
-wait $!
+apt-get install -q -y libimage-exiftool-perl
 fi
 
 
 # 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
-apt-get install -q -y exiv2&
-wait $!
+apt-get install -q -y exiv2
 fi
 
 
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-apt-get install -q -y msmtp&
-wait $!
+apt-get install -q -y msmtp
 fi
 
 if [[ $(dpkg -l | grep mutt) = '' ]]; then
-apt-get install -q -y mutt&
-wait $!
+apt-get install -q -y mutt
 fi
 
 # vim-tiny- which is crap like nano- will also match unless grep-ed with boundaries:
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
-apt-get install -q -y vim&
-wait $!
+apt-get install -q -y vim
 fi
 
 if [[ $(dpkg -l | grep git) = '' ]]; then
-apt-get install -q -y git&
-wait $!
+apt-get install -q -y git
 fi
 
 # NOTE: following are not required but just included because they are useful
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
-apt-get install -q -y mtr&
-wait $!
+apt-get install -q -y mtr
 fi
 
 if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
-apt-get install -q -y tcpdump&
-wait $!
+apt-get install -q -y tcpdump
 fi
 
 
 
 echo ''
-echo '###### Configure Cloud Storage ######'
+echo '###### Configure *CLOUD* Storage ######'
 echo ''
 echo "https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md"
 echo ''
 
-# "Dropbox-Uploader.sh" enables you to copy images to cloud- ensuring evidence not lost if PiCam destroyed or stolen
+# "Dropbox-Uploader.sh" enables copying images from local storage to cloud- ensuring evidence not lost if PiCam destroyed or stolen
 echo ''
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
-	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git&
-	wait $!
+	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git
 fi
 
 
@@ -494,12 +534,44 @@ chmod 700 /home/pi/scripts/Dropbox-Uploader.sh
 chown pi:pi /home/pi/scripts/Dropbox-Uploader.sh
 
 
-# Create crontab entry in user "pi" crontab to schedule uploading copies off local files up to cloud:
-echo '*/2 * * * * /home/pi/scripts/Dropbox-Uploader.sh'  >> /var/spool/cron/crontabs/pi
 
 
-chmod 600 /var/spool/cron/crontabs/pi
-chown pi:crontab /var/spool/cron/crontabs/pi
+cat <<EOF> /etc/systemd/system/Dropbox-Uploader.service
+[Unit]
+Description=Upload images to cloud
+Before=housekeeping.service
+
+[Service]
+Type=simple
+ExecStart=/home/pi/scripts/Dropbox-Uploader.sh
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+
+cat <<EOF> /etc/systemd/system/Dropbox-Uploader.timer
+[Unit]
+Description=Execute Dropbox-Uploader.sh script every 8 min to safeguard camera evidence
+
+[Timer]
+OnCalendar=*:0/8
+Unit=Dropbox-Uploader.service
+
+[Install]
+WantedBy=timers.target
+
+EOF
+
+
+systemctl daemon-reload
+systemctl enable Dropbox-Uploader.service
+systemctl enable Dropbox-Uploader.timer
+systemctl list-timers --all
+
+
 
 
 echo ''
@@ -677,13 +749,11 @@ echo '###### Post Config Diagnostics: ######'
 echo ''
 echo 'Pi Temperature reported by "vcgencmd measure_temp" below should be between 40-60 degrees Celcius:'
 echo '------------------------------------------------------------------------'
-/opt/vc/bin/vcgencmd measure_temp&
-wait $!
+/opt/vc/bin/vcgencmd measure_temp
 echo ''
 echo 'Output of command "vcgencmd get_camera" below should report: supported=1 detected=1'
 echo '------------------------------------------------------------------------'
-vcgencmd get_camera&
-wait $!
+vcgencmd get_camera
 echo ''
 echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not camera will be down:'
 echo '------------------------------------------------------------------------'
@@ -695,8 +765,7 @@ ls -al /dev | grep video0
 echo''
 echo 'Check Host Timekeeping both correct and automated:'
 echo '------------------------------------------------------------------------'
-systemctl status systemd-timesyncd.service&
-wait $!
+systemctl status systemd-timesyncd.service
 echo ''
 echo 'Open UDP/123 in Router FW if error "Timed out waiting for reply" is reported'
 echo ''
