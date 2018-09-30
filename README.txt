@@ -1,4 +1,4 @@
-# "pi-cam-config.sh": Installs & configs Raspberry Pi camera application, drivers and Kernel module
+# "pi-cam-config.sh": Installs & configs Raspberry Pi camera application drivers and Kernel module
 # Compatibility: Raspbian :     Tested and known to work with Raspian "Stretch" running on a Pi3+ as of 20180514
 # Compatibility: Cameras:		Picams 1.3 & 2.1 are know to work with this script and the driver is relies on.
  
@@ -16,57 +16,59 @@
 
 
 # 1. LICENSE:
-# Beer-ware License: If I saved you a few hours of your life fiddling with this crap buy me a beer ;-)
+# Beer-ware License: If I saved you a few hours of manually configuring one or more pi-cams I wouldn't say "no" to a beer ;-)
 #	paypal.me/TerrenceHoulahan
 
 # 2. SCRIPT PREREQUISITES:
-# - USB thumb drive formatted for the EXFAT filesystem (allows reading media on Windows & Mac machines)
-# - Raspberry Pi running Raspbian with a camera attached and Internet connection.
+# - USB thumb drive formatted for EXFAT filesystem (allows reading media on Windows & Mac machines)
+# - Raspberry Pi running Raspbian with a camera and Internet connection
 
 # 3. OPTIONAL: (BUT RECOMMENDED)
-# - An SMTP server to relay alerts Pi sends on motion detection events. Most SMTP servers wont talk to others tucked which are not at a min dont have public DNS records
+# - An SMTP server to relay alerts Pi sends on motion detection events. Most SMTP servers wont talk to a connecting host if:
+#		its MX record and PTR record to resolve to the same host
 # - Dropbox account configured to use their API to facilitate copying video/pics on Pi into the Cloud:
 #	https://www.raspberrypi.org/magpi/dropbox-raspberry-pi/
-#	Dropbox isn't required, but without it if your Pi is stolen, the video of the theft of it goes with the thief ;->
+#	Dropbox is not required but if pics of thief have not be copied off it into the cloud evidence will be stolen with pi
 
 # 4. SCRIPT FEATURES:
 # Note: This script performs a comprehensive configuration but requires some small degree of local tailoring to your use-case
 # - Enables camera in Raspbian
 # - Disables Camera red LED light
 # - Sets Kernel driver for camera to automatically load on boot
-# - Installs & configures "Motion" Video Camera Software
-# - Installs & configures "MSMTP" for email alerts
-# - Downloads "Dropbox_Uploader" to enable you to copy video/pics to the cloud (Note: requires manual configuration )
+# - Installs and configures "Motion" Video Camera package
+# - Installs and configures "MSMTP" package for email alerts
+# - Downloads "Dropbox_Uploader" to enable you to copy video/pics to cloud (Note: requires manual config )
 # - Abstracts data from local SD card storage to a USB exfat formatted flash drive to separate data from OS
-# - Configures a cron to upload images on USB flash drive to a DropBox Account.
+# - Configures a cron to upload images on USB flash drive to a DropBox account
 # - Configures 2nd cron to delete media from *LOCAL* USB flash storage older than 8 minutes to stop Motion from filling up storage to 100%
-# - Sends Motion Detection Alerts with the hostname of Pi sending alert in email Subject Line
-# - Changes default editor FROM evil nano TO lovely VIM !
+# - Sends motion detection alerts with hostname of Pi sending alert in email "Subject" line
+# - Changes default editor FROM evil nano TO lovely vim !
 # - Sets hostname
 # - Sets passwords for users 'pi' and 'root'
 # - Configures an ECDSA 521 bit SSH Keypair
-# - Add your Public key to ~/.ssh/authorized_keys
-# - Configures /etc/ssh/sshd_config for public key access
+# - Adds your Public key to "~/.ssh/authorized_keys"
+# - Configures "/etc/ssh/sshd_config" for public key access
 # - Disables Autologin
-# - Disables boot Splash Screen so errors can be observed as host rises-up
+# - Disables boot splash screen so errors can be observed as host rises-up
 
-# Please note "security" is NOT a feature in list. No firewall config is done to protect the Pi camera from remote snoopers!
-# It is *USER* responsibility to tailor their security to their local network environment.
+# Please note "security" is NOT a feature in list. No firewall config is done to protect the Pi camera from remote snoopers
+# It is *USER* responsibility to tailor security to their local network environment
 
 
 # 5. INSTALLATION INSTRUCTIONS:
 #	1. Login to Raspberry Pi to be configured as a web security camera
 #	2. Insert a USB thumb drive into any of the Pi's USB ports.
-	NOTE: If installing to a Pi Zero W you will need to keep that micro USB port free for the USB storage if you have anything in it!
+	NOTE: If installing to a Pi Zero W that a free micro USB port is required for the storage
 
 As user "pi" execute following commands:
 
 #	3. Download my lovely all-singing-and-dancing script:
 #		git clone git@bitbucket.org:f1linux/Pi-Cam-Config.git
 
-#	4. Edit the variables in "pi-cam-config.sh"
-#		vi /home/pi/pi-cam-config.sh
+#	4. Edit variables in "pi-cam-config.sh"
+#		vi /home/pi/Pi-Cam-Config/pi-cam-config.sh
 
-#	5. Execute the script:
+#	5. Execute script:
+		cd /home/pi/Pi-Cam-Config/
 #		sudo ./pi-cam-config.sh
 
