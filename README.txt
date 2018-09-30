@@ -66,8 +66,9 @@ As user "pi" execute following commands:
 #		git clone git@bitbucket.org:f1linux/Pi-Cam-Config.git
 
 #	4. Edit variables in "pi-cam-config.sh"
-#		vi /home/pi/pi-cam-config.sh
+#		vi /home/pi/Pi-Cam-Config/pi-cam-config.sh
 
 #	5. Execute script:
+		cd /home/pi/Pi-Cam-Config/
 #		sudo ./pi-cam-config.sh
 
