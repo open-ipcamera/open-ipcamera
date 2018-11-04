@@ -483,7 +483,7 @@ chown pi:pi /home/pi/scripts/Dropbox-Uploader.sh
 cat <<EOF> /etc/systemd/system/Dropbox-Uploader.service
 [Unit]
 Description=Upload images to cloud
-Before=housekeeping.service
+#Before=
 
 [Service]
 User=pi
