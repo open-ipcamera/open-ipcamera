@@ -119,32 +119,57 @@ if [ -d /home/pi/.ssh ]; then
 	rm -R /home/pi/.ssh
 fi
 
-# Delete the pub key or every time we run the key it will just continue to append a new copy of the key:
+# Delete our pub key or every time we run the key it will just continue to append a new copy of the key:
 if [ -f /home/pi/.ssh/authorized_keys ]; then
 sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
 fi
+
+
+### Uninstall any SystemD services and their related files previously created by this script to ensure they are cleanly recreated each time script is run:
+
+# Uninstall automount service for the USB storage:
+if [ -f /etc/systemd/system/media-pi.mount ]; then
+	systemctl stop media-pi.mount
+	systemctl disable media-pi.mount
+	systemctl daemon-reload
+	rm /etc/systemd/system/media-pi.mount
+fi
+
 
 if [ -f /etc/systemd/system/media-pi.automount ]; then
 	rm /etc/systemd/system/media-pi.automount
 fi
 
-if [ -f /etc/systemd/system/media-pi.mount ]; then
-	rm /etc/systemd/system/media-pi.mount
+# Uninstall housekeeping service:
+if [ -f /etc/systemd/system/housekeeping.service ]; then
+	systemctl disable housekeeping.service
+	systemctl disable housekeeping.timer
+	systemctl daemon-reload
+	rm /etc/systemd/system/housekeeping.timer
+	rm /etc/systemd/system/housekeeping.service
 fi
 
 if [ -f /home/pi/scripts/housekeeping.sh ]; then
 	rm /home/pi/scripts/housekeeping.sh
 fi
 
+
+# Uninstall dropbox photo uploader service:
+if [-f /etc/systemd/system/Dropbox-Uploader.service ]
+	systemctl disable Dropbox-Uploader.service
+	systemctl disable Dropbox-Uploader.timer
+	systemctl daemon-reload
+	rm /etc/systemd/system/Dropbox-Uploader.service
+	rm /etc/systemd/system/Dropbox-Uploader.timer
+fi
+
+
 # This is NOT part of the Dropbox-uploader script- it just uses it:
 if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
 	rm -r /home/pi/scripts/Dropbox-Uploader
 fi
 
-if [ -f /var/spool/cron/crontabs/pi ]; then
-	sed -i '/.*Dropbox-Uploader.sh/d' /var/spool/cron/crontabs/pi
-	sed -i '/.*housekeeping.sh/d' /var/spool/cron/crontabs/pi
-fi
+
 
 if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
 	rm /etc/modules-load.d/bcm2835-v4l2.conf
@@ -345,7 +370,7 @@ chmod 700 /home/pi/scripts/housekeeping.sh
 
 
 
-# "simple" used below in lieu of "oneshot" in "Type" directive to avoid blocking behaviour
+# "simple" used below in lieu of "oneshot" in "Type" SystemD directive to avoid blocking behaviour
 # Ref: https://stackoverflow.com/questions/39032100/what-is-the-difference-between-systemd-service-type-oneshot-and-simple
 
 # NOTE: We use the "After" directive below to ensure image pruning does not happen before being copied to cloud by Dropbox-Uploader.service (created further down this script)
@@ -518,21 +543,24 @@ if [ ! -d /home/pi/Dropbox-Uploader ]; then
 fi
 
 
+
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
 
-cd /home/pi/Dropbox-Uploader
-./dropbox_uploader.sh upload $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )/*.jpg .&
-wait \$!
+# This script searches /media/pi for jpg and mp4 files and pipes those it finds to xargs which
+# first uploads them to dropbox and then deletes them ensuring storage does not fill to 100 percent
 
-./dropbox_uploader.sh upload $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )/*.$FFMPEGVIDEOCODEC .&
-wait \$!
+while [-z "$(ls -A /media/pi)"]
+do
+	find /media/pi -name '*.jpg' -print0 -o -name '*.mp4' -print0 | xargs -d '/' -0 -I % sh -c '/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload % . && rm %'
+done
 
 EOF
 
+
+
 chmod 700 /home/pi/scripts/Dropbox-Uploader.sh
 chown pi:pi /home/pi/scripts/Dropbox-Uploader.sh
-
 
 
 
@@ -556,10 +584,10 @@ EOF
 
 cat <<EOF> /etc/systemd/system/Dropbox-Uploader.timer
 [Unit]
-Description=Execute Dropbox-Uploader.sh script every 8 min to safeguard camera evidence
+Description=Execute Dropbox-Uploader.sh script every 5 min to safeguard camera evidence
 
 [Timer]
-OnCalendar=*:0/8
+OnCalendar=*:0/5
 Unit=Dropbox-Uploader.service
 
 [Install]
