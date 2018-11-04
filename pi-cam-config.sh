@@ -140,21 +140,9 @@ if [ -f /etc/systemd/system/media-pi.automount ]; then
 	rm /etc/systemd/system/media-pi.automount
 fi
 
-# Uninstall housekeeping service:
-if [ -f /etc/systemd/system/housekeeping.service ]; then
-	systemctl disable housekeeping.service
-	systemctl disable housekeeping.timer
-	systemctl daemon-reload
-	rm /etc/systemd/system/housekeeping.timer
-	rm /etc/systemd/system/housekeeping.service
-fi
-
-if [ -f /home/pi/scripts/housekeeping.sh ]; then
-	rm /home/pi/scripts/housekeeping.sh
-fi
-
 
 # Uninstall dropbox photo uploader service:
+# NOTE: This is NOT part of the Dropbox-uploader script- it just uses it
 if [-f /etc/systemd/system/Dropbox-Uploader.service ]
 	systemctl disable Dropbox-Uploader.service
 	systemctl disable Dropbox-Uploader.timer
@@ -164,7 +152,6 @@ if [-f /etc/systemd/system/Dropbox-Uploader.service ]
 fi
 
 
-# This is NOT part of the Dropbox-uploader script- it just uses it:
 if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
 	rm -r /home/pi/scripts/Dropbox-Uploader
 fi
@@ -348,77 +335,6 @@ fi
 
 
 
-echo ''
-echo '###### Configure Housekeeping on *LOCAL* Storage ######'
-echo ''
-
-
-
-# Housekeeping: Prune images after being copied from local USB storage to Dropbox:
-cat <<'EOF'> /home/pi/scripts/housekeeping.sh
-#!/bin/bash
-
-# Test for correct Internet connection before deleting local images older than 8 minutes ensuring they were shifted to cloud before deletion:
-ping -c 1 8.8.8.8
-if [ $? -eq 0 ]; then
-rm $(find $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) -type f -mmin +8 2>/dev/null)
-fi
-
-EOF
-
-chmod 700 /home/pi/scripts/housekeeping.sh
-
-
-
-# "simple" used below in lieu of "oneshot" in "Type" SystemD directive to avoid blocking behaviour
-# Ref: https://stackoverflow.com/questions/39032100/what-is-the-difference-between-systemd-service-type-oneshot-and-simple
-
-# NOTE: We use the "After" directive below to ensure image pruning does not happen before being copied to cloud by Dropbox-Uploader.service (created further down this script)
-
-cat <<EOF> /etc/systemd/system/housekeeping.service
-[Unit]
-Description=Prune images from local storage after being uploaded to cloud
-After=Dropbox-Uploader.service
-
-[Service]
-Type=simple
-ExecStart=/home/pi/scripts/housekeeping.sh
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-
-# Useful SystemD Timer References to help you Transition from using Cron: 
-#	https://wiki.archlinux.org/index.php/Systemd/Timers
-#	https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
-#	https://www.freedesktop.org/software/systemd/man/systemd.time.html
-#	https://unix.stackexchange.com/questions/427346/im-writing-a-systemd-timer-what-value-should-i-use-for-wantedby
-
-cat <<EOF> /etc/systemd/system/housekeeping.timer
-[Unit]
-Description=Execute housekeeping script every 8 min to stop local storage from filling to 100 percent
-
-[Timer]
-OnCalendar=*:0/8
-Unit=housekeeping.service
-
-[Install]
-WantedBy=timers.target
-
-EOF
-
-
-systemctl daemon-reload
-systemctl enable housekeeping.service
-systemctl enable housekeeping.timer
-systemctl list-timers --all
-
-
-
-
 ###### BEGIN INSTALLATION ######
 
 echo ''
@@ -580,6 +496,13 @@ WantedBy=multi-user.target
 
 EOF
 
+
+
+# Useful SystemD Timer References to help you Transition from using Cron: 
+#	https://wiki.archlinux.org/index.php/Systemd/Timers
+#	https://unix.stackexchange.com/questions/126786/systemd-timer-every-15-minutes
+#	https://www.freedesktop.org/software/systemd/man/systemd.time.html
+#	https://unix.stackexchange.com/questions/427346/im-writing-a-systemd-timer-what-value-should-i-use-for-wantedby
 
 
 cat <<EOF> /etc/systemd/system/Dropbox-Uploader.timer
