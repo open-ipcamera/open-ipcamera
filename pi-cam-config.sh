@@ -3,13 +3,12 @@
 # Author:  Terrence Houlahan, LPIC2 Certified Linux Engineer
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20180611
+# Date:    20181105
  
 # License: Beerware. If I saved you a few hours of manually configuring one or more pi-cams I wouldn't say "no" to a beer ;-)
 #	paypal.me/TerrenceHoulahan
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application and related drivers and Kernel module
-# Known Compatibility: (as of 20180611)
 #   Hardware:   Raspberry Pi 2/3 *AND* Pi Zero W
 #   OS:         Raspbian "Stretch"
 
@@ -98,12 +97,9 @@ DROPBOXACCESSTOKEN='ABCD1234'
 
 
 #############################################################
-#                                                           #
 # ONLY EDIT BELOW THIS LINE IF YOU KNOW WHAT YOU ARE DOING! #
-#                                                           #
 #############################################################
 
-echo ''
 echo ''
 echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
 echo ''
@@ -125,7 +121,7 @@ sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
 fi
 
 
-### Uninstall any SystemD services and their related files previously created by this script to ensure they are cleanly recreated each time script is run:
+### Uninstall any SystemD services and their related files previously created by this script:
 
 # Uninstall automount service for the USB storage:
 if [ -f /etc/systemd/system/media-pi.mount ]; then
@@ -135,13 +131,12 @@ if [ -f /etc/systemd/system/media-pi.mount ]; then
 	rm /etc/systemd/system/media-pi.mount
 fi
 
-
 if [ -f /etc/systemd/system/media-pi.automount ]; then
 	rm /etc/systemd/system/media-pi.automount
 fi
 
 
-# Uninstall dropbox photo uploader service:
+# Uninstall dropbox photo uploader SystemD service:
 # NOTE: This is NOT part of the Dropbox-uploader script- it just uses it
 if [-f /etc/systemd/system/Dropbox-Uploader.service ]
 	systemctl disable Dropbox-Uploader.service
@@ -150,7 +145,6 @@ if [-f /etc/systemd/system/Dropbox-Uploader.service ]
 	rm /etc/systemd/system/Dropbox-Uploader.service
 	rm /etc/systemd/system/Dropbox-Uploader.timer
 fi
-
 
 if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
 	rm -r /home/pi/scripts/Dropbox-Uploader
@@ -377,8 +371,6 @@ systemctl disable autologin@.service
 echo 'Disabled autologin.'
 
 
-
-
 echo ''
 echo '###### Set New Hostname: ######'
 echo ''
@@ -463,13 +455,10 @@ fi
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
 
-# This script searches /media/pi for jpg and mp4 files and pipes those it finds to xargs which
+# Script searches /media/pi for jpg and mp4 files and pipes those it finds to xargs which
 # first uploads them to dropbox and then deletes them ensuring storage does not fill to 100 percent
 
-while [-z "$(ls -A /media/pi)"]
-do
-	find /media/pi -name '*.jpg' -print0 -o -name '*.mp4' -print0 | xargs -d '/' -0 -I % sh -c '/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload % . && rm %'
-done
+find /media/pi -name '*.jpg' -print0 -o -name '*.mp4' -print0 | xargs -d '/' -0 -I % sh -c '/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload % . && rm %'
 
 EOF
 
@@ -523,7 +512,6 @@ systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
 systemctl list-timers --all
-
 
 
 
