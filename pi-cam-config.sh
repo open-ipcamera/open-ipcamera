@@ -44,6 +44,24 @@ PASSWDROOT='Tbh11b2pc'
 # **REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN**. If your Pi is behind a NAT I still cannot reach it but notwithstanding dont allow my key.
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 
+#### Dropbox-Uploader Variables:
+# Dropbox can be used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
+# In "Developers" section of DropBox account go to "OAuth 2" > "Generated access token" > "Generate" to create an access token and replace "'ABCD11234' with it
+DROPBOXACCESSTOKEN='ABCD1234'
+
+### Variables: MSMTP (to send alerts):
+# SELF-HOSTED SMTP Relay Mail Server:
+SMTPRELAYPORT='25'
+SASLUSER='terrence'
+SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
+SMTPRELAYFQDN='mail.linuxengineer.co.uk'
+SMTPRELAYFROM='terrence@houlahan.co.uk'
+
+# GMAIL SMTP Relay Server:  NOTE: Requires a PAID Google-hosted mail account
+GMAILADDRESS='terrence.houlahan.devices@gmail.com'
+GMAILPASSWD='ABCD1234'
+
+
 ### Variables: Motion
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
 IPV6ENABLED='on'
@@ -76,24 +94,6 @@ STREAMAUTHMETHOD='0'
 WEBCONTROLLOCALHOST='off'
 WEBCONTROLPORT='8080'
 
-
-### Variables: MSMTP (to send alerts):
-# SELF-HOSTED SMTP Relay Mail Server:
-SMTPRELAYPORT='25'
-SASLUSER='terrence'
-SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
-SMTPRELAYFQDN='mail.linuxengineer.co.uk'
-SMTPRELAYFROM='terrence@houlahan.co.uk'
-
-# GMAIL SMTP Relay Server:  NOTE: Requires a PAID Google-hosted mail account
-GMAILADDRESS='terrence.houlahan.devices@gmail.com'
-GMAILPASSWD='ABCD1234'
-
-#### Dropbox-Uploader Variables:
-
-# Dropbox can be used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
-# In "Developers" section of DropBox account go to "OAuth 2" > "Generated access token" > "Generate" to create an access token and replace "'ABCD11234' with it
-DROPBOXACCESSTOKEN='ABCD1234'
 
 
 #############################################################
