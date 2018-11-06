@@ -1,35 +1,37 @@
-# "pi-cam-config.sh": Installs & configs Raspberry Pi camera application drivers and Kernel module
-# Compatibility: Raspbian :     Tested and known to work with Raspian "Stretch" running on a Pi3+ as of 20181105
-# Compatibility: Cameras:		Picams 1.3 & 2.1 are known to work with this script and the driver is relies on.
- 
 # Author:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20181105
 
-# TABLE OF CONTENTS:
+# "pi-cam-config.sh": Installs & configs Raspberry Pi camera application drivers and Kernel module
+
+# README CONTENTS:
 # 	1. LICENCE
-# 	2. SCRIPT PREREQUISITES
-# 	3. OPTIONAL
-# 	4. SCRIPT FEATURES
-# 	5. INSTALLATION INSTRUCTIONS
+#	2. Compatibility
+# 	3. SCRIPT PREREQUISITES
+# 	4. OPTIONAL FUNCTIONALITY
+# 	5. SCRIPT FEATURES
+# 	6. INSTALL INSTRUCTIONS
 
 
 # 1. LICENSE:
 # Beer-ware License: If I saved you a few hours/days of manually configuring one or more pi-cams I wouldn't say "no" if you bought me a beer ;-)
 #	paypal.me/TerrenceHoulahan
 
-# 2. SCRIPT PREREQUISITES:
-# - Raspberry Pi 3 B+ running Raspbian with a Pi camera and Internet connection
-# - USB flash drive formatted for EXFAT filesystem (to ensure cross compatibility of reading & storing large files on Windows & Mac)
-# - Dropbox Account Access Token: Script copies images from Pi's local USB storage into cloud via Dropbox's API. See "DROPBOXACCESSTOKEN" variable in script for where to find it
-#	3rd Party script that my script uses to call the Dropbox API to shift images into the cloud: https://www.raspberrypi.org/magpi/dropbox-raspberry-pi/
+# 2. Compatibility: Script known to work with following configurations (but might work with others)
+# - OS Version:	Raspbian "Stretch"
+# - Pi Model:	3B+ and Pi Zero W
+# - Cameras:	Picams 1.3 and 2.1
 
-# 3. OPTIONAL: (BUT RECOMMENDED)
-# - An SMTP server with both an MX and PTR DNS records to relay alerts the Pi sends on motion detection
+# 3. SCRIPT PREREQUISITES:
+# - Internet connection (wired or Ethernet)
+# - USB flash drive formatted for EXFAT filesystem
+# - Dropbox Account Access Token: My script copies images from the Pi's local USB storage into cloud via Dropbox API. See "DROPBOXACCESSTOKEN" variable in script for further info
 
+# 4. OPTIONAL FUNCTIONALITY:
+# -  To receive email alerts for motion detection events an SMTP server with both an MX and PTR DNS record to relay alert emails from the Pi
 
-# 4. SCRIPT FEATURES:
+# 5. SCRIPT FEATURES:
 # - Enables camera in Raspbian and disables its' red LED activity light
 # - Sets Kernel driver for camera to automatically load on boot
 # - Installs and configures "Motion" video camera package
@@ -45,21 +47,16 @@
 # - Disables boot splash screen so errors can be observed as host rises-up
 # Note: Users must configure firewall rules to restrict access to the camera
 
-
-# 5. INSTALLATION INSTRUCTIONS:
-#	1. Login to Raspberry Pi to be configured as a web security camera
-#	2. Insert a USB thumb drive into any of the Pi's USB ports.
+# 6. INSTALL INSTRUCTIONS:
+#	1. Login to Pi
+#	2. Insert USB Flash drive into any of Pi's USB ports
 	NOTE: If installing to a Pi Zero W that a free micro USB port is required for the storage
 
-As user "pi" execute following commands:
-
-#	3. Download my lovely all-singing-and-dancing script:
+As user "pi" execute following commands- do not sudo to root!:
+#	3. Download my repo:
 #		git clone git@bitbucket.org:f1linux/Pi-Cam-Config.git
-
 #	4. Edit variables in "pi-cam-config.sh"
 #		vi /home/pi/Pi-Cam-Config/pi-cam-config.sh
-
 #	5. Execute script:
 		cd /home/pi/Pi-Cam-Config/
 #		sudo ./pi-cam-config.sh
-
