@@ -451,6 +451,10 @@ if [ ! -d /home/pi/Dropbox-Uploader ]; then
 fi
 
 
+# Attribution: 	My script "Dropbox-Uploader.sh" created by Here-Doc below which shifts images from local USB storage to dropbox
+# 				downloads dependent scripts from Andrea Fabrizi's git repo:
+#				https://github.com/andreafabrizi/Dropbox-Uploader.git
+# Kudos for that Andrea
 
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
@@ -710,8 +714,6 @@ systemctl status systemd-timesyncd.service
 echo ''
 echo 'Open UDP/123 in Router FW if error "Timed out waiting for reply" is reported'
 echo ''
-echo ''
-echo '*** Dont forget to configure Dropbox-Uploader.sh ***'
 echo ''
 echo 'Dont forget to delete this script after done iterating through different install configs: it contains passwords so wipe it after you are done!'
 echo ''
