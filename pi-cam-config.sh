@@ -138,7 +138,7 @@ fi
 
 # Uninstall dropbox photo uploader SystemD service:
 # NOTE: This is NOT part of the Dropbox-uploader script- it just uses it
-if [-f /etc/systemd/system/Dropbox-Uploader.service ]
+if [-f /etc/systemd/system/Dropbox-Uploader.service ]; then
 	systemctl disable Dropbox-Uploader.service
 	systemctl disable Dropbox-Uploader.timer
 	systemctl daemon-reload
