@@ -50,7 +50,8 @@
 # 6. INSTALL INSTRUCTIONS:
 #	1. Login to Pi
 #	2. Insert USB Flash drive into any of Pi's USB ports
-	NOTE: If installing to a Pi Zero W that a free micro USB port is required for the storage
+	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
+		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
 
 As user "pi" execute following commands- do not sudo to root!:
 #	3. Download my repo:
