@@ -64,11 +64,12 @@
 
 # 7. CONFIGURE DROPBOX ACCESS TOKEN:
 #	a. Create a separate Dropbox account to receive images
-#	b. Once logged-in to thew account, go to the URL:
-#		https://www.dropbox.com/developers
-#	c. Click "API Explorer" > "token/from_oauth1" > "Get Access Token"
-#			Click "Allow" when prompted to dialog "Dropbox API v2 Explorer would like access to the files and folders in your Dropbox"
-#	d. Copy & paste the Access Token into the variable "DROPBOXACCESSTOKEN" in "pi-cam-config.sh" script in the variables section
+#	b  Verify email address before proceeding if you haven't already done so
+#	c. Execute following command and follow the instructions to create a Dropbox Access Token:
+#		/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
+#	d. Next replace "ABCD1234" between the two single quotes with the Access Token in variable "DROPBOXACCESSTOKEN=":
+#		nano /home/pi/pi-cam-config/pi-cam-config.sh using the Dropbox-Uploader script.
+# NOTE: Access Token only needs to be confirmed just the first time you connect 
 
 # 8. INSTALL INSTRUCTIONS:
 #	a. Login to Pi connected to the Internet
@@ -84,3 +85,4 @@ As user "pi" execute following commands- do not sudo to root!:
 #	e. Execute script:
 #		cd /home/pi/pi-cam-config/
 #		sudo ./pi-cam-config.sh
+
