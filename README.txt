@@ -11,7 +11,9 @@
 # 	3. SCRIPT PREREQUISITES
 # 	4. OPTIONAL FUNCTIONALITY
 # 	5. SCRIPT FEATURES
-# 	6. INSTALL INSTRUCTIONS
+# 	6. PRE-INSTALL INSTRUCTIONS
+#	7. CONFIGURE DROPBOX ACCESS TOKEN
+# 	8. INSTALL INSTRUCTIONS
 
 
 # 1. LICENSE:
@@ -47,17 +49,38 @@
 # - Disables boot splash screen so errors can be observed as host rises-up
 # Note: Users must configure firewall rules to restrict access to the camera
 
-# 6. INSTALL INSTRUCTIONS:
-#	1. Login to Pi
-#	2. Insert USB Flash drive into any of Pi's USB ports
-	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
-		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
+# 6. PRE-INSTALL INSTRUCTIONS:
+# Skip these two steps if they've already been completed:
+# Using a wireless or wired keyboard connected to a USB port on the Pi:
+#	a. Install the Pi's Raspbian OS on a MicroSD card (short video detailing how can be found at below URL):
+#		www.YouTube.com/user/LinuxEngineer
+#	b. Enable SSH:
+#		sudo raspi-config
+#		Then choose "Interfacing Options" > "SSH" > Choose "Yes" to enable SSH
+#		NOTE: "pi" users password: this will be changed in my script
+#	c. Join your Pi to WiFi:
+#		raspi-config
+#		"Network Options" > "Wi-Fi" > Then enter SSID and password when prompted
+
+# 7. CONFIGURE DROPBOX ACCESS TOKEN:
+#	a. Create a separate Dropbox account to receive images
+#	b. Once logged-in to thew account, go to the URL:
+#		https://www.dropbox.com/developers
+#	c. Click "API Explorer" > "token/from_oauth1" > "Get Access Token"
+#			Click "Allow" when prompted to dialog "Dropbox API v2 Explorer would like access to the files and folders in your Dropbox"
+#	d. Copy & paste the Access Token into the variable "DROPBOXACCESSTOKEN" in "pi-cam-config.sh" script in the variables section
+
+# 8. INSTALL INSTRUCTIONS:
+#	a. Login to Pi connected to the Internet
+#	b. Insert USB Flash drive into any of Pi's USB ports
+#	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
+#		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
 
 As user "pi" execute following commands- do not sudo to root!:
-#	3. Download my repo:
-#		git clone git@bitbucket.org:f1linux/Pi-Cam-Config.git
-#	4. Edit variables in "pi-cam-config.sh"
-#		vi /home/pi/Pi-Cam-Config/pi-cam-config.sh
-#	5. Execute script:
-		cd /home/pi/Pi-Cam-Config/
+#	c. Download my repo:
+#		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
+#	d. Edit variables in "pi-cam-config.sh"
+#		nano /home/pi/Pi-Cam-Config/pi-cam-config.sh
+#	e. Execute script:
+#		cd /home/pi/pi-cam-config/
 #		sudo ./pi-cam-config.sh
