@@ -80,7 +80,7 @@ As user "pi" execute following commands- do not sudo to root!:
 #	c. Download my repo:
 #		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
 #	d. Edit variables in "pi-cam-config.sh"
-#		nano /home/pi/Pi-Cam-Config/pi-cam-config.sh
+#		nano /home/pi/pi-cam-config/pi-cam-config.sh
 #	e. Execute script:
 #		cd /home/pi/pi-cam-config/
 #		sudo ./pi-cam-config.sh

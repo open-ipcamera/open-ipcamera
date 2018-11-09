@@ -447,10 +447,9 @@ echo ''
 echo ''
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
-	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git&
-	wait $!
+	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git /home/pi
 	else
-	echo "Failed to download dependent Repo Dropbox-Uploader. Script will exit"
+	echo 'Failed to download dependent repo https://github.com/andreafabrizi/Dropbox-Uploader.git- script will exit'
 	exit
 fi
 
