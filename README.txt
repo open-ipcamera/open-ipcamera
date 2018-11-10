@@ -7,20 +7,20 @@
 
 # README CONTENTS:
 # 	1. LICENCE
-#	2. Compatibility
+#	2. COMPATIBILITY
 # 	3. SCRIPT PREREQUISITES
 # 	4. OPTIONAL FUNCTIONALITY
 # 	5. SCRIPT FEATURES
-# 	6. PRE-INSTALL INSTRUCTIONS
+# 	6. MINIMAL PI SETUP
 #	7. CONFIGURE DROPBOX ACCESS TOKEN
-# 	8. INSTALL INSTRUCTIONS
-
+# 	8. SCRIPT INSTRUCTIONS
+#	9. POST-SCRIPT EXECUTION
 
 # 1. LICENSE:
 # Beer-ware License: If I saved you a few hours/days of manually configuring one or more pi-cams I wouldn't say "no" if you bought me a beer ;-)
 #	paypal.me/TerrenceHoulahan
 
-# 2. Compatibility: Script known to work with following configurations (but might work with others)
+# 2. COMPATIBILITY: Script known to work with following configurations (but might work with others)
 # - OS Version:	Raspbian "Stretch"
 # - Pi Model:	3B+ and Pi Zero W
 # - Cameras:	Picams 1.3 and 2.1
@@ -49,7 +49,7 @@
 # - Disables boot splash screen so errors can be observed as host rises-up
 # Note: Users must configure firewall rules to restrict access to the camera
 
-# 6. PRE-INSTALL INSTRUCTIONS:
+# 6. MINIMAL PI SETUP:
 # Skip these two steps if they've already been completed:
 # Using a wireless or wired keyboard connected to a USB port on the Pi:
 #	a. Install the Pi's Raspbian OS on a MicroSD card (short video detailing how can be found at below URL):
@@ -63,26 +63,37 @@
 #		"Network Options" > "Wi-Fi" > Then enter SSID and password when prompted
 
 # 7. CONFIGURE DROPBOX ACCESS TOKEN:
+# Skip this step for all subsequent Pi-Cam setups- only needs to be done just once
 #	a. Create a separate Dropbox account to receive images
 #	b  Verify email address before proceeding if you haven't already done so
-#	c. Execute following command and follow the instructions to create a Dropbox Access Token:
-#		/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
-#	d. Next replace "ABCD1234" between the two single quotes with the Access Token in variable "DROPBOXACCESSTOKEN=":
-#		nano /home/pi/pi-cam-config/pi-cam-config.sh using the Dropbox-Uploader script.
-# NOTE: Access Token only needs to be confirmed just the first time you connect 
+#	c. Go to: https://www.dropbox.com/developers/apps
+#		Click "Create App"
+#		Choose "Dropbox API"
+#		Choose "Full Dropbox-Access"
+#		Name your App
+#		Click "Create App" (A "Settings" page will next be displayed)
+#		Click "Generate" in section "Generated access token"
+#		Copy long string of characters to paste into a variable in the next step
 
-# 8. INSTALL INSTRUCTIONS:
-#	a. Login to Pi connected to the Internet
+# 8. SCRIPT INSTRUCTIONS:
+#	a. Login to a Pi connected to the Internet
 #	b. Insert USB Flash drive into any of Pi's USB ports
 #	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
 #		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
 
-As user "pi" execute following commands- do not sudo to root!:
-#	c. Download my repo:
+As user "pi" - do not sudo to root- execute following commands:
+#	c. Download my Git repo:
 #		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
-#	d. Edit variables in "pi-cam-config.sh"
+#	d. Edit variables in "pi-cam-config.sh":
 #		nano /home/pi/pi-cam-config/pi-cam-config.sh
+#	NOTE: Replace the value ABCD1234 between the single quotes in variable "DROPBOXACCESSTOKEN=" with the Dropbox Access Token you copied in Step 7:
 #	e. Execute script:
 #		cd /home/pi/pi-cam-config/
 #		sudo ./pi-cam-config.sh
+
+# 9. POST-SCRIPT EXECUTION:
+#	f. Execute following command and follow instructions presented to verify the Dropbox Access Token:
+#		/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
+#
+# NOTE: Access Token only needs to be confirmed just the first time you connect 
 
