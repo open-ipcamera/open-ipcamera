@@ -59,7 +59,7 @@ SMTPRELAYFROM='terrence@houlahan.co.uk'
 
 # GMAIL SMTP Relay Server:  NOTE: Requires a PAID Google-hosted mail account
 GMAILADDRESS='terrence.houlahan.devices@gmail.com'
-GMAILPASSWD='ABCD1234'
+GMAILPASSWD='YourGmailPasswdHere'
 
 
 ### Variables: Motion
@@ -718,6 +718,12 @@ systemctl status systemd-timesyncd.service
 echo ''
 echo 'Open UDP/123 in Router FW if error "Timed out waiting for reply" is reported'
 echo ''
+echo ''
+ping -c 2 www.google.com
+echo ''
+ping -c 2 8.8.8.8
+echo ''
+echo 'If Pinging "www.google.com" by name failed but pinging "8.8.8.8" succeeded check that port UDP/53 is open'
 echo ''
 echo 'Dont forget to delete this script after done iterating through different install configs: it contains passwords so wipe it after you are done!'
 echo ''
