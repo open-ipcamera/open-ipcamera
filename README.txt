@@ -51,7 +51,7 @@
 # Note: Users must configure firewall rules to restrict access to the camera
 
 # 6. MINIMAL PI SETUP:
-# Skip these two steps if they've already been completed:
+# Skip below (3) steps if already completed:
 # Using a wireless or wired keyboard connected to a USB port on the Pi:
 #	a. Install the Pi's Raspbian OS on a MicroSD card (short video detailing how can be found at below URL):
 #		www.YouTube.com/user/LinuxEngineer
@@ -62,7 +62,6 @@
 #	c. Join your Pi to WiFi:
 #		raspi-config
 #		"Network Options" > "Wi-Fi" > Then enter SSID and password when prompted
-
 
 # 7. CONFIGURE DROPBOX ACCESS TOKEN:
 # Skip this step for all subsequent Pi-Cam setups- only needs to be done just once
@@ -78,7 +77,9 @@
 #		Copy long string of characters to paste into a variable in the next step
 
 # 8. SCRIPT INSTRUCTIONS:
-#	a. Login to a Pi connected to the Internet
+#	a. Login to a Pi connected to the Internet:
+#		NOTE: If using SSH, connect as user "pi" with default passwd "raspberry"
+#			
 #	b. Insert USB Flash drive into any of Pi's USB ports
 #	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
 #		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
