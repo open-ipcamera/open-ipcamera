@@ -93,12 +93,13 @@ As user "pi" - do not sudo to root- execute following commands:
 #		cd /home/pi/pi-cam-config/
 #		sudo ./pi-cam-config.sh
 #	f. Log into your Pi-Cam at address listed at end of script's screen output "Camera Address:"
+#		NOTE: Use the Login credentials that you set in the "### Variables: Motion" section of the script!
 
-# 9. POST-SCRIPT EXECUTION:
-#	f. Execute following command and follow instructions presented to verify the Dropbox Access Token:
+# 9. POST-SCRIPT EXECUTION Setup:
+#	a. Execute following command and follow instructions presented to verify the Dropbox Access Token:
 #		/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
+#	b. Setup sensible firewall rules to restrict access to your Pi-Cameras!
 #
-# NOTE: Access Token only needs to be confirmed just the first time you connect 
 
 # 10. TROUBLESHOOTING:
 # Before posting issues in Bitbucket, please first:
@@ -108,7 +109,7 @@ As user "pi" - do not sudo to root- execute following commands:
 #		NOTE: There's no local firewalling configured on the Pi so any blocked ports will be in front of your PI!
 #		Can't connect to Pi via SSH:
 #			TCP/22	 (SSH)
-#		Can't connect to websites or download software via "apt-get"":
+#		Can't connect to websites or download software via "apt-get":
 #			TCP/80	 (HTTP)
 #			TCP/8080 (HTTP) Pi-Cameras are accessed on this port
 #			TCP/443	 (HTTPS)
@@ -118,4 +119,5 @@ As user "pi" - do not sudo to root- execute following commands:
 #		Routing issues:
 #			mtr IP Address or
 #			mtr DNS Name
-
+#	d. Check that you haven't inadvertently deleted one- or both- of the single quotes encasing variables in "pi-cam-config.sh"
+#		If you have, just execute the script again to rebuild everything and fix the error
