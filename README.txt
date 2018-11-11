@@ -15,6 +15,7 @@
 #	7. CONFIGURE DROPBOX ACCESS TOKEN
 # 	8. SCRIPT INSTRUCTIONS
 #	9. POST-SCRIPT EXECUTION
+#	10.TROUBLESHOOTING
 
 # 1. LICENSE:
 # Beer-ware License: If I saved you a few hours/days of manually configuring one or more pi-cams I wouldn't say "no" if you bought me a beer ;-)
@@ -62,6 +63,7 @@
 #		raspi-config
 #		"Network Options" > "Wi-Fi" > Then enter SSID and password when prompted
 
+
 # 7. CONFIGURE DROPBOX ACCESS TOKEN:
 # Skip this step for all subsequent Pi-Cam setups- only needs to be done just once
 #	a. Create a separate Dropbox account to receive images
@@ -86,14 +88,34 @@ As user "pi" - do not sudo to root- execute following commands:
 #		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
 #	d. Edit variables in "pi-cam-config.sh":
 #		nano /home/pi/pi-cam-config/pi-cam-config.sh
-#	NOTE: Replace the value ABCD1234 between the single quotes in variable "DROPBOXACCESSTOKEN=" with the Dropbox Access Token you copied in Step 7:
+#	NOTE: Replace value "ABCD1234" encased between single quotes in variable "DROPBOXACCESSTOKEN=" with Dropbox Access Token copied in Step 7:
 #	e. Execute script:
 #		cd /home/pi/pi-cam-config/
 #		sudo ./pi-cam-config.sh
+#	f. Log into your Pi-Cam at address listed at end of script's screen output "Camera Address:"
 
 # 9. POST-SCRIPT EXECUTION:
 #	f. Execute following command and follow instructions presented to verify the Dropbox Access Token:
 #		/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
 #
 # NOTE: Access Token only needs to be confirmed just the first time you connect 
+
+# 10. TROUBLESHOOTING:
+# Before posting issues in Bitbucket, please first:
+# 	a. Review the output at the end of the script "###### Post Config Diagnostics: ######"
+#	b. Read my repo's Wiki
+#	c. Make a few cursory checks of the related firewall ports below if unable to access services listening on them:
+#		NOTE: There's no local firewalling configured on the Pi so any blocked ports will be in front of your PI!
+#		Can't connect to Pi via SSH:
+#			TCP/22	 (SSH)
+#		Can't connect to websites or download software via "apt-get"":
+#			TCP/80	 (HTTP)
+#			TCP/8080 (HTTP) Pi-Cameras are accessed on this port
+#			TCP/443	 (HTTPS)
+#			UDP/123  (NTP)	HTTPS will break if the time is too far off on the system!
+#			TCP/53	 (DNS)	Check ping tests in "###### Post Config Diagnostics: ######"
+#			UDP/53	 (DNS)
+#		Routing issues:
+#			mtr IP Address or
+#			mtr DNS Name
 
