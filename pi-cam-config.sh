@@ -723,4 +723,6 @@ echo ''
 # Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
 rm -rf /home/pi/pi-cam-config
 
+read -p "Press Enter to reboot after noting camera IP address in script feedback above"
+
 systemctl reboot
