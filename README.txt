@@ -16,6 +16,7 @@
 # 	8. SCRIPT INSTRUCTIONS
 #	9. POST-SCRIPT EXECUTION
 #	10.TROUBLESHOOTING
+#	11.USEFUL LINKS
 
 # 1. LICENSE:
 # Beer-ware License: If I saved you a few hours/days of manually configuring one or more pi-cams I wouldn't say "no" if you bought me a beer ;-)
@@ -122,3 +123,16 @@ As user "pi" - do not sudo to root- execute following commands:
 #			mtr DNS Name
 #	d. Check that you haven't inadvertently deleted one- or both- of the single quotes encasing variables in "pi-cam-config.sh"
 #		If you have, just execute the script again to rebuild everything and fix the error
+
+# # USEFUL LINKS:
+#  "Motion" Config Options:         https://motion-project.github.io/motion_config.html
+#  Standard PiCam vs Pi NOIR PiCam: https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
+#  Pi NoIR: https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/
+#  Pi NoIR: Infrared light modules
+#  Pi NoIR: Powering infrared lights via GPIO pins:
+#     https://www.sparkfun.com/news/1396
+#     https://learn.adafruit.com/cloud-cam-connected-raspberry-pi-security-camera/enclosure
+#     https://www.raspberrypi.org/forums/viewtopic.php?t=93350
+#     https://projects.raspberrypi.org/en/projects/infrared-bird-box/6
+#     https://www.makerspace.marlborougharea.org/Public%2Bprojects%2B-%2BBird%2Bbox%2Bweb%2Bcam%2Bproject
+#     http://www.haydnallbutt.com.au/2009/02/18/how-to-assemble-your-own-140-led-infrared-light-source-part-2/

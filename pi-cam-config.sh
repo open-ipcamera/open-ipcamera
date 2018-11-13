@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Author:  Terrence Houlahan, LPIC2 Certified Linux Engineer
+# Author:  Terrence Houlahan, Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20181105
@@ -16,19 +16,6 @@
 # README.txt file distributed with this this script
 # VIDEO:  www.YouTube.com/user/LinuxEngineer
 
-# Useful Links:
-# "Motion" Config Options:         https://motion-project.github.io/motion_config.html
-# Standard PiCam vs Pi NOIR PiCam: https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
-# Pi NoIR: https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/
-# Pi NoIR: Infrared light modules
-# Pi NoIR: Powering infrared lights via GPIO pins:
-#     https://www.sparkfun.com/news/1396
-#     https://learn.adafruit.com/cloud-cam-connected-raspberry-pi-security-camera/enclosure
-#     https://www.raspberrypi.org/forums/viewtopic.php?t=93350
-#     https://projects.raspberrypi.org/en/projects/infrared-bird-box/6
-#     https://www.makerspace.marlborougharea.org/Public%2Bprojects%2B-%2BBird%2Bbox%2Bweb%2Bcam%2Bproject
-#     http://www.haydnallbutt.com.au/2009/02/18/how-to-assemble-your-own-140-led-infrared-light-source-part-2/
-
 
 ######  Variables: ######
 #
@@ -36,12 +23,12 @@
 # Change or delete specimen values below as appropriate:
 
 ### Variables: Linux
-#OURHOSTNAME='raspberrypizerow1'
-OURHOSTNAME='raspberrypi3-3'
-PASSWDPI='Tbh11b2pc'
-PASSWDROOT='Tbh11b2pc'
+#OURHOSTNAME='pi0w-1'
+OURHOSTNAME='pi3Bplus-3'
+PASSWDPI='ChangeMe'
+PASSWDROOT='ChangeMe'
 
-# **REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN**. If your Pi is behind a NAT I still cannot reach it but notwithstanding dont allow my key.
+# ** WARNING ** REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN. If your Pi is behind a NAT I cannot reach it but leaving my Key is a really bad idea
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 
 #### Dropbox-Uploader Variables:
@@ -52,10 +39,10 @@ DROPBOXACCESSTOKEN='ABCD1234'
 ### Variables: MSMTP (to send alerts):
 # SELF-HOSTED SMTP Relay Mail Server:
 SMTPRELAYPORT='25'
-SASLUSER='terrence'
-SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
-SMTPRELAYFQDN='mail.linuxengineer.co.uk'
-SMTPRELAYFROM='terrence@houlahan.co.uk'
+SASLUSER='yourUserName'
+SASLPASSWD='ChangeMe'
+SMTPRELAYFQDN='mail.yourRelayDomain.com'
+SMTPRELAYFROM='you@domainYouWantPiToAppearToBeSendingAlertsFrom'
 
 # GMAIL SMTP Relay Server:  NOTE: Requires a PAID Google-hosted mail account
 GMAILADDRESS='terrence.houlahan.devices@gmail.com'
@@ -70,7 +57,7 @@ PASSWD='xF9e4Ld'
 
 # Max VIDEO Resolution PiCam v2: 1080p30, 720p60, 640x480p90
 # Max IMAGE Resolution PiCam v2: 3280 x 2464
-# NOTE: Many PiCams puking high-res images can cause bandwidth issues when copying them to Dropbox
+# NOTE: If you have a lot of PiCams all puking high-res images can cause bandwidth issues when copying them to Dropbox
 WIDTH='1640'
 HEIGHT='1232'
 FRAMERATE='1'
@@ -109,6 +96,11 @@ echo ''
 # Delete "motion and any related config files for using "apt-get purge" :
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	apt-get purge -q -y motion
+fi
+
+# Delete "Dropbox-Uploader"
+if [ -d /home/pi/Dropbox-Uploader ]; then
+	rm -rf /home/pi/Dropbox-Uploader
 fi
 
 if [ -d /home/pi/.ssh ]; then
@@ -534,6 +526,7 @@ bcm2835-v4l2
 
 EOF
 
+depmod -a
 modprobe bcm2835-v4l2
 
 
@@ -725,8 +718,11 @@ ping -c 2 8.8.8.8
 echo ''
 echo 'If Pinging "www.google.com" by name failed but pinging "8.8.8.8" succeeded check that port UDP/53 is open'
 echo ''
-echo 'Dont forget to delete this script after done iterating through different install configs: it contains passwords so wipe it after you are done!'
 echo ''
 
+# Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
+rm -rf /home/pi/pi-cam-config
+
+read -p "Press Enter to reboot after noting camera IP address in script feedback above"
 
 systemctl reboot
