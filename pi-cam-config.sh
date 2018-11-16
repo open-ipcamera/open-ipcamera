@@ -145,7 +145,7 @@ read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL
 echo ''
 echo "$(tput setaf 5)****** DELETE DETRITUS FROM PRIOR INSTALLS:  ******$(tput sgr 0)"
 echo ''
-echo '### Restore Pi to predictable known state prior prior to starting the install: ###'
+echo '### Restore Pi to predictable known state prior to starting the install: ###'
 echo ''
 
 # Reset the hosts file back to default state
@@ -868,7 +868,10 @@ echo ''
 echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo ''
 
-
+echo '###############################################################################' >> /etc/motd
+echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer!$(tput sgr 0) ##" >> /etc/motd
+echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
+echo '###############################################################################' >> /etc/motd
 echo '' >> /etc/motd
 echo "Video Camera Status: $(echo "sudo systemctl status motion")" >> /etc/motd
 echo '' >> /etc/motd
@@ -952,21 +955,15 @@ echo ''
 echo ''
 
 echo "Note below address of your camera to access via web browser after reboot:"
-echo "$(tput setaf 2) ** Camera Address: "CAMERAIPV4":8080 ** $(tput sgr 0)"
-echo "$(tput setaf 2) ** Camera Address: "CAMERAIPV6":8080 ** $(tput sgr 0)"
-
-echo '' >> /etc/motd
-echo '' >> /etc/motd
-
-echo '###############################################################################' >> /etc/motd
-echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer!$(tput sgr 0) ##" >> /etc/motd
-echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
-echo '###############################################################################' >> /etc/motd
+echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
+echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
 
 echo '' >> /etc/motd
 echo '' >> /etc/motd
 echo "$(tput setaf 1)** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS ** $(tput sgr 0)"
-
+echo '' >> /etc/motd
+echo '' >> /etc/motd
 read -p "Press Enter to reboot after reviewing script feedback above"
-
+echo '' >> /etc/motd
+echo '' >> /etc/motd
 systemctl reboot
