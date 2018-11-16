@@ -1,21 +1,39 @@
 #!/bin/bash
 
-# Author:  Terrence Houlahan, Linux Engineer F1Linux.com
+# Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181105
- 
-# License: Beerware. If I saved you a few hours of manually configuring one or more pi-cams I wouldn't say "no" to a beer ;-)
-#	paypal.me/TerrenceHoulahan
+# Date:    20181116
 
-# "pi-cam-config.sh": Installs and configs Raspberry Pi camera application and related drivers and Kernel module
-#   Hardware:   Raspberry Pi 2/3 *AND* Pi Zero W
+# "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
+#   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
 #   OS:         Raspbian "Stretch"
 
-# Install Instructions:
+######  License: ######
+#
+# Copyright (C) 2018 Terrence Houlahan
+# License: GPL 3:
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not see <https://www.gnu.org/licenses/>.
+
+
+######  INSTALL INSTRUCTIONS: ######
+
 # README.txt file distributed with this this script
 # VIDEO:  www.YouTube.com/user/LinuxEngineer
 
+# If I saved you a few hours or possibly DAYS of manually configuring one or more pi-cams consider buying me a beer ;-)
+# paypal.me/TerrenceHoulahan
 
 ######  Variables: ######
 #
@@ -24,17 +42,29 @@
 
 ### Variables: Linux
 #OURHOSTNAME='pi0w-1'
-OURHOSTNAME='pi3Bplus-3'
-PASSWDPI='ChangeMe'
-PASSWDROOT='ChangeMe'
+OURHOSTNAME='pi3Bplus-camera1'
+OURDOMAIN='f1linux.com'
+PASSWDPI='ChangeMe1234'
+PASSWDROOT='ChangeMe1234'
 
 # ** WARNING ** REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN. If your Pi is behind a NAT I cannot reach it but leaving my Key is a really bad idea
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 
 #### Dropbox-Uploader Variables:
-# Dropbox can be used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
-# In "Developers" section of DropBox account go to "OAuth 2" > "Generated access token" > "Generate" to create an access token and replace "'ABCD11234' with it
+# Dropbox is used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
+# Please consult "README.txt" for how to obtain the value for below variable
 DROPBOXACCESSTOKEN='ABCD1234'
+
+# Set a threshold value to be notified when Pi exceeds it:
+HEATTHRESHOLDWARN='71'
+HEATTHRESHOLDSHUTDOWN='91'
+
+### Variables: SNMP Monitoring
+# "SNMPLOCATION" is a descriptive location of the area the camera covers
+SNMPLOCATION='Back Door'
+SNMPV3AUTHPASSWD='PiDemo1234'
+SNMPV3ENCRYPTPASSWD='PiDemo1234'
+SNMPV3ROUSER='pi'
 
 ### Variables: MSMTP (to send alerts):
 # SELF-HOSTED SMTP Relay Mail Server:
@@ -49,11 +79,20 @@ GMAILADDRESS='terrence.houlahan.devices@gmail.com'
 GMAILPASSWD='YourGmailPasswdHere'
 
 
-### Variables: Motion
+# Specify an email address where IP of camera will be sent to you
+# This email address can be different than the one specified in 'ONEVENTSTART' variable below
+EMAILCAMERAIP='terrence.houlahan.devices@gmail.com'
+
+### Variables: Camera Application "Motion"
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
+
+# Change *ONLY* email address in variable ONEVENTSTART below taking care not to delete any of the encasing single quote marks
+ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp terrence.houlahan.devices@gmail.com'
+
 IPV6ENABLED='on'
-USER='terrence'
-PASSWD='xF9e4Ld'
+# NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
+USER='me'
+PASSWD='xF9e4Ldg1'
 
 # Max VIDEO Resolution PiCam v2: 1080p30, 720p60, 640x480p90
 # Max IMAGE Resolution PiCam v2: 3280 x 2464
@@ -67,8 +106,6 @@ QUALITY='65'
 FFMPEGOUTPUTMOVIES='on'
 MAXMOVIETIME='60'
 FFMPEGVIDEOCODEC='mp4'
-# Change *ONLY* the email address in variable 'ONEVENTSTART' taking care not to delete the final encasing single quote mark
-ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp terrence.houlahan.devices@gmail.com'
 THRESHOLD='1500'
 LOCATEMOTIONMODE='preview'
 LOCATEMOTIONSTYLE='redbox'
@@ -87,11 +124,38 @@ WEBCONTROLPORT='8080'
 # ONLY EDIT BELOW THIS LINE IF YOU KNOW WHAT YOU ARE DOING! #
 #############################################################
 
+# Below variable is self-populating- there is no need to modify if
+CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
+CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}')"
+
 echo ''
-echo '###### DELETE DETRITUS FROM PRIOR INSTALLS ######'
+echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo ''
-echo '### Restore Pi to a predictable known configuration state by deleting debris from prior installs:'
+
+echo '"pi-cam-config.sh" Copyright (C) 2018 Terrence Houlahan'
 echo ''
+echo 'This program comes with ABSOLUTELY NO WARRANTY express or implied.'
+echo 'This is free software and you are welcome to redistribute it under certain conditions.'
+echo 'Consult "LICENSE.txt" for terms of GPL 3 License and conditions of use.'
+
+read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL C" to EXIT'
+
+
+
+echo ''
+echo "$(tput setaf 5)****** DELETE DETRITUS FROM PRIOR INSTALLS:  ******$(tput sgr 0)"
+echo ''
+echo '### Restore Pi to predictable known state prior prior to starting the install: ###'
+echo ''
+
+# Reset the hosts file back to default state
+sed -i "s/127\.0\.0\.1.*/127\.0\.1\.1      raspberrypi/" /etc/hosts
+sed -i "s/::1.*/::1     raspberrypi/" /etc/hosts
+
+hostnamectl set-hostname raspberrypi
+systemctl restart systemd-hostnamed&
+wait $!
+
 
 # Delete "motion and any related config files for using "apt-get purge" :
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
@@ -171,7 +235,7 @@ truncate -s 0 /etc/motd
 
 
 echo ''
-echo '###### Configure A Minimum Security baseline:  ######'
+echo "$(tput setaf 5)****** SECURITY: Set Passwords - Disable Autologin - Enable Public Key Access ******$(tput sgr 0)"
 echo ''
 
 # By default no passwords set for users 'pi' and 'root'
@@ -205,7 +269,7 @@ echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
 echo "Added Your Public Key to 'authorized_keys' file"
 echo ''
 
-# There are more options that could be tweaked or course in /etc/ssh/sshd_config
+# Modify default SSH access behaviour by tweaking below directives in /etc/ssh/sshd_config
 sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
 sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
 sed -i "s|#SyslogFacility AUTH|SyslogFacility AUTH|" /etc/ssh/sshd_config
@@ -217,14 +281,17 @@ sed -i "s|#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2|Aut
 sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|" /etc/ssh/sshd_config
 sed -i "s|#PermitEmptyPasswords no|#PermitEmptyPasswords no|" /etc/ssh/sshd_config
 sed -i "s|#X11Forwarding yes|X11Forwarding yes|" /etc/ssh/sshd_config
-sed -i "s|PrintMotd no|PrintMotd yes|" /etc/ssh/sshd_config
+sed -i "s|PrintMotd yes|PrintMotd no|" /etc/ssh/sshd_config
 sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
 sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
-
+# No need for autologin now that we enabled Public Key Access so we disable it:
+sed -i "/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
+systemctl disable autologin@.service
+echo 'Disabled autologin'
 
 echo ''
-echo '###### Configure *LOCAL* Storage ######'
+echo "$(tput setaf 5)****** USB Flash Storage Configuration:  ******$(tput sgr 0)"
 echo ''
 
 # Interesting thread on auto mounting choices:
@@ -321,17 +388,15 @@ fi
 
 
 
-###### BEGIN INSTALLATION ######
-
 echo ''
-echo '###### Configure Sensible Defaults: ######'
+echo "$(tput setaf 5)****** SET BOOT PARAMS:  ******$(tput sgr 0)"
 echo ''
 
 # raspian-config: How to interface from the CLI:
 # https://raspberrypi.stackexchange.com/questions/28907/how-could-one-automate-the-raspbian-raspi-config-setup
 
-# We first clear any boot param added during a previous build and then add each back with most current value set:
-# Enable camera (there is no raspi-config option for this):
+# Clear any boot params added during a previous build and then add each back with most current value set:
+# Enable camera (No raspi-config option to script this):
 sed -i '/start_x=1/d' /boot/config.txt
 echo 'start_x=1' >> /boot/config.txt
 
@@ -359,83 +424,94 @@ echo 'disable_splash=1' >> /boot/config.txt
 
 echo 'Disabled boot splash screen so we can see errors while host is rising up.'
 
-systemctl disable autologin@.service
-echo 'Disabled autologin.'
+
 
 
 echo ''
-echo '###### Set New Hostname: ######'
+echo "$(tput setaf 5)******  SET HOSTNAME:  ******$(tput sgr 0)"
 echo ''
 
-hostnamectl set-hostname $OURHOSTNAME
+hostnamectl set-hostname $OURHOSTNAME.$OURDOMAIN
 systemctl restart systemd-hostnamed&
 wait $!
 
 # hostnamectl does NOT update its own entry in /etc/hosts so must do separately:
-sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME/" /etc/hosts
-
-
+sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
+sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 
 
 echo ''
-echo '###### Install Software ######'
+echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo ''
 
 
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-apt-get install -q -y motion
+	apt-get install -q -y motion
 fi
 
 
 # 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
 if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
-apt-get install -q -y libimage-exiftool-perl
+	apt-get install -q -y libimage-exiftool-perl
 fi
 
 
 # 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
-apt-get install -q -y exiv2
+	apt-get install -q -y exiv2
 fi
 
 
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-apt-get install -q -y msmtp
+	apt-get install -q -y msmtp
 fi
 
 if [[ $(dpkg -l | grep mutt) = '' ]]; then
-apt-get install -q -y mutt
+	apt-get install -q -y mutt
 fi
 
 # vim-tiny- which is crap like nano- will also match unless grep-ed with boundaries:
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
-apt-get install -q -y vim
+	apt-get install -q -y vim
 fi
 
 if [[ $(dpkg -l | grep git) = '' ]]; then
-apt-get install -q -y git
+	apt-get install -q -y git
 fi
+
+
+if [[ $(dpkg -l | grep mailutils) = '' ]]; then
+	apt-get install -q -y mailutils
+fi
+
 
 # NOTE: following are not required but just included because they are useful
+
+# mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
-apt-get install -q -y mtr
+	apt-get install -q -y mtr
 fi
 
+# tcpdump is a packet sniffer you can use to investigate connectivity issues and analyze traffic:
 if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
-apt-get install -q -y tcpdump
+	apt-get install -q -y tcpdump
 fi
 
+# iptraf-ng can be used to investigate bandwidth issues if you are puking too many chunky images over a thin connection:
+if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
+	apt-get install -q -y iptraf-ng
+fi
 
 
 echo ''
-echo '###### Configure *CLOUD* Storage ######'
+echo "$(tput setaf 5)****** DROPBOX Storage Configuration:  ******$(tput sgr 0)"
 echo ''
 echo "https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md"
 echo ''
 
-# "Dropbox-Uploader.sh" enables copying images from local storage to cloud- ensuring evidence not lost if PiCam destroyed or stolen
+# "Dropbox-Uploader" facilitates copying images from local USB Flash storage to cloud safeguarding evidence from theft or destruction of Pi-Cam
 echo ''
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
@@ -446,11 +522,6 @@ if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	exit
 fi
 
-
-# Attribution: 	My script "Dropbox-Uploader.sh" created by Here-Doc below which shifts images from local USB storage to dropbox
-# 				downloads dependent scripts from Andrea Fabrizi's git repo:
-#				https://github.com/andreafabrizi/Dropbox-Uploader.git
-# Kudos for that Andrea
 
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
@@ -463,10 +534,8 @@ find /media/pi -name '*.jpg' -print0 -o -name '*.mp4' -print0 | xargs -d '/' -0 
 EOF
 
 
-
 chmod 700 /home/pi/scripts/Dropbox-Uploader.sh
 chown pi:pi /home/pi/scripts/Dropbox-Uploader.sh
-
 
 
 cat <<EOF> /etc/systemd/system/Dropbox-Uploader.service
@@ -484,7 +553,6 @@ ExecStart=/home/pi/scripts/Dropbox-Uploader.sh
 WantedBy=multi-user.target
 
 EOF
-
 
 
 # Useful SystemD Timer References to help you Transition from using Cron: 
@@ -511,12 +579,11 @@ EOF
 systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
-systemctl list-timers --all
 
 
 
 echo ''
-echo '###### Configure Camera Kernel Driver ######'
+echo "$(tput setaf 5)****** CAMERA KERNEL DRIVER: Load on Boot  ******$(tput sgr 0)"
 echo ''
 
 
@@ -526,16 +593,19 @@ bcm2835-v4l2
 
 EOF
 
+# Rebuild Kernel modules dependencies map
 depmod -a
+
+# Load the Camera Kernel Module
 modprobe bcm2835-v4l2
 
 
 echo ''
-echo '###### Configure Default Editor ######'
+echo "$(tput setaf 5)****** DEFAULT EDITOR: Change FROM *Nano* TO *vi*  ******$(tput sgr 0)"
 echo ''
 
 
-# Nano is a piece of crap: change default editor to something more sensible
+# Nano is crap: change default editor to a universal Unix standard vi
 update-alternatives --set editor /usr/bin/vim.basic
 
 if [ -f /home/pi/.selected_editor ]; then
@@ -545,11 +615,12 @@ fi
 cp /usr/share/vim/vimrc /home/pi/.vimrc
 
 # Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
-sed -i 's|"set mouse=a      " Enable mouse usage (all modes)|"set mouse=v       " Enable mouse usage (all modes)|' /home/pi/.vimrc
+sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
+sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
 
 
 echo ''
-echo '###### Configure Camera Application Motion ######'
+echo "$(tput setaf 5)****** Camera Software *MOTION* Configuration  ******$(tput sgr 0)"
 echo ''
 echo 'Further Info: https://motion-project.github.io/motion_config.html'
 echo ''
@@ -591,8 +662,9 @@ systemctl enable motion.service
 
 
 echo ''
-echo '###### Configure Mail for Alerts ######'
+echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION:  ******$(tput sgr 0)"
 echo ''
+
 # References:
 # http://msmtp.sourceforge.net/doc/msmtp.html
 # https://wiki.archlinux.org/index.php/Msmtp
@@ -633,34 +705,178 @@ account default : $SMTPRELAYFQDN
 EOF
 
 
+
+
+echo ''
+echo "$(tput setaf 5)****** SNMP Configuration:  ******$(tput sgr 0)"
+echo ''
+
+
+apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+
+# *DISABLE* local-only connections to SNMP daemon
+sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmp.conf
+
+# *ENABLE* remote SNMP connectivity to cameras:
+# A further Reminder to please restrict access by firewall to your cameras
+sed -i "s/#agentAddress  udp:161,udp6:[::1]:161/##agentAddress  udp:161,udp6:161/" /etc/snmp/snmp.conf
+
+# Enable loading of MIBs:
+sed -i "-s/mibs :/#mibs :/" /etc/snmp/snmp.conf
+
+# Describe location of camera:
+sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCATION/" /etc/snmp/snmp.conf
+
+# Stop SNMP daemon to create a Read-Only user:
+systemctl stop snmpd.service
+
+# Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
+# "-A" => AUTHENTICATION password and "-X" => ENCRYPTION password
+net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
+
+
+systemctl enable snmpd.service
+systemctl start snmpd.service
+
+
+# Test our SNMPv3 config works correctly by checking Camera Location
+snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
+
+
+
+
+
+echo ''
+echo "$(tput setaf 5)****** Email NOTIFICATIONS: IP and HEAT ALERTS  ******$(tput sgr 0)"
+echo ''
+
+# Apple offers no way to identify the IP of a device tethered to an iPhone HotSpot.
+# This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "EMAILCAMERAIP"
+# Note: This feature will only work if you have configured a working mail relay for the camera to use
+
+
+# Create Mutt configuration file for user "pi"
 cat <<EOF> /home/pi/.muttrc
 
-set sendmail="/usr/bin/msmtp"
+set sendmail=$(command -v msmtp)"
 set use_from=yes
-set realname="Alert From PiCam"
-set from=$SMTPRELAYFROM
+set realname="$HOSTNAME"
+set from="pi@$HOSTNAME.$OURDOMAIN"
 set envelope_from=yes
+set editor="vim.basic"
 
 EOF
 
-# Change ownership of all files created by this script FROM "root" TO user "pi":
+
+
+cat <<EOF> /home/pi/scripts/email-camera-address.sh
+#!/bin/bash
+
+sleep 30
+echo -e “$HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "IP Address of Camera $HOSTNAME" $EMAILCAMERAIP
+
+EOF
+
+
+
+cat <<EOF> /etc/systemd/system/email-camera-address.service
+[Unit]
+Description=Email IP Address of Camera on Boot
+#Before=
+
+[Service]
+User=pi
+Group=pi
+Type=oneshot
+ExecStart=/home/pi/scripts/email-camera-address.sh
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+systemctl enable email-camera-address.service
+
+
+
+cat <<EOF> /home/pi/scripts/heat-alert.sh
+#!/bin/bash
+
+if [ $(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]; then
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLD C \n Timer controlling frequency of this alert: heat-alert.timer \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert $HOSTNAME" $EMAILCAMERAIP
+elif [ $(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]; then
+	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLD C \n \n Pi was shutdown due to excessive heat condition \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert $HOSTNAME" $EMAILCAMERAIP
+	systemctl poweroff
+else
+	exit
+fi
+
+EOF
+
+
+cat <<EOF> /etc/systemd/system/heat-alert.service
+[Unit]
+Description=Email Heat Alerts
+#Before=
+
+[Service]
+User=pi
+Group=pi
+Type=oneshot
+ExecStart=/home/pi/scripts/heat-alert.sh
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+systemctl enable heat-alert.service
+
+
+
+cat <<EOF> /etc/systemd/system/heat-alert.timer
+[Unit]
+Description=Email Heat Alerts
+
+[Timer]
+OnCalendar=*:0/5
+Unit=heat-alert.service
+
+[Install]
+WantedBy=timers.target
+
+EOF
+
+
+
+systemctl enable heat-alert.timer
+systemctl list-timers --all
+
+
+
+
+# Change ownership of all files created by this script FROM user "root" TO user "pi":
 chown -R pi:pi /home/pi
 
+
+
 echo ''
-echo '###### Config /etc/motd Messages: ######'
+echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo ''
 
 echo '' >> /etc/motd
-echo '##########################################################################' >> /etc/motd
-echo '##  pi-cam-config.sh script is Beer-ware: Buy me a beer if you like it! ##' >> /etc/motd
+echo '###############################################################################' >> /etc/motd
+echo '##  If this script saved you lots of time doing manual config buy me a beer! ##' >> /etc/motd
 echo '##                      paypal.me/TerrenceHoulahan                      ## ' >> /etc/motd
-echo '##########################################################################' >> /etc/motd
+echo '###############################################################################' >> /etc/motd
 echo '' >> /etc/motd
 echo "Video Camera Status: $(echo "sudo systemctl status motion")" >> /etc/motd
 echo '' >> /etc/motd
-echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080 " >> /etc/motd
+echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
 echo '' >> /etc/motd
-echo "Local Images Stored: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) " >> /etc/motd
+echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) " >> /etc/motd
 echo '' >> /etc/motd
 echo 'To stop/start/reload the Motion daemon:' >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
@@ -679,15 +895,14 @@ echo '' >> /etc/motd
 echo 'To see metadata for an image or video:' >> /etc/motd
 echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo '' >> /etc/motd
-echo 'Instructions for Configuring Dropbox-Uploader:' >> /etc/motd
-echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md' >> /etc/motd
-echo '' >> /etc/motd
+echo 'Below tools were installed to assist you in troubleshooting any networking issues:
+echo 'mtr, tcpdump and iptraf-ng'
 echo 'To edit or delete these login messages goto: /etc/motd' >> /etc/motd
 echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 
 echo ''
-echo '###### Post Config Diagnostics: ######'
+echo "$(tput setaf 5)****** POST-CONFIG DIAGNOSTICS:  ******$(tput sgr 0)"
 echo ''
 echo 'Pi Temperature reported by "vcgencmd measure_temp" below should be between 40-60 degrees Celcius:'
 echo '------------------------------------------------------------------------'
@@ -723,6 +938,25 @@ echo ''
 # Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
 rm -rf /home/pi/pi-cam-config
 
-read -p "Press Enter to reboot after noting camera IP address in script feedback above"
+echo''
+echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******$(tput sgr 0)"
+echo ''
+echo''
+/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
+echo ''
+echo ''
+
+echo 'Big Thanks to ANDREA FABRIZI:'
+echo '-----------------------------------------------------------------------------------------------------------------'
+echo 'My script "pi-cam-config.sh" downloads and uses his repo to shift images from local USB Flash storage to Dropbox'
+echo "		$(tput setaf 5) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
+echo ''
+echo ''
+
+echo '** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS **'
+
+echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080"
+
+read -p "Press Enter to reboot after reviewing script feedback above"
 
 systemctl reboot
