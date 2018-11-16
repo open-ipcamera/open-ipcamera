@@ -868,17 +868,13 @@ echo ''
 echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo ''
 
-echo '' >> /etc/motd
-echo '###############################################################################' >> /etc/motd
-echo '##  If this script saved you lots of time doing manual config buy me a beer! ##' >> /etc/motd
-echo '##                      paypal.me/TerrenceHoulahan                      ## ' >> /etc/motd
-echo '###############################################################################' >> /etc/motd
+
 echo '' >> /etc/motd
 echo "Video Camera Status: $(echo "sudo systemctl status motion")" >> /etc/motd
 echo '' >> /etc/motd
 echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
 echo '' >> /etc/motd
-echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) " >> /etc/motd
+echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )" >> /etc/motd
 echo '' >> /etc/motd
 echo 'To stop/start/reload the Motion daemon:' >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
@@ -897,9 +893,9 @@ echo '' >> /etc/motd
 echo 'To see metadata for an image or video:' >> /etc/motd
 echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo '' >> /etc/motd
-echo 'Below tools were installed to assist you in troubleshooting any networking issues:
+echo 'Below tools were installed to assist you in troubleshooting any networking issues:' >> /etc/motd
 echo 'mtr, tcpdump and iptraf-ng'
-echo 'To edit or delete these login messages goto: /etc/motd' >> /etc/motd
+echo 'To edit or delete these login messages:  vi /etc/motd' >> /etc/motd
 echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 
@@ -940,10 +936,10 @@ echo ''
 # Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
 rm -rf /home/pi/pi-cam-config
 
-echo''
+echo ''
 echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******$(tput sgr 0)"
 echo ''
-echo''
+echo ''
 /home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
 echo ''
 echo ''
@@ -955,11 +951,21 @@ echo "		$(tput setaf 5) https://github.com/andreafabrizi/Dropbox-Uploader.git $(
 echo ''
 echo ''
 
-echo '** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS **'
-
 echo "Note below address of your camera to access via web browser after reboot:"
 echo "$(tput setaf 2) ** Camera Address: "CAMERAIPV4":8080 ** $(tput sgr 0)"
 echo "$(tput setaf 2) ** Camera Address: "CAMERAIPV6":8080 ** $(tput sgr 0)"
+
+echo '' >> /etc/motd
+echo '' >> /etc/motd
+
+echo '###############################################################################' >> /etc/motd
+echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer!$(tput sgr 0) ##" >> /etc/motd
+echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
+echo '###############################################################################' >> /etc/motd
+
+echo '' >> /etc/motd
+echo '' >> /etc/motd
+echo "$(tput setaf 1)** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS ** $(tput sgr 0)"
 
 read -p "Press Enter to reboot after reviewing script feedback above"
 
