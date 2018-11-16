@@ -286,9 +286,11 @@ sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
 sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
 # No need for autologin now that we enabled Public Key Access so we disable it:
-sed -i "/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
+sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
 systemctl disable autologin@.service
 echo 'Disabled autologin'
+
+
 
 echo ''
 echo "$(tput setaf 5)****** USB Flash Storage Configuration:  ******$(tput sgr 0)"
@@ -715,17 +717,17 @@ echo ''
 apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
 
 # *DISABLE* local-only connections to SNMP daemon
-sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmp.conf
+sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmpd.conf
 
 # *ENABLE* remote SNMP connectivity to cameras:
 # A further Reminder to please restrict access by firewall to your cameras
-sed -i "s/#agentAddress  udp:161,udp6:[::1]:161/##agentAddress  udp:161,udp6:161/" /etc/snmp/snmp.conf
+sed -i "s/#agentAddress  udp:161,udp6:[::1]:161/agentAddress  udp:161,udp6:161/" /etc/snmp/snmpd.conf
 
 # Enable loading of MIBs:
-sed -i "-s/mibs :/#mibs :/" /etc/snmp/snmp.conf
+sed -i "s/mibs :/#mibs :/" /etc/snmp/snmp.conf
 
 # Describe location of camera:
-sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCATION/" /etc/snmp/snmp.conf
+sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCATION/" /etc/snmp/snmpd.conf
 
 # Stop SNMP daemon to create a Read-Only user:
 systemctl stop snmpd.service
@@ -803,10 +805,10 @@ systemctl enable email-camera-address.service
 cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
-if [ $(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]; then
-	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLD C \n Timer controlling frequency of this alert: heat-alert.timer \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert $HOSTNAME" $EMAILCAMERAIP
-elif [ $(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLD C \n \n Pi was shutdown due to excessive heat condition \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert $HOSTNAME" $EMAILCAMERAIP
+if [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]; then
+	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLD C \n Timer controlling frequency of this alert: heat-alert.timer \n \$HOSTNAME \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mutt -s "Heat Alert \$HOSTNAME" \$EMAILCAMERAIP
+elif [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]; then
+	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLD C \n \n Pi was shutdown due to excessive heat condition \n \$HOSTNAME \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mutt -s "Shutdown Alert \$HOSTNAME" \$EMAILCAMERAIP
 	systemctl poweroff
 else
 	exit
@@ -955,7 +957,9 @@ echo ''
 
 echo '** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS **'
 
-echo "Camera Address: "$(ip addr list|grep wlan0|awk '{print $2}'| cut -d '/' -f1| cut -d ':' -f2)":8080"
+echo "Note below address of your camera to access via web browser after reboot:"
+echo "$(tput setaf 2) ** Camera Address: "CAMERAIPV4":8080 ** $(tput sgr 0)"
+echo "$(tput setaf 2) ** Camera Address: "CAMERAIPV6":8080 ** $(tput sgr 0)"
 
 read -p "Press Enter to reboot after reviewing script feedback above"
 
