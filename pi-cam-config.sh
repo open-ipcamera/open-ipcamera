@@ -126,7 +126,7 @@ WEBCONTROLPORT='8080'
 
 # Below variable is self-populating- there is no need to modify if
 CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
-CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}')"
+CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cut -d '/' -f1)"
 
 echo ''
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
@@ -176,6 +176,8 @@ if [ -f /home/pi/.ssh/authorized_keys ]; then
 sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
 fi
 
+
+apt-get update
 
 ### Uninstall any SystemD services and their related files previously created by this script:
 
@@ -239,10 +241,10 @@ echo "$(tput setaf 5)****** SECURITY: Set Passwords - Disable Autologin - Enable
 echo ''
 
 # By default no passwords set for users 'pi' and 'root'
-echo "*** Set passwd for user 'pi' ***"
+echo "Set passwd for user 'pi' "
 echo "pi:$PASSWDPI"|chpasswd
 
-echo "*** Set passwd for user 'root' ***"
+echo "Set passwd for user 'root' "
 echo "root:$PASSWDROOT"|chpasswd
 
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
@@ -298,9 +300,6 @@ echo ''
 
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
-
-apt-get update
-
 
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
 	apt-get purge -q -y usbmount
@@ -897,13 +896,13 @@ echo 'To see metadata for an image or video:' >> /etc/motd
 echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Below tools were installed to assist you in troubleshooting any networking issues:' >> /etc/motd
-echo 'mtr, tcpdump and iptraf-ng'
+echo 'mtr, tcpdump and iptraf-ng' >> /etc/motd
 echo 'To edit or delete these login messages:  vi /etc/motd' >> /etc/motd
 echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 
 echo ''
-echo "$(tput setaf 5)****** POST-CONFIG DIAGNOSTICS:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** POST-CONFIG DIAGNOSTICS:  ****** $(tput sgr 0)"
 echo ''
 echo 'Pi Temperature reported by "vcgencmd measure_temp" below should be between 40-60 degrees Celcius:'
 echo '------------------------------------------------------------------------'
@@ -936,15 +935,11 @@ echo 'If Pinging "www.google.com" by name failed but pinging "8.8.8.8" succeeded
 echo ''
 echo ''
 
-# Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
-rm -rf /home/pi/pi-cam-config
-
-echo ''
 echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******$(tput sgr 0)"
 echo ''
+echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
 /home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
-echo ''
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
@@ -958,12 +953,16 @@ echo "Note below address of your camera to access via web browser after reboot:"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
 
-echo '' >> /etc/motd
-echo '' >> /etc/motd
+echo ''
+echo ''
 echo "$(tput setaf 1)** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS ** $(tput sgr 0)"
-echo '' >> /etc/motd
-echo '' >> /etc/motd
+echo ''
+echo ''
 read -p "Press Enter to reboot after reviewing script feedback above"
-echo '' >> /etc/motd
-echo '' >> /etc/motd
+echo ''
+echo ''
+
+# Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
+rm -rf /home/pi/pi-cam-config
+
 systemctl reboot
