@@ -1,7 +1,7 @@
 # Author:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181105
+# Date:    20181116
 
 # "pi-cam-config.sh": Installs & configs Raspberry Pi camera application drivers and Kernel module
 
@@ -18,9 +18,20 @@
 #	10.TROUBLESHOOTING
 #	11.USEFUL LINKS
 
-# 1. LICENSE:
-# Beer-ware License: If I saved you a few hours/days of manually configuring one or more pi-cams I wouldn't say "no" if you bought me a beer ;-)
-#	paypal.me/TerrenceHoulahan
+# 1. LICENSE: GPL version 3
+# Copyright (C) 2018 Terrence Houlahan
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # 2. COMPATIBILITY: Script known to work with following configurations (but might work with others)
 # - OS Version:	Raspbian "Stretch"
@@ -41,8 +52,9 @@
 # - Installs and configures "Motion" video camera package
 # - Installs and configures "MSMTP" package for email alerts on motion detection
 # - Abstracts data to a USB flashdrive formatted for EXFAT from the OS on the SD card
-# - Downloads "Dropbox_Uploader" for copying video & pics to cloud (Note: requires manual config)
+# - Downloads "Dropbox_Uploader" for copying video & pics to cloud (Note: requires setup in your Dropbox Account)
 # - Configures a SystemD Timer to upload images on USB flash drive to a DropBox account and delete the local copies
+# - SNMP V3 configured
 # - Changes default editor FROM crappy nano TO standardized vim
 # - Sets hostname (by variable)
 # - Disables AutologinSets and sets passwords for the users 'pi' and 'root'
@@ -63,6 +75,7 @@
 #	c. Join your Pi to WiFi:
 #		raspi-config
 #		"Network Options" > "Wi-Fi" > Then enter SSID and password when prompted
+#	NOTE: If Camera will also be used with a phone HotSpot additionally set this network
 
 # 7. CONFIGURE DROPBOX ACCESS TOKEN:
 # Skip this step for all subsequent Pi-Cam setups- only needs to be done just once
@@ -85,11 +98,13 @@
 #	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
 #		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
 
-As user "pi" - do not sudo to root- execute following commands:
+# As user "pi" - do not sudo to root- execute following commands:
 #	c. Download my Git repo:
 #		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
 #	d. Edit variables in "pi-cam-config.sh":
 #		nano /home/pi/pi-cam-config/pi-cam-config.sh
+#	** WARNING: Record any unique values supplied as variables- ie usernames and passwords- in a file NOT ON THE SECURITY CAMERA.
+#				The final step in the script is to delete itself ensuring that no clear-text login data persists on the security camera.
 #	NOTE: Replace value "ABCD1234" encased between single quotes in variable "DROPBOXACCESSTOKEN=" with Dropbox Access Token copied in Step 7:
 #	e. Execute script:
 #		cd /home/pi/pi-cam-config/
@@ -98,9 +113,7 @@ As user "pi" - do not sudo to root- execute following commands:
 #		NOTE: Use the Login credentials that you set in the "### Variables: Motion" section of the script!
 
 # 9. POST-SCRIPT EXECUTION Setup:
-#	a. Execute following command and follow instructions presented to verify the Dropbox Access Token:
-#		/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
-#	b. Setup sensible firewall rules to restrict access to your Pi-Cameras!
+#	a. Setup firewall rules to restrict access to your Pi-Cameras to either a specific IP or subnet
 #
 
 # 10. TROUBLESHOOTING:
