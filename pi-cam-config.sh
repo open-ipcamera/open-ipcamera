@@ -479,7 +479,7 @@ if [[ $(dpkg -l | grep mutt) = '' ]]; then
 	apt-get install -q -y mutt
 fi
 
-# vim-tiny- which is crap like nano- will also match unless grep-ed with boundaries:
+# vim-tiny- which is crap like nano- will also match unless grep-ed with "word" boundaries:
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
 	apt-get install -q -y vim
 fi
@@ -524,11 +524,19 @@ echo ''
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	cd /home/pi
 	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git
+	echo "Dropbox-Uploader Downloaded"
 	else
 	echo 'Failed to download dependent repo https://github.com/andreafabrizi/Dropbox-Uploader.git- script will exit'
 	exit
 fi
 
+echo ''
+echo 'Big Thanks to ANDREA FABRIZI:'
+echo '-----------------------------------------------------------------------------------------------------------------'
+echo 'My script "pi-cam-config.sh" downloads and uses his repo to shift images from local USB Flash storage to Dropbox'
+echo "		$(tput setaf 5) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
+echo ''
+echo ''
 
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
@@ -612,8 +620,15 @@ echo "$(tput setaf 5)****** DEFAULT EDITOR: Change FROM *Nano* TO *vi*  ******$(
 echo ''
 
 
-# Nano is crap: change default editor to a universal Unix standard vi
+echo 'Change default editor from crap "nano" to a universal Unix standard "vi"'
+
+echo "Before Change:"
+update-alternatives --get-selections|grep editor
+echo ''
 update-alternatives --set editor /usr/bin/vim.basic
+echo ''
+echo "After Change:"
+update-alternatives --get-selections|grep editor
 
 if [ -f /home/pi/.selected_editor ]; then
 	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
@@ -669,7 +684,7 @@ systemctl enable motion.service
 
 
 echo ''
-echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: Motion Detection  ******$(tput sgr 0)"
 echo ''
 
 # References:
@@ -710,51 +725,11 @@ password    $GMAILPASSWD
 account default : $SMTPRELAYFQDN
 
 EOF
-
-
-
-
-echo ''
-echo "$(tput setaf 5)****** SNMP Configuration:  ******$(tput sgr 0)"
-echo ''
-
-
-apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
-
-# *DISABLE* local-only connections to SNMP daemon
-sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmpd.conf
-
-# *ENABLE* remote SNMP connectivity to cameras:
-# A further Reminder to please restrict access by firewall to your cameras
-sed -i "s/#agentAddress  udp:161,udp6:[::1]:161/agentAddress  udp:161,udp6:161/" /etc/snmp/snmpd.conf
-
-# Enable loading of MIBs:
-sed -i "s/mibs :/#mibs :/" /etc/snmp/snmp.conf
-
-# Describe location of camera:
-sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCATION/" /etc/snmp/snmpd.conf
-
-# Stop SNMP daemon to create a Read-Only user:
-systemctl stop snmpd.service
-
-# Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
-# "-A" => AUTHENTICATION password and "-X" => ENCRYPTION password
-net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
-
-
-systemctl enable snmpd.service
-systemctl start snmpd.service
-
-
-# Test our SNMPv3 config works correctly by checking Camera Location
-snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
-
-
-
+ 
 
 
 echo ''
-echo "$(tput setaf 5)****** Email NOTIFICATIONS: IP and HEAT ALERTS  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and HEAT  ******$(tput sgr 0)"
 echo ''
 
 # Apple offers no way to identify the IP of a device tethered to an iPhone HotSpot.
@@ -784,6 +759,9 @@ echo -e “$HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "IP Address of C
 
 EOF
 
+
+chmod 700 /home/pi/scripts/email-camera-address.sh
+chown pi:pi /home/pi/scripts/email-camera-address.sh
 
 
 cat <<EOF> /etc/systemd/system/email-camera-address.service
@@ -820,6 +798,10 @@ else
 fi
 
 EOF
+
+
+chmod 700 /home/pi/scripts/heat-alert.sh
+chown pi:pi /home/pi/scripts/heat-alert.sh
 
 
 cat <<EOF> /etc/systemd/system/heat-alert.service
@@ -864,8 +846,41 @@ systemctl list-timers --all
 
 
 
-# Change ownership of all files created by this script FROM user "root" TO user "pi":
-chown -R pi:pi /home/pi
+echo ''
+echo "$(tput setaf 5)****** SNMP Configuration:  ******$(tput sgr 0)"
+echo ''
+
+
+apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+
+# *DISABLE* local-only connections to SNMP daemon
+sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmpd.conf
+
+# *ENABLE* remote SNMP connectivity to cameras:
+# A further reminder to please restrict access by firewall to your cameras
+sed -i "s/#agentAddress  udp:161,udp6:[::1]:161/agentAddress  udp:161,udp6:161/" /etc/snmp/snmpd.conf
+
+# Enable loading of MIBs:
+sed -i "s/mibs :/#mibs :/" /etc/snmp/snmp.conf
+
+# Describe location of camera:
+sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCATION/" /etc/snmp/snmpd.conf
+
+# Stop SNMP daemon to create a Read-Only user:
+systemctl stop snmpd.service
+
+# Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
+# "-A" => AUTHENTICATION password and "-X" => ENCRYPTION password
+net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
+
+
+systemctl enable snmpd.service
+systemctl start snmpd.service
+
+
+# Test our SNMPv3 config works correctly by checking Camera Location
+snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
+
 
 
 
@@ -907,6 +922,7 @@ echo 'To edit or delete these login messages:  vi /etc/motd' >> /etc/motd
 echo '' >> /etc/motd
 echo '##########################################################################' >> /etc/motd
 
+
 echo ''
 echo "$(tput setaf 5)****** POST-CONFIG DIAGNOSTICS:  ****** $(tput sgr 0)"
 echo ''
@@ -937,7 +953,7 @@ ping -c 2 www.google.com
 echo ''
 ping -c 2 8.8.8.8
 echo ''
-echo 'If Pinging "www.google.com" by name failed but pinging "8.8.8.8" succeeded check that port UDP/53 is open'
+echo 'If Pinging "www.google.com" above by name failed but pinging "8.8.8.8" succeeded check that port UDP/53 is open'
 echo ''
 echo ''
 
@@ -954,13 +970,6 @@ echo "y"
 echo -ne '\n'
 echo ''
 
-echo 'Big Thanks to ANDREA FABRIZI:'
-echo '-----------------------------------------------------------------------------------------------------------------'
-echo 'My script "pi-cam-config.sh" downloads and uses his repo to shift images from local USB Flash storage to Dropbox'
-echo "		$(tput setaf 5) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
-echo ''
-echo ''
-
 echo "Note below address of your camera to access via web browser after reboot:"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
@@ -973,6 +982,9 @@ echo ''
 read -p "Press Enter to reboot after reviewing script feedback above"
 echo ''
 echo ''
+
+# Change ownership of all files created by this script FROM user "root" TO user "pi":
+chown -R pi:pi /home/pi
 
 # Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
 rm -rf /home/pi/pi-cam-config
