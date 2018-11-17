@@ -939,7 +939,7 @@ echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******
 echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
-/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
+echo "$DROPBOXACCESSTOKEN" | "/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
