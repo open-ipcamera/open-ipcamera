@@ -972,7 +972,7 @@ echo ''
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo ''
 cd /home/pi/Dropbox-Uploader/
-su pi -c ""./dropbox_uploader.sh upload << INPUT
+su pi -c "./dropbox_uploader.sh upload << 'INPUT'
 $DROPBOXACCESSTOKEN
 INPUT"
 echo "y"
