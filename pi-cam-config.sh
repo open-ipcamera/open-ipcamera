@@ -404,25 +404,28 @@ echo 'start_x=1' >> /boot/config.txt
 sed -i '/disable_camera_led=1/d' /boot/config.txt
 echo 'disable_camera_led=1' >> /boot/config.txt
 
+echo "Determine if Pi is a Zero W or NOT to"
+echo "set the GPU memory value correctly:"
 
 if [ $(cat /proc/device-tree/model | awk '{ print $3 }') != 'Zero' ]; then
 	echo "NOT PI ZERO!"
+	echo "Setting GPU Memory to 128"
 	sed -i '/gpu_mem=128/d' /boot/config.txt
 	echo 'gpu_mem=128' >> /boot/config.txt
 else
 	echo "PI ZERO"
+#	echo "Setting GPU Memory to 512"
 #	sed -i '/gpu_mem=512/d' /boot/config.txt
 #	echo 'gpu_mem=512' >> /boot/config.txt
 fi
 
+echo ''
 
 echo 'Camera enabled'
 echo 'Camera LED light disabled'
 
-# Disable splash screen to stop it hiding any errors as Pi rises up on boot:
 sed -i '/disable_splash=1/d' /boot/config.txt
 echo 'disable_splash=1' >> /boot/config.txt
-
 echo 'Disabled boot splash screen so we can see errors while host is rising up.'
 
 
@@ -939,7 +942,7 @@ echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******
 echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
-echo "$DROPBOXACCESSTOKEN" | "/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload
+echo "$DROPBOXACCESSTOKEN" | "/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload"
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
