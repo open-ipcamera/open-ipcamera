@@ -434,13 +434,13 @@ echo ''
 echo "$(tput setaf 5)******  SET HOSTNAME:  ******$(tput sgr 0)"
 echo ''
 
-echo "Current Hostname: $HOSTNAME"
+echo "Hostname CURRENT: $HOSTNAME"
 
 hostnamectl set-hostname $OURHOSTNAME.$OURDOMAIN
 systemctl restart systemd-hostnamed&
 wait $!
 echo ''
-echo "NEW Hostname: $HOSTNAME"
+echo "Hostname NEW: $HOSTNAME"
 
 # hostnamectl does NOT update its own entry in /etc/hosts so must do separately:
 sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
@@ -946,8 +946,9 @@ echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
 cd /home/pi/Dropbox-Uploader/
-./dropbox_uploader.sh upload
-echo $DROPBOXACCESSTOKEN
+echo ""$DROPBOXACCESSTOKEN""|./dropbox_uploader.sh upload
+echo -ne '\n'
+echo "y"
 echo -ne '\n'
 echo ''
 
