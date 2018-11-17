@@ -877,10 +877,15 @@ net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTP
 systemctl enable snmpd.service
 systemctl start snmpd.service
 
+echo ''
 
-# Test our SNMPv3 config works correctly by checking Camera Location
+echo "Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):"
+echp'---------------------------------------------------------------------------------------------'
 snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
+echo ''
+echo "Expected result of the snmpget should be: $SNMPLOCATION"
 
+echo ''
 
 
 
@@ -888,6 +893,8 @@ echo ''
 echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo ''
 
+echo 'Configured messages in /etc/motd to display on user login'
+echo ''
 echo '###############################################################################' >> /etc/motd
 echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer!$(tput sgr 0) ##" >> /etc/motd
 echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
@@ -959,10 +966,7 @@ echo ''
 
 echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******$(tput sgr 0)"
 echo ''
-echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
-echo ''
 cd /home/pi/Dropbox-Uploader/
-# Use a here-doc called "INPUT" to feed required answer- the Access Token- to the script:
 ./dropbox_uploader.sh upload << INPUT
 $DROPBOXACCESSTOKEN
 INPUT
