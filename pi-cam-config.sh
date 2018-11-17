@@ -530,11 +530,13 @@ if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	exit
 fi
 
+chown -R pi:pi /home/pi/Dropbox-Uploader
+
 echo ''
-echo 'Big Thanks to ANDREA FABRIZI:'
+echo "$(tput setaf 2) Big Thanks to ANDREA FABRIZI:$(tput sgr 0)"
 echo '-----------------------------------------------------------------------------------------------------------------'
 echo 'My script "pi-cam-config.sh" downloads and uses his repo to shift images from local USB Flash storage to Dropbox'
-echo "		$(tput setaf 5) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
+echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
 echo ''
 echo ''
 
@@ -974,13 +976,13 @@ echo "y"
 echo -ne '\n'
 echo ''
 
-echo "Note below address of your camera to access via web browser after reboot:"
+echo "Note below address of your camera to access it via web browser after reboot:"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
 
 echo ''
 echo ''
-echo "$(tput setaf 1)** WARNING: DO NOT FORGET TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS ** $(tput sgr 0)"
+echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS ** $(tput sgr 0)"
 echo ''
 echo ''
 read -p "Press Enter to reboot after reviewing script feedback above"
