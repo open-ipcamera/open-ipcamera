@@ -942,7 +942,7 @@ echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
 cd /home/pi/Dropbox-Uploader/
-echo "$DROPBOXACCESSTOKEN" | "./dropbox_uploader.sh upload"
+echo "$DROPBOXACCESSTOKEN" | ./dropbox_uploader.sh upload
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
