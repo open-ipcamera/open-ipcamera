@@ -404,8 +404,7 @@ echo 'start_x=1' >> /boot/config.txt
 sed -i '/disable_camera_led=1/d' /boot/config.txt
 echo 'disable_camera_led=1' >> /boot/config.txt
 
-echo "Determine if Pi is a Zero W or NOT to"
-echo "set the GPU memory value correctly:"
+echo "Determine if Pi is a Zero W or NOT to set GPU memory value appropriately:"
 
 if [ $(cat /proc/device-tree/model | awk '{ print $3 }') != 'Zero' ]; then
 	echo "NOT PI ZERO!"
@@ -942,7 +941,7 @@ echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******
 echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
-echo "$DROPBOXACCESSTOKEN" | "/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload"
+echo "$DROPBOXACCESSTOKEN" | "./home/pi/Dropbox-Uploader/dropbox_uploader.sh upload"
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
