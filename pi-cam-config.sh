@@ -947,7 +947,7 @@ echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
 cd /home/pi/Dropbox-Uploader/
 # Use a here-doc called "INPUT" to feed required answer- the Access Token- to the script:
-./dropbox_uploader.sh upload <<< INPUT
+./dropbox_uploader.sh upload << INPUT
 $DROPBOXACCESSTOKEN
 INPUT
 echo "y"
