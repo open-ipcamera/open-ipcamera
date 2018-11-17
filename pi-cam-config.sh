@@ -642,6 +642,8 @@ cp /usr/share/vim/vimrc /home/pi/.vimrc
 sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
 sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
 
+chown pi:pi /home/pi/.vimrc
+chmod 600 /home/pi/.vimrc
 
 echo ''
 echo "$(tput setaf 5)****** Camera Software *MOTION* Configuration  ******$(tput sgr 0)"
@@ -751,7 +753,8 @@ set editor="vim.basic"
 
 EOF
 
-
+chown pi:pi /home/pi/.muttrc
+chmod 600 /home/pi/.muttrc
 
 cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
@@ -966,12 +969,12 @@ echo 'If Pinging "www.google.com" above by name failed but pinging "8.8.8.8" suc
 echo ''
 echo ''
 
-echo "$(tput setaf 5)****** Paste Dropbox Access Token when prompted to:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo ''
 cd /home/pi/Dropbox-Uploader/
-./dropbox_uploader.sh upload << INPUT
+su pi -c './dropbox_uploader.sh upload << INPUT
 $DROPBOXACCESSTOKEN
-INPUT
+INPUT'
 echo "y"
 echo -ne '\n'
 echo ''
