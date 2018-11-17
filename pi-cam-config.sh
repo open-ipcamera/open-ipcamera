@@ -946,10 +946,12 @@ echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
 cd /home/pi/Dropbox-Uploader/
-echo "$DROPBOXACCESSTOKEN"|./dropbox_uploader.sh upload
-#echo -ne '\n'
-#echo "y"
-#echo -ne '\n'
+# Use a here-doc called "INPUT" to feed required answer- the Access Token- to the script:
+./dropbox_uploader.sh upload <<< INPUT
+$DROPBOXACCESSTOKEN
+INPUT
+echo "y"
+echo -ne '\n'
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
