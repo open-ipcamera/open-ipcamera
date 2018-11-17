@@ -942,9 +942,8 @@ echo ''
 echo "Copy and paste this token at the following prompt:  $DROPBOXACCESSTOKEN"
 echo ''
 cd /home/pi/Dropbox-Uploader/
-./dropbox_uploader.sh upload
-cat $DROPBOXACCESSTOKEN
-echo -ne '\n'
+echo $DROPBOXACCESSTOKEN|./dropbox_uploader.sh upload
+#echo -ne '\n'
 echo ''
 
 echo 'Big Thanks to ANDREA FABRIZI:'
