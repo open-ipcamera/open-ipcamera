@@ -3,7 +3,7 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181116
+# Date:    20181120x
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -69,10 +69,10 @@ SNMPV3ROUSER='pi'
 ### Variables: MSMTP (to send alerts):
 # SELF-HOSTED SMTP Relay Mail Server:
 SMTPRELAYPORT='25'
-SASLUSER='yourUserName'
-SASLPASSWD='ChangeMe'
-SMTPRELAYFQDN='mail.yourRelayDomain.com'
-SMTPRELAYFROM='you@domainYouWantPiToAppearToBeSendingAlertsFrom'
+SASLUSER='terrence'
+SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
+SMTPRELAYFQDN='mail.linuxengineer.co.uk'
+SMTPRELAYFROM='terrence@houlahan.co.uk'
 
 # GMAIL SMTP Relay Server:  NOTE: Requires a PAID Google-hosted mail account
 GMAILADDRESS='terrence.houlahan.devices@gmail.com'
