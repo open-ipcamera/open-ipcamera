@@ -39,6 +39,7 @@
 # - Cameras:	Picams 1.3 and 2.1
 
 # 3. SCRIPT PREREQUISITES:
+# - DHCP IP addressing: If the camera can just catch an address it will configure the rest of the networking
 # - Internet connection (wired or Ethernet)
 # - USB flash drive formatted for EXFAT filesystem
 # - Dropbox Account Access Token: My script copies images from the Pi's local USB storage into cloud via Dropbox API. See "DROPBOXACCESSTOKEN" variable in script for further info
@@ -47,18 +48,20 @@
 # -  To receive email alerts for motion detection events an SMTP server with both an MX and PTR DNS record to relay alert emails from the Pi
 
 # 5. SCRIPT FEATURES:
+# - Automatically configures the IP address in the configuration files
 # - Enables camera in Raspbian and disables its' red LED activity light
 # - Sets Kernel driver for camera to automatically load on boot
 # - Installs and configures "Motion" video camera package
 # - Installs and configures "MSMTP" package for email alerts on motion detection
-# - Abstracts data to a USB flashdrive formatted for EXFAT from the OS on the SD card
+# - Abstracts data from the OS MicroSD card storage to a USB flashdrive formatted for EXFAT
 # - Downloads "Dropbox_Uploader" for copying video & pics to cloud (Note: requires setup in your Dropbox Account)
 # - Configures a SystemD Timer to upload images on USB flash drive to a DropBox account and delete the local copies
 # - SNMP V3 configured
+# - Heat Monitoring for user configurable thresholds: WARN and SHUTDOWN
 # - Changes default editor FROM crappy nano TO standardized vim
 # - Sets hostname (by variable)
-# - Disables AutologinSets and sets passwords for the users 'pi' and 'root'
-# - Configures passwordless login by adding a specified Public Key (by variable) to "~/.ssh/authorized_keys" and configuring "/etc/ssh/sshd_config"
+# - Disables Autologin and sets passwords for the users 'pi' and 'root'
+# - Configures passwordless login by adding a Public Key YOU specify in a variable to "~/.ssh/authorized_keys" and configuring "/etc/ssh/sshd_config"
 # - Configures an ECDSA 521 bit SSH Keypair
 # - Disables boot splash screen so errors can be observed as host rises-up
 # Note: Users must configure firewall rules to restrict access to the camera
@@ -102,6 +105,7 @@
 #	c. Download my Git repo:
 #		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
 #	d. Edit variables in "pi-cam-config.sh":
+#  WARNING FOR NETWORKING NEOPHYTES: Set hostname variable to a unique hostname before executing script on other cameras!
 #		nano /home/pi/pi-cam-config/pi-cam-config.sh
 #	** WARNING: Record any unique values supplied as variables- ie usernames and passwords- in a file NOT ON THE SECURITY CAMERA.
 #				The final step in the script is to delete itself ensuring that no clear-text login data persists on the security camera.
