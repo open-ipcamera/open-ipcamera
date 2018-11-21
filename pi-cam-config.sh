@@ -494,7 +494,7 @@ if [[ $(dpkg -l | grep mailutils) = '' ]]; then
 fi
 
 
-# NOTE: following are not required but just included because they are useful
+# NOTE: following are not required but included because they are useful
 
 # mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
@@ -510,6 +510,20 @@ fi
 if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
 	apt-get install -q -y iptraf-ng
 fi
+
+
+# VLC can be used to both play video and also to record your desktop for HowTo videos:
+if [[ $(dpkg -l | grep vlc) = '' ]]; then
+	apt-get install vlc vlc-plugin-access-extra
+fi
+
+# Start "vlc" and immediately kill it to generate the vlc QT preferences file:
+vlc --no-qt-privacy-ask
+killall vlc
+
+# Edit prefs file just created above to set MP4 as default codec:
+sed -i '/[General]/a codecs-profiles-selected=Video - H.264 + MP3 (MP4)' /home/pi/.config/vlc/vlc-qt-interface.conf
+
 
 
 echo ''
