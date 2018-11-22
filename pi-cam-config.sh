@@ -146,8 +146,8 @@ read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL
 echo ''
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo ''
-echo '### <rant> This is a camera and we do not need Libre Office and besides it is just total crap. ###'
-echo '### Dont get me started.  Grrrrr </rant>###'
+echo '<rant> This is a camera and we do not need Libre Office and besides it is just total crap.'
+echo 'Dont get me started.  Grrrrr </rant>'
 echo ''
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
@@ -168,7 +168,7 @@ fi
 echo ''
 echo "$(tput setaf 5)****** DELETE DETRITUS FROM PRIOR INSTALLS:  ******$(tput sgr 0)"
 echo ''
-echo '$(tput setaf 2)### Restore Pi to predictable known state by removing artefacts left by prior executions of this script: ###$(tput sgr 0)'
+echo "$(tput setaf 2)### Restore Pi to predictable known state by removing artefacts left by prior executions of this script: ###$(tput sgr 0)""
 echo ''
 
 # Reset the hosts file back to default state
@@ -288,7 +288,7 @@ fi
 # Messages are appended to MOTD by this script: we truncate the file to wipe existing messages to stop being repeatedly appended every time we execute it
 truncate -s 0 /etc/motd
 
-apt-get autoremove
+apt-get autoremove -q -y
 apt-get clean
 
 echo ''
