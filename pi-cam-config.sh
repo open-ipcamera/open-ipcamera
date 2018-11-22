@@ -146,7 +146,7 @@ read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL
 echo ''
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo ''
-echo '<rant> This is a camera and we do not need Libre Office and besides it is just total crap.'
+echo '<rant> This is a camera. We do not need Libre Office and in any event it is just crap.'
 echo 'Dont get me started.  Grrrrr </rant>'
 echo ''
 
@@ -308,9 +308,10 @@ apt-get upgrade
 apt-get dist-upgrade
 
 
-# kex-tools can be used to load a new Kernel without a reboot
+# kexec-tools can be used to load a new Kernel without reboot
+# --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
-	apt-get install -q -y kexec-tools
+	apt-get install -q --assume-no kexec-tools
 fi
 
 
@@ -529,13 +530,13 @@ echo ''
 echo "$(tput setaf 5)******  SET HOSTNAME:  ******$(tput sgr 0)"
 echo ''
 
-echo "Hostname CURRENT: $(echo hostname)"
+echo "Hostname CURRENT: $(hostname)"
 
 hostnamectl set-hostname $OURHOSTNAME.$OURDOMAIN
 systemctl restart systemd-hostnamed&
 wait $!
 echo ''
-echo "Hostname NEW: $(echo hostname)"
+echo "Hostname NEW: $(hostname)"
 
 # hostnamectl does NOT update the hosts own entry in /etc/hosts so must do separately:
 sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
@@ -934,10 +935,10 @@ systemctl enable email-camera-address.service
 cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
-if [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]; then
-	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLD C \n Timer controlling frequency of this alert: heat-alert.timer \n \$HOSTNAME \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mutt -s "Heat Alert \$HOSTNAME" \$EMAILCAMERAIP
-elif [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLD C \n \n Pi was shutdown due to excessive heat condition \n \$HOSTNAME \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mutt -s "Shutdown Alert \$HOSTNAME" \$EMAILCAMERAIP
+if [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]; then
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLD C \n Timer controlling frequency of this alert: heat-alert.timer \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert \$HOSTNAME" \$EMAILCAMERAIP
+elif [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]; then
+	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLD C \n \n Pi was shutdown due to excessive heat condition \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert \$HOSTNAME" \$EMAILCAMERAIP
 	systemctl poweroff
 else
 	exit
