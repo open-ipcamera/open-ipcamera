@@ -105,7 +105,7 @@
 #	c. Download my Git repo:
 #		git clone https://f1linux@bitbucket.org/f1linux/pi-cam-config.git
 #	d. Edit variables in "pi-cam-config.sh":
-#  WARNING FOR NETWORKING NEOPHYTES: Set hostname variable to a unique hostname before executing script on other cameras!
+#  WARNING FOR NETWORKING NEOPHYTES: Set hostname variable to a unique hostname before executing script on other cameras
 #		nano /home/pi/pi-cam-config/pi-cam-config.sh
 #	** WARNING: Record any unique values supplied as variables- ie usernames and passwords- in a file NOT ON THE SECURITY CAMERA.
 #				The final step in the script is to delete itself ensuring that no clear-text login data persists on the security camera.
