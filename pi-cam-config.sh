@@ -3,7 +3,7 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181120x
+# Date:    20181122
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -119,14 +119,15 @@ WEBCONTROLLOCALHOST='off'
 WEBCONTROLPORT='8080'
 
 
+# Below variables are self-populating- DO NOT EDIT THESE:
+# These variables automatically identify the IP address of camera and insert it in config files where required
+CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
+CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cut -d '/' -f1)"
+
 
 #############################################################
 # ONLY EDIT BELOW THIS LINE IF YOU KNOW WHAT YOU ARE DOING! #
 #############################################################
-
-# Below variable is self-populating- there is no need to modify if
-CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
-CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cut -d '/' -f1)"
 
 echo ''
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
@@ -143,50 +144,79 @@ read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL
 
 
 echo ''
+echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
+echo ''
+echo '### <rant> This is a camera and we do not need Libre Office and besides it is just total crap. ###'
+echo '### Dont get me started.  Grrrrr </rant>###'
+echo ''
+
+# Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
+if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
+	apt-get purge libreoffice*
+	apt-get clean
+	echo ''
+	echo ''
+	echo 'LibreOffice wiped from system'
+	echo ''
+	echo ''
+fi
+
+
+
+echo ''
 echo "$(tput setaf 5)****** DELETE DETRITUS FROM PRIOR INSTALLS:  ******$(tput sgr 0)"
 echo ''
-echo '### Restore Pi to predictable known state prior to starting the install: ###'
+echo '$(tput setaf 2)### Restore Pi to predictable known state by removing artefacts left by prior executions of this script: ###$(tput sgr 0)'
 echo ''
 
 # Reset the hosts file back to default state
 sed -i "s/127\.0\.0\.1.*/127\.0\.1\.1      raspberrypi/" /etc/hosts
 sed -i "s/::1.*/::1     raspberrypi/" /etc/hosts
 
+# Restore the default hostname:
 hostnamectl set-hostname raspberrypi
 systemctl restart systemd-hostnamed&
 wait $!
 
 
-# Delete "motion and any related config files for using "apt-get purge" :
+# Delete packages and any related config files with "apt-get purge" :
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	apt-get purge -q -y motion
 fi
+
+
+if [[ ! $(dpkg -l | grep msmtp) = '' ]]; then
+	apt-get purge -q -y msmtp
+fi
+
+
+if [[ ! $(dpkg -l | grep snmpd) = '' ]]; then
+	systemctl stop snmpd.service
+	systemctl disable snmpd.service
+	rm /etc/snmp/snmp.conf
+	rm /etc/snmp/snmpd.conf
+	apt-get purge -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+fi
+
+
 
 # Delete "Dropbox-Uploader"
 if [ -d /home/pi/Dropbox-Uploader ]; then
 	rm -rf /home/pi/Dropbox-Uploader
 fi
 
-if [ -d /home/pi/.ssh ]; then
-	rm -R /home/pi/.ssh
-fi
-
-# Delete our pub key or every time we run the key it will just continue to append a new copy of the key:
-if [ -f /home/pi/.ssh/authorized_keys ]; then
-sed -i "\|$MYPUBKEY|d" /home/pi/.ssh/authorized_keys
+# Delete file that loads the camera kernel module on boot:
+if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
+	rm /etc/modules-load.d/bcm2835-v4l2.conf
 fi
 
 
-apt-get update
+### Uninstall any SystemD services and their related files:
 
-### Uninstall any SystemD services and their related files previously created by this script:
-
-# Uninstall automount service for the USB storage:
+# Uninstall automount service for USB flash storage:
 if [ -f /etc/systemd/system/media-pi.mount ]; then
 	systemctl stop media-pi.mount
 	systemctl disable media-pi.mount
-	systemctl daemon-reload
-	rm /etc/systemd/system/media-pi.mount
 fi
 
 if [ -f /etc/systemd/system/media-pi.automount ]; then
@@ -199,20 +229,42 @@ fi
 if [ -f /etc/systemd/system/Dropbox-Uploader.service ]; then
 	systemctl disable Dropbox-Uploader.service
 	systemctl disable Dropbox-Uploader.timer
-	systemctl daemon-reload
 	rm /etc/systemd/system/Dropbox-Uploader.service
 	rm /etc/systemd/system/Dropbox-Uploader.timer
 fi
 
-if [ -d /home/pi/scripts/Dropbox-Uploader ]; then
-	rm -r /home/pi/scripts/Dropbox-Uploader
+
+if [ -f /etc/systemd/system/email-camera-address.service ]; then
+	systemctl stop email-camera-address.service
+	systemctl disable email-camera-address.service
+	rm /etc/systemd/system/email-camera-address.service
 fi
 
 
-
-if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
-	rm /etc/modules-load.d/bcm2835-v4l2.conf
+if [ -f /etc/systemd/system/heat-alert.service ]; then
+	systemctl stop heat-alert.service
+	systemctl disable heat-alert.service
+	systemctl stop heat-alert.timer
+	systemctl disable heat-alert.timer
+	rm /etc/systemd/system/heat-alert.service
+	rm /etc/systemd/system/heat-alert.timer
 fi
+
+# Update the system to the changes we made to the services:
+systemctl daemon-reload
+
+
+# Delete scripts home-rolled scripts created by here-doc from previous runs of "pi-cam-config.sh" that SystemD services were calling:
+rm -r /home/pi/scripts
+
+
+# Delete local config files not removed when their package was purged:
+
+# Delete SSH keys: our public key and "pi" user keys
+if [ -d /home/pi/.ssh ]; then
+	rm -R /home/pi/.ssh
+fi
+
 
 if [ -f /home/pi/.vimrc ]; then
 	rm /home/pi/.vimrc
@@ -226,15 +278,35 @@ if [ -f /home/pi/.muttrc ]; then
 	rm /home/pi/.muttrc
 fi
 
-# apt-get purge does not delete log which will contain errors from previous builds: We truncate it to show only new stuff related to most recent build:
+# apt-get purge does not delete log which will contain errors from previous builds: we will truncate it so only new messages from latest build are present:
 if [ -f /var/log/motion/motion.log ]; then
 	truncate -s 0 /var/log/motion/motion.log
 fi
 
-# Messages are appended to MOTD by this script:truncate the file to wipe existing messages to stop being repeatedly appended
+# Messages are appended to MOTD by this script: we truncate the file to wipe existing messages to stop being repeatedly appended every time we execute it
 truncate -s 0 /etc/motd
 
+apt-get autoremove
+apt-get clean
 
+echo ''
+echo ''
+echo "$(tput setaf 5)****** Update System: ******$(tput sgr 0)"
+echo ''
+
+echo ''
+echo 'Raspbian Version PRE Update'
+lsb_release -a
+echo ''
+
+apt-get update
+apt-get upgrade
+apt-get dist-upgrade
+
+echo ''
+echo 'Raspbian Version POST Update'
+lsb_release -a
+echo ''
 
 echo ''
 echo "$(tput setaf 5)****** SECURITY: Set Passwords - Disable Autologin - Enable Public Key Access ******$(tput sgr 0)"
@@ -301,17 +373,18 @@ echo ''
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
 
+# "usbmount" will interfere with the way we are going to mount the storage- ensure it is gone:
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
 	apt-get purge -q -y usbmount
 fi
 
 
-# We want EXFAT because it supports large file sizes and can be read on Mac and Windows:
+# We use EXFAT for large file size support and its cross-platform OS adoptions:
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
 	apt-get install -q -y exfat-fuse
 fi
 
-# Disable automounting by the default Filemanager "pcmanfm": it steps on the SystemD automount which gives us flexibility to change mount options:
+# Disable automounting by default Filemanager "pcmanfm": it steps on our SystemD automount which gives us flexibility to change mount options:
 if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
 	sed -i 's/mount_removable=1/mount_removable=0/' /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
 fi
@@ -371,7 +444,7 @@ fi
 if [[ $(lsblk -f|grep sda1|awk '{print $2}') = '' ]]; then
 	echo ''
 	echo 'ERROR: USB flash drive NOT formatted for * EXFAT * filesystem'
-	echo 'Re-run script after minimum storage requirements met. Exiting'
+	echo 'Re-execute script after minimum storage requirements met. Exiting'
 	echo ''
 	exit
 else
@@ -447,13 +520,34 @@ sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/
 sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 
 
+
+
+
+
 echo ''
 echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo ''
 
+# Ensure "git" is installed: we need it to grab repos using "git clone"
+if [[ $(dpkg -l | grep git) = '' ]]; then
+	apt-get install -q -y git
+fi
 
+# "motion" is the package our camera uses to capture our video evidence
 if [[ $(dpkg -l | grep motion) = '' ]]; then
 	apt-get install -q -y motion
+fi
+
+
+# "msmtp" is used to relay motion detection email alerts:
+if [[ $(dpkg -l | grep msmtp) = '' ]]; then
+	apt-get install -q -y msmtp
+fi
+
+
+# SNMP monitoring will be configured:
+if [[ $(dpkg -l | grep snmpd) = '' ]]; then
+	apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
 fi
 
 
@@ -471,10 +565,6 @@ if [[ $(dpkg -l | grep exiv2) = '' ]]; then
 fi
 
 
-if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-	apt-get install -q -y msmtp
-fi
-
 if [[ $(dpkg -l | grep mutt) = '' ]]; then
 	apt-get install -q -y mutt
 fi
@@ -484,17 +574,21 @@ if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
 	apt-get install -q -y vim
 fi
 
-if [[ $(dpkg -l | grep git) = '' ]]; then
-	apt-get install -q -y git
-fi
-
 
 if [[ $(dpkg -l | grep mailutils) = '' ]]; then
 	apt-get install -q -y mailutils
 fi
 
 
-# NOTE: following are not required but included because they are useful
+# NOTE: Following package installations are optional. Therefore they could be changed according to your personal
+# preferences without affecting the overall operation of this script. However I have chosen each for good reasons...
+
+# "screen" creates a shell session that can remain active after an SSH session ends that can be reconnected to on future SSH sessions.
+# If you have a flaky Internet connection or need to start a long running process  screen" is your friend
+if [[ $(dpkg -l | grep screen) = '' ]]; then
+	apt-get install -q -y screen
+fi
+
 
 # mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
@@ -511,10 +605,21 @@ if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
 	apt-get install -q -y iptraf-ng
 fi
 
+# Install a screen shotting program: always useful for capturing media for blogs or error reports
+if [[ $(dpkg -l | grep shutter) = '' ]]; then
+	apt-get install shutter
+fi
 
-# VLC can be used to both play video and also to record your desktop for HowTo videos:
+# "vokoscreen" is a great screen recorder that can be minimized so it doesn't end-up being in the video
+# "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
+if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
+	apt-get install vokoscreen
+fi
+
+
+# VLC can be used to both play video and also to record your desktop for HowTo videos of your Linux projects:
 if [[ $(dpkg -l | grep vlc) = '' ]]; then
-	apt-get install vlc vlc-plugin-access-extra
+	apt-get install vlc vlc-plugin-access-extra browser-plugin-vlc
 fi
 
 # Start "vlc" and immediately kill it to generate the vlc QT preferences file:
@@ -869,8 +974,6 @@ echo ''
 echo "$(tput setaf 5)****** SNMP Configuration:  ******$(tput sgr 0)"
 echo ''
 
-
-apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
 
 # *DISABLE* local-only connections to SNMP daemon
 sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmpd.conf
