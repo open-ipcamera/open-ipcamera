@@ -156,9 +156,11 @@ if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
 	apt-get clean
 	echo ''
 	echo ''
-	echo 'LibreOffice wiped from system'
+	echo 'Libre Office wiped from system'
 	echo ''
 	echo ''
+else
+	echo 'Libre Office not found on system'
 fi
 
 
@@ -295,18 +297,34 @@ echo "$(tput setaf 5)****** Update System: ******$(tput sgr 0)"
 echo ''
 
 echo ''
-echo 'Raspbian Version PRE Update'
+echo 'Raspbian Version *PRE* Updates'
 lsb_release -a
+echo ''
+echo "Kernel: $(uname -r)"
 echo ''
 
 apt-get update
 apt-get upgrade
 apt-get dist-upgrade
 
+
+# kex-tools can be used to load a new Kernel without a reboot
+if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
+	apt-get install -q -y kexec-tools
+fi
+
+
+
 echo ''
-echo 'Raspbian Version POST Update'
+echo 'Raspbian Version *POST* Updates'
 lsb_release -a
 echo ''
+echo "Kernel: $(uname -r)"
+echo ''
+
+
+
+
 
 echo ''
 echo "$(tput setaf 5)****** SECURITY: Set Passwords - Disable Autologin - Enable Public Key Access ******$(tput sgr 0)"
@@ -364,6 +382,10 @@ sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
 systemctl disable autologin@.service
 echo 'Disabled autologin'
 
+
+# Set user bash histories to unlimited:
+sed -i "s/HISTSIZE=1000/HISTSIZE=/" /home/pi/.bashrc
+sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
 
 
 echo ''
@@ -507,15 +529,15 @@ echo ''
 echo "$(tput setaf 5)******  SET HOSTNAME:  ******$(tput sgr 0)"
 echo ''
 
-echo "Hostname CURRENT: $HOSTNAME"
+echo "Hostname CURRENT: $(echo hostname)"
 
 hostnamectl set-hostname $OURHOSTNAME.$OURDOMAIN
 systemctl restart systemd-hostnamed&
 wait $!
 echo ''
-echo "Hostname NEW: $HOSTNAME"
+echo "Hostname NEW: $(echo hostname)"
 
-# hostnamectl does NOT update its own entry in /etc/hosts so must do separately:
+# hostnamectl does NOT update the hosts own entry in /etc/hosts so must do separately:
 sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 
@@ -1002,10 +1024,10 @@ systemctl start snmpd.service
 echo ''
 
 echo "Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):"
-echp'---------------------------------------------------------------------------------------------'
+echo'---------------------------------------------------------------------------------------------'
 snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
 echo ''
-echo "Expected result of the snmpget should be: $SNMPLOCATION"
+echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
 
 echo ''
 
