@@ -645,13 +645,6 @@ if [[ $(dpkg -l | grep vlc) = '' ]]; then
 	apt-get install vlc vlc-plugin-access-extra browser-plugin-vlc
 fi
 
-# Start "vlc" and immediately kill it to generate the vlc QT preferences file:
-su pi -c "vlc --no-qt-privacy-ask"
-killall vlc
-
-# Edit prefs file just created above to set MP4 as default codec:
-sed -i '/[General]/a codecs-profiles-selected=Video - H.264 + MP3 (MP4)' /home/pi/.config/vlc/vlc-qt-interface.conf
-
 
 
 echo ''
