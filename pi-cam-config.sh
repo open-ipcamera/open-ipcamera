@@ -646,7 +646,7 @@ if [[ $(dpkg -l | grep vlc) = '' ]]; then
 fi
 
 # Start "vlc" and immediately kill it to generate the vlc QT preferences file:
-vlc --no-qt-privacy-ask
+su pi -c "vlc --no-qt-privacy-ask"
 killall vlc
 
 # Edit prefs file just created above to set MP4 as default codec:
