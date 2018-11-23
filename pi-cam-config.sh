@@ -81,13 +81,13 @@ GMAILPASSWD='YourGmailPasswdHere'
 
 # Specify an email address where IP of camera will be sent to you
 # This email address can be different than the one specified in 'ONEVENTSTART' variable below
-EMAILCAMERAIP='terrence.houlahan.devices@gmail.com'
+NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
 
 ### Variables: Camera Application "Motion"
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
 
-# Change *ONLY* email address in variable ONEVENTSTART below taking care not to delete any of the encasing single quote marks
-ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp terrence.houlahan.devices@gmail.com'
+# Only modify "Subject: Motion Detected" if you want to change it. Take care not to delete any of the encasing single quote marks
+ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp '"'$NOTIFICATIONSRECIPIENT'"''
 
 IPV6ENABLED='on'
 # NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
@@ -305,16 +305,12 @@ echo ''
 echo "Kernel: $(uname -r)"
 echo ''
 
-apt-get update
-apt-get upgrade -q -y
-apt-get dist-upgrade -q -y
 
-
-# How to answer "no" to an interactive tui in a script for an unattended install:
+# How to answer "no" to an interactive TUI dialog box in a script for an unattended install:
 #	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
 # 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
 
-# kexec-tools can be used to load a new Kernel without reboot
+# kexec-tools
 # --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selection
@@ -875,11 +871,11 @@ EOF
 
 
 echo ''
-echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and HEAT  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and Heat  ******$(tput sgr 0)"
 echo ''
 
 # Apple offers no way to identify the IP of a device tethered to an iPhone HotSpot.
-# This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "EMAILCAMERAIP"
+# This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "NOTIFICATIONSRECIPIENT"
 # Note: This feature will only work if you have configured a working mail relay for the camera to use
 
 
@@ -902,7 +898,7 @@ cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
 sleep 30
-echo -e “$HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "IP Address of Camera $HOSTNAME" $EMAILCAMERAIP
+echo -e “$HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "IP Address of Camera $HOSTNAME" $NOTIFICATIONSRECIPIENT
 
 EOF
 
@@ -936,9 +932,9 @@ cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
 if [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]; then
-	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert $(hostname) $EMAILCAMERAIP
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert $(hostname) $NOTIFICATIONSRECIPIENT
 elif [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert $(hostname)" $EMAILCAMERAIP
+	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert $(hostname)" $NOTIFICATIONSRECIPIENT
 	systemctl poweroff
 else
 	exit
@@ -990,6 +986,11 @@ EOF
 systemctl enable heat-alert.timer
 systemctl list-timers --all
 
+
+
+# Since we are doing mail thingies here we will alias roots mail to a real account:
+echo "root: $NOTIFICATIONSRECIPIENT" >> /etc/aliases
+newaliases
 
 
 
@@ -1137,5 +1138,10 @@ chown -R pi:pi /home/pi
 
 # Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
 rm -rf /home/pi/pi-cam-config
+
+# There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
+apt-get update
+apt-get upgrade -q -y
+apt-get dist-upgrade -q -y
 
 systemctl reboot
