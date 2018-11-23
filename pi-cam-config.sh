@@ -308,10 +308,15 @@ apt-get upgrade
 apt-get dist-upgrade
 
 
+# How to answer "no" to an interactive tui in a script for an unattended install:
+#	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
+# 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
+
 # kexec-tools can be used to load a new Kernel without reboot
 # --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
-	apt-get install -q --assume-no kexec-tools
+	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selection
+	apt-get install -q kexec-tools
 fi
 
 
@@ -630,19 +635,19 @@ fi
 
 # Install a screen shotting program: always useful for capturing media for blogs or error reports
 if [[ $(dpkg -l | grep shutter) = '' ]]; then
-	apt-get install shutter
+	apt-get install -q -y shutter
 fi
 
 # "vokoscreen" is a great screen recorder that can be minimized so it doesn't end-up being in the video
 # "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
 if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
-	apt-get install vokoscreen
+	apt-get install -q -y vokoscreen
 fi
 
 
 # VLC can be used to both play video and also to record your desktop for HowTo videos of your Linux projects:
 if [[ $(dpkg -l | grep vlc) = '' ]]; then
-	apt-get install vlc vlc-plugin-access-extra browser-plugin-vlc
+	apt-get install -q -y vlc vlc-plugin-access-extra browser-plugin-vlc
 fi
 
 
