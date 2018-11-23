@@ -257,8 +257,10 @@ systemctl daemon-reload
 
 
 # Delete scripts home-rolled scripts created by here-doc from previous runs of "pi-cam-config.sh" that SystemD services were calling:
-rm -r /home/pi/scripts
 
+if [ -d /home/pi/scripts ]
+	rm -r /home/pi/scripts
+fi
 
 # Delete local config files not removed when their package was purged:
 
@@ -304,8 +306,8 @@ echo "Kernel: $(uname -r)"
 echo ''
 
 apt-get update
-apt-get upgrade
-apt-get dist-upgrade
+apt-get upgrade -q -y
+apt-get dist-upgrade -q -y
 
 
 # How to answer "no" to an interactive tui in a script for an unattended install:
