@@ -258,7 +258,7 @@ systemctl daemon-reload
 
 # Delete scripts home-rolled scripts created by here-doc from previous runs of "pi-cam-config.sh" that SystemD services were calling:
 
-if [ -d /home/pi/scripts ]
+if [ -d /home/pi/scripts ]; then
 	rm -r /home/pi/scripts
 fi
 
