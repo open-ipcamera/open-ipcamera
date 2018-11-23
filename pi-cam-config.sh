@@ -936,9 +936,9 @@ cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
 if [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]; then
-	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLD C \n Timer controlling frequency of this alert: heat-alert.timer \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert \$HOSTNAME" \$EMAILCAMERAIP
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert $(hostname) $EMAILCAMERAIP
 elif [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLD C \n \n Pi was shutdown due to excessive heat condition \n $HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert \$HOSTNAME" \$EMAILCAMERAIP
+	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert $(hostname)" $EMAILCAMERAIP
 	systemctl poweroff
 else
 	exit
@@ -1017,7 +1017,7 @@ systemctl stop snmpd.service
 # Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
 # "-A" => AUTHENTICATION password and "-X" => ENCRYPTION password
 net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
-
+echo ''
 
 systemctl enable snmpd.service
 systemctl start snmpd.service
@@ -1025,7 +1025,7 @@ systemctl start snmpd.service
 echo ''
 
 echo "Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):"
-echo'---------------------------------------------------------------------------------------------'
+echo '---------------------------------------------------------------------------------------------'
 snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
 echo ''
 echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
@@ -1089,11 +1089,11 @@ echo ''
 echo 'Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not camera will be down:'
 echo '------------------------------------------------------------------------'
 lsmod |grep v4l2
-echo''
+echo ''
 echo 'Device "video0" should be shown below. If not your camera will be down:'
 echo '------------------------------------------------------------------------'
 ls -al /dev | grep video0
-echo''
+echo ''
 echo 'Check Host Timekeeping both correct and automated:'
 echo '------------------------------------------------------------------------'
 systemctl status systemd-timesyncd.service
@@ -1119,7 +1119,7 @@ echo "y"
 echo -ne '\n'
 echo ''
 
-echo "Note below address of your camera to access it via web browser after reboot:"
+echo "Note the address of your camera below to access it via web browser after reboot:"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
 
