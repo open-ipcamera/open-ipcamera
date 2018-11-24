@@ -7,7 +7,7 @@
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
-#   OS:         Raspbian "Stretch"
+#   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
 
 ######  License: ######
 #
@@ -29,7 +29,7 @@
 
 ######  INSTALL INSTRUCTIONS: ######
 
-# README.txt file distributed with this this script
+# README.txt file distributed with this script
 # VIDEO:  www.YouTube.com/user/LinuxEngineer
 
 # If I saved you a few hours or possibly DAYS of manually configuring one or more pi-cams consider buying me a beer ;-)
@@ -129,6 +129,18 @@ CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cu
 # ONLY EDIT BELOW THIS LINE IF YOU KNOW WHAT YOU ARE DOING! #
 #############################################################
 
+
+
+until apt-get update
+	do
+		echo ''
+		echo "$(tput setaf 5)apt-get update failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)Check your Internet Connection$(tput sgr 0)"
+		echo ''
+	done
+
+
+
 echo ''
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo ''
@@ -152,8 +164,7 @@ echo ''
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
 if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
-	apt-get purge libreoffice*
-	apt-get clean
+	apt-get purge -q -y libreoffice*
 	echo ''
 	echo ''
 	echo 'Libre Office wiped from system'
@@ -290,44 +301,12 @@ fi
 # Messages are appended to MOTD by this script: we truncate the file to wipe existing messages to stop being repeatedly appended every time we execute it
 truncate -s 0 /etc/motd
 
+# Remove any aliases created for sending root's mail in /etc/aliases:
+sed  -i '/root: $NOTIFICATIONSRECIPIENT/d' /etc/aliases
+
+
 apt-get autoremove -q -y
 apt-get clean
-
-echo ''
-echo ''
-echo "$(tput setaf 5)****** Update System: ******$(tput sgr 0)"
-echo ''
-
-echo ''
-echo 'Raspbian Version *PRE* Updates'
-lsb_release -a
-echo ''
-echo "Kernel: $(uname -r)"
-echo ''
-
-
-# How to answer "no" to an interactive TUI dialog box in a script for an unattended install:
-#	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
-# 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
-
-# kexec-tools
-# --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
-if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
-	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selection
-	apt-get install -q kexec-tools
-fi
-
-
-
-echo ''
-echo 'Raspbian Version *POST* Updates'
-lsb_release -a
-echo ''
-echo "Kernel: $(uname -r)"
-echo ''
-
-
-
 
 
 echo ''
@@ -483,7 +462,7 @@ fi
 systemctl enable media-pi.mount
 
 if [ ! -d /home/pi/scripts ]; then
-mkdir -p /home/pi/scripts
+	mkdir -p /home/pi/scripts
 fi
 
 
@@ -554,26 +533,50 @@ echo ''
 echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo ''
 
-# Ensure "git" is installed: we need it to grab repos using "git clone"
+# Ensure "git" is installed: required to grab repos using "git clone"
 if [[ $(dpkg -l | grep git) = '' ]]; then
-	apt-get install -q -y git
+	until apt-get install -q -y git
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of pkg * GIT * failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
 fi
 
 # "motion" is the package our camera uses to capture our video evidence
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-	apt-get install -q -y motion
+	until apt-get install -q -y motion
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of pkg * MOTION * failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
 fi
 
 
 # "msmtp" is used to relay motion detection email alerts:
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-	apt-get install -q -y msmtp
+	until apt-get install -q -y msmtp
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of pkg * MSMTP * failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
 fi
 
 
 # SNMP monitoring will be configured:
 if [[ $(dpkg -l | grep snmpd) = '' ]]; then
-	apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+	until apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
 fi
 
 
@@ -661,11 +664,13 @@ echo ''
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	cd /home/pi
-	git clone https://github.com/andreafabrizi/Dropbox-Uploader.git
-	echo "Dropbox-Uploader Downloaded"
-	else
-	echo 'Failed to download dependent repo https://github.com/andreafabrizi/Dropbox-Uploader.git- script will exit'
-	exit
+	until git clone https://github.com/andreafabrizi/Dropbox-Uploader.git
+	do
+		echo ''
+		echo "$(tput setaf 5)Download of Dropbox-Uploader repo failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
 fi
 
 chown -R pi:pi /home/pi/Dropbox-Uploader
@@ -673,7 +678,7 @@ chown -R pi:pi /home/pi/Dropbox-Uploader
 echo ''
 echo "$(tput setaf 2) Big Thanks to ANDREA FABRIZI:$(tput sgr 0)"
 echo '-----------------------------------------------------------------------------------------------------------------'
-echo 'My script "pi-cam-config.sh" downloads and uses his repo to shift images from local USB Flash storage to Dropbox'
+echo 'My script "pi-cam-config.sh" downloads and uses this repo to shift images from local USB Flash storage to Dropbox'
 echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
 echo ''
 echo ''
@@ -762,12 +767,12 @@ echo ''
 
 echo 'Change default editor from crap "nano" to a universal Unix standard "vi"'
 
-echo "Before Change:"
+echo "BEFORE Change:"
 update-alternatives --get-selections|grep editor
 echo ''
 update-alternatives --set editor /usr/bin/vim.basic
 echo ''
-echo "After Change:"
+echo "AFTER Change:"
 update-alternatives --get-selections|grep editor
 
 if [ -f /home/pi/.selected_editor ]; then
@@ -1139,9 +1144,40 @@ chown -R pi:pi /home/pi
 # Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
 rm -rf /home/pi/pi-cam-config
 
+echo ''
+echo "$(tput setaf 5)****** Performing apt-get upgrade and dist-upgrade:  ******$(tput sgr 0)"
+echo ''
+
+echo ''
+echo 'Raspbian Version *PRE* Updates'
+lsb_release -a
+echo ''
+echo "Kernel: $(uname -r)"
+echo ''
+
+# How to answer "no" to an interactive TUI dialog box in a script for an unattended install:
+#	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
+# 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
+
+# kexec-tools
+# --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
+if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
+	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selection
+	apt-get install -q kexec-tools
+fi
+
+
 # There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
-apt-get update
 apt-get upgrade -q -y
 apt-get dist-upgrade -q -y
 
-systemctl reboot
+
+echo ''
+echo 'Raspbian Version *POST* Updates'
+lsb_release -a
+echo ''
+echo "Kernel: $(uname -r)"
+echo ''
+
+
+#systemctl reboot
