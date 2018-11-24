@@ -192,7 +192,13 @@ systemctl restart systemd-hostnamed&
 wait $!
 
 
-# Delete packages and any related config files with "apt-get purge" :
+# Delete packages and any related config files with "apt-get purge":
+
+if [[ ! $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
+	apt-get purge -q -y raspberrypi-kernel-headers
+fi
+
+
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
 	apt-get purge -q -y motion
 fi
@@ -302,11 +308,10 @@ fi
 truncate -s 0 /etc/motd
 
 # Remove any aliases created for sending root's mail in /etc/aliases:
-sed  -i '/root: $NOTIFICATIONSRECIPIENT/d' /etc/aliases
 
-
-apt-get autoremove -q -y
-apt-get clean
+if [ -f /etc/aliases ]; then
+	sed  -i '/root: $NOTIFICATIONSRECIPIENT/d' /etc/aliases
+fi
 
 
 echo ''
@@ -532,6 +537,22 @@ sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 echo ''
 echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo ''
+
+
+# Grab the Kernel headers
+if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
+	until apt-get install -q -y git
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of pkg * raspberrypi-kernel-headers * failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
+fi
+
+
+
+
 
 # Ensure "git" is installed: required to grab repos using "git clone"
 if [[ $(dpkg -l | grep git) = '' ]]; then
@@ -1168,6 +1189,11 @@ fi
 
 
 # There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
+
+# Get rid of any dependencies installed from pkgs we removed- ie Libre Office- that are no longer required:
+apt-get autoremove -q -y
+
+# Now do an upgrade
 apt-get upgrade -q -y
 apt-get dist-upgrade -q -y
 
