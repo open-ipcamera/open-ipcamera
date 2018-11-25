@@ -977,10 +977,10 @@ systemctl enable email-camera-address.service
 cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
-if [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]; then
-	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Heat Alert $(hostname) $NOTIFICATIONSRECIPIENT
-elif [ \$(/opt/vc/bin/vcgencmd measure_temp|cut 'd=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "Shutdown Alert $(hostname)" $NOTIFICATIONSRECIPIENT
+if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]]; then
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mail -s "Heat Alert $(hostname)" $NOTIFICATIONSRECIPIENT
+elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]]; then
+	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mail -s "Shutdown Alert $(hostname)" $NOTIFICATIONSRECIPIENT
 	systemctl poweroff
 else
 	exit
@@ -1092,9 +1092,13 @@ echo "##  $(tput setaf 4)If this script saved you lots of time doing manual conf
 echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
 echo '###############################################################################' >> /etc/motd
 echo '' >> /etc/motd
-echo "Video Camera Status: $(echo "sudo systemctl status motion")" >> /etc/motd
+echo "Video Camera Status:" >> /etc/motd
+echo "$(sudo systemctl status motion)" >> /etc/motd
 echo '' >> /etc/motd
 echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
+echo '' >> /etc/motd
+echo 'Camera Temperature:'
+echo "/opt/vc/bin/vcgencmd measure_temp" >> /etc/motd
 echo '' >> /etc/motd
 echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )" >> /etc/motd
 echo '' >> /etc/motd
