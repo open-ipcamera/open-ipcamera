@@ -92,7 +92,15 @@ ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp '"'$NOTIFI
 IPV6ENABLED='on'
 # NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
 USER='me'
-PASSWD='xF9e4Ldg1'
+PASSWD='CHANGEME1234'
+
+# With camera positioned flat on the base of the Smarti Pi case (USB ports facing up) we need to rotate picture 180 degrees:
+ROTATE='180'
+
+# You can change ports below if you configure other web services on camera host and they cause a port conflict.
+# Otherwise the ports do not need to be changed:
+WEBCONTROLPORT='8080'
+STREAMPORT='8081'
 
 # Max VIDEO Resolution PiCam v2: 1080p30, 720p60, 640x480p90
 # Max IMAGE Resolution PiCam v2: 3280 x 2464
@@ -110,13 +118,11 @@ THRESHOLD='1500'
 LOCATEMOTIONMODE='preview'
 LOCATEMOTIONSTYLE='redbox'
 OUTPUTPICTURES='best'
-STREAMPORT='8081'
 STREAMQUALITY='50'
 STREAMMOTION='1'
 STREAMLOCALHOST='off'
 STREAMAUTHMETHOD='0'
 WEBCONTROLLOCALHOST='off'
-WEBCONTROLPORT='8080'
 
 
 # Below variables are self-populating- DO NOT EDIT THESE:
@@ -601,6 +607,19 @@ if [[ $(dpkg -l | grep snmpd) = '' ]]; then
 fi
 
 
+# "debconf-utils" is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
+if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
+	until apt-get install -q -y debconf-utils
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
+fi
+
+
+
 # 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
 if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
@@ -778,7 +797,7 @@ EOF
 depmod -a
 
 # Load the Camera Kernel Module
-modprobe bcm2835-v4l2
+sudo modprobe bcm2835-v4l2
 
 
 echo ''
@@ -818,6 +837,7 @@ echo ''
 # Configure *BASIC* Settings (just enough to get things generally working):
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
+sed -i "s/rotate 0/rotate $ROTATE/" /etc/motion/motion.conf
 sed -i "s/width 320/width $WIDTH/" /etc/motion/motion.conf
 sed -i "s/height 240/height $HEIGHT/" /etc/motion/motion.conf
 sed -i "s/framerate 2/framerate $FRAMERATE/" /etc/motion/motion.conf
@@ -910,8 +930,8 @@ cat <<EOF> /home/pi/.muttrc
 
 set sendmail=$(command -v msmtp)"
 set use_from=yes
-set realname="$HOSTNAME"
-set from="pi@$HOSTNAME.$OURDOMAIN"
+set realname="$(hostname)"
+set from="pi@$(hostname)"
 set envelope_from=yes
 set editor="vim.basic"
 
@@ -924,7 +944,7 @@ cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
 sleep 30
-echo -e “$HOSTNAME \n $CAMERAIPV4 \n $CAMERAIPV6” | mutt -s "IP Address of Camera $HOSTNAME" $NOTIFICATIONSRECIPIENT
+mutt -s "IP Address of Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6" $NOTIFICATIONSRECIPIENT
 
 EOF
 
@@ -1083,7 +1103,7 @@ echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo '' >> /etc/motd
 echo 'Video Camera Logs: /var/log/motion/motion.log' >> /etc/motd
 echo '' >> /etc/motd
-echo "$(v4l2-ctl -V)" >> /etc/motd
+echo "$(/usr/bin/v4l2-ctl -V)" >> /etc/motd
 echo '' >> /etc/motd
 echo 'To manually change *VIDEO* resolution using Video4Linux driver tailor below example to your use case:' >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
@@ -1143,7 +1163,8 @@ su pi -c "./dropbox_uploader.sh upload << 'INPUT'
 $DROPBOXACCESSTOKEN
 INPUT"
 echo "y"
-echo -ne '\n'
+echo "$(tput setaf 1)** Press ENTER to confirm Access Token and continue script execution: **$(tput sgr 0)"
+#echo -ne '\n'
 echo ''
 
 echo "Note the address of your camera below to access it via web browser after reboot:"
