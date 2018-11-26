@@ -51,7 +51,7 @@ PASSWDROOT='ChangeMe1234'
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 
 #### Dropbox-Uploader Variables:
-# Dropbox is used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
+# Dropbox used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
 # Please consult "README.txt" for how to obtain the value for below variable
 DROPBOXACCESSTOKEN='ABCD1234'
 
@@ -150,19 +150,6 @@ read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL
 
 
 echo ''
-echo "$(tput setaf 5)****** Re-Synch the Package Index:  ******$(tput sgr 0)"
-echo ''
-
-until apt-get -q update
-	do
-		echo ''
-		echo "$(tput setaf 5)apt-get update failed. Retrying$(tput sgr 0)"
-		echo "$(tput setaf 3)Check your Internet Connection$(tput sgr 0)"
-		echo ''
-	done
-
-
-echo ''
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo ''
 echo '<rant> This is a camera: we do not require it. Were it not we would still remove Libre Office because it is crap.'
@@ -171,7 +158,7 @@ echo ''
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
 if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
-	apt-get -qy purge libreoffice*
+	apt-get -qqy purge libreoffice*
 	echo ''
 	echo 'Libre Office wiped from system'
 	echo ''
@@ -200,17 +187,17 @@ wait $!
 # Delete packages and any related config files with "apt-get purge":
 
 if [[ ! $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	apt-get -qy purge raspberrypi-kernel-headers
+	apt-get -qqy purge raspberrypi-kernel-headers
 fi
 
 
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
-	apt-get -qy purge motion
+	apt-get -qqy purge motion
 fi
 
 
 if [[ ! $(dpkg -l | grep msmtp) = '' ]]; then
-	apt-get -qy purge msmtp
+	apt-get -qqy purge msmtp
 fi
 
 
@@ -219,7 +206,7 @@ if [[ ! $(dpkg -l | grep snmpd) = '' ]]; then
 	systemctl disable snmpd.service
 	rm /etc/snmp/snmp.conf
 	rm /etc/snmp/snmpd.conf
-	apt-get -qy purge snmp snmpd snmp-mibs-downloader libsnmp-dev
+	apt-get -qqy purge snmp snmpd snmp-mibs-downloader libsnmp-dev
 fi
 
 
@@ -319,14 +306,29 @@ if [ -f /etc/aliases ]; then
 fi
 
 
+
+echo ''
+echo "$(tput setaf 5)****** Re-Synch Package Index:  ******$(tput sgr 0)"
+echo ''
+
+until apt-get -qq update
+	do
+		echo ''
+		echo "$(tput setaf 5)apt-get update failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)Check your Internet Connection$(tput sgr 0)"
+		echo ''
+	done
+
+
+
 echo ''
 echo "$(tput setaf 5)****** SECURITY: Set Passwords - Disable Autologin - Enable Public Key Access ******$(tput sgr 0)"
 echo ''
 
-# By default no passwords set for users 'pi' and 'root'
-echo "Set passwd for user 'pi' "
+echo 'Changing default password "raspberry" for user "pi"'
 echo "pi:$PASSWDPI"|chpasswd
 
+# Set a password for user 'root'
 echo "Set passwd for user 'root' "
 echo "root:$PASSWDROOT"|chpasswd
 
@@ -346,7 +348,7 @@ if [ ! -d /home/pi/.ssh ]; then
 	chmod 644 /home/pi/.ssh/id_ecdsa.pub
 	chown -R pi:pi /home/pi/
 
-	echo "ECDSA 521 bit keypair created for user pi"
+	echo 'ECDSA 521 bit keypair created for user "pi"'
 fi
 
 echo ''
@@ -390,13 +392,13 @@ echo ''
 
 # "usbmount" will interfere with the way we are going to mount the storage- ensure it is gone:
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-	apt-get -qy purge usbmount
+	apt-get -qqy purge usbmount
 fi
 
 
 
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-	until apt-get -qy install exfat-fuse
+	until apt-get -qqy install exfat-fuse
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * EXFAT-FUSE * failed. Retrying$(tput sgr 0)"
@@ -547,6 +549,22 @@ sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 
 
 
+echo ''
+echo "$(tput setaf 5)****** CAMERA KERNEL DRIVER: Load on Boot  ******$(tput sgr 0)"
+echo ''
+
+
+# Load Kernel module for Pi camera on boot:
+cat <<'EOF'> /etc/modules-load.d/bcm2835-v4l2.conf
+bcm2835-v4l2
+
+EOF
+
+# Rebuild Kernel modules dependencies map
+depmod -a
+
+# Load the Camera Kernel Module
+modprobe bcm2835-v4l2
 
 
 
@@ -555,9 +573,24 @@ echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo ''
 
 
+# "debconf-utils" is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
+if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
+	until apt-get -qqy install debconf-utils
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
+fi
+
+echo 'Package debconf-utils installed'
+echo ''
+
+
 # Grab the Kernel headers
 if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	until apt-get -qy install raspberrypi-kernel-headers
+	until apt-get -qqy install raspberrypi-kernel-headers
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * raspberrypi-kernel-headers * failed. Retrying$(tput sgr 0)"
@@ -571,7 +604,7 @@ echo ''
 
 # Ensure "git" is installed: required to grab repos using "git clone"
 if [[ $(dpkg -l | grep git) = '' ]]; then
-	until apt-get -qy install git
+	until apt-get -qqy install git
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * GIT * failed. Retrying$(tput sgr 0)"
@@ -583,7 +616,7 @@ fi
 
 # "motion" is the package our camera uses to capture our video evidence
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-	until apt-get -qy install motion
+	until apt-get -qqy install motion
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * MOTION * failed. Retrying$(tput sgr 0)"
@@ -598,7 +631,7 @@ echo ''
 
 # "msmtp" is used to relay motion detection email alerts:
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-	until apt-get -qy install msmtp
+	until apt-get -qqy install msmtp
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * MSMTP * failed. Retrying$(tput sgr 0)"
@@ -612,7 +645,7 @@ echo ''
 
 # SNMP monitoring will be configured:
 if [[ $(dpkg -l | grep snmpd) = '' ]]; then
-	until apt-get -qy install snmp snmpd snmp-mibs-downloader libsnmp-dev
+	until apt-get -qqy install snmp snmpd snmp-mibs-downloader libsnmp-dev
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
@@ -625,26 +658,26 @@ echo 'Packages snmp snmpd snmp-mibs-downloader libsnmp-dev installed'
 echo ''
 
 
-# "debconf-utils" is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
-if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
-	until apt-get -qy install debconf-utils
+if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
+	until apt-get -qqy install vim
 	do
 		echo ''
-		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 5)Install of pkg * VIM * failed. Retrying$(tput sgr 0)"
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Package debconf-utils installed'
+
+
+echo 'Following package installations are not required for configuration of your Pi as a Motion Detection Camera'
+echo 'but included as I felt they were useful.  Feel free to remove or replace them with alternatives as you wish:'
 echo ''
-
-
 
 # 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
 if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
-	apt-get -qy install libimage-exiftool-perl
+	apt-get -qqy install libimage-exiftool-perl
 	echo 'Package libimage-exiftool-perl installed'
 	echo ''
 fi
@@ -653,40 +686,30 @@ fi
 # 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
-	apt-get -qy install exiv2
+	apt-get -qqy install exiv2
 	echo 'Package exiv2 installed'
 	echo ''
 fi
 
 
 if [[ $(dpkg -l | grep mutt) = '' ]]; then
-	apt-get -qy install mutt
+	apt-get -qqy install mutt
 	echo 'Package mutt installed'
-	echo ''
-fi
-
-# vim-tiny- which is crap like nano- will also match unless grep-ed with "word" boundaries:
-if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
-	apt-get -qy install vim
-	echo 'Package vim installed'
 	echo ''
 fi
 
 
 if [[ $(dpkg -l | grep mailutils) = '' ]]; then
-	apt-get -qy install mailutils
+	apt-get -qqy install mailutils
 	echo 'Package mailutils installed'
 	echo ''
 fi
 
 
-# NOTE: Following package installations are optional. Therefore they could be changed according to your personal
-# preferences without affecting the overall operation of this script. However I have chosen each for good reasons...
-
 # "screen" creates a shell session that can remain active after an SSH session ends that can be reconnected to on future SSH sessions.
 # If you have a flaky Internet connection or need to start a long running process  screen" is your friend
 if [[ $(dpkg -l | grep screen) = '' ]]; then
-	apt-get -qy install screen
+	apt-get -qqy install screen
 	echo 'Package screen installed'
 	echo ''
 fi
@@ -694,36 +717,30 @@ fi
 
 # mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
-	apt-get -qy install mtr
+	apt-get -qqy install mtr
 	echo 'Package mtr installed'
 	echo ''
 fi
 
 # tcpdump is a packet sniffer you can use to investigate connectivity issues and analyze traffic:
 if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
-	apt-get -qy install tcpdump
+	apt-get -qqy install tcpdump
 	echo 'Package tcpdump installed'
 	echo ''
 fi
 
 # iptraf-ng can be used to investigate bandwidth issues if you are puking too many chunky images over a thin connection:
 if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
-	apt-get -qy install iptraf-ng
+	apt-get -qqy install iptraf-ng
 	echo 'Package iptraf-ng installed'
 	echo ''
 fi
 
-# Install a screen shotting program: always useful for capturing media for blogs or error reports
-if [[ $(dpkg -l | grep shutter) = '' ]]; then
-	apt-get -qy install shutter
-	echo 'Package shutter installed'
-	echo ''
-fi
 
 # "vokoscreen" is a great screen recorder that can be minimized so it doesn't end-up being in the video
 # "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
 if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
-	apt-get -qy install vokoscreen
+	apt-get -qqy install vokoscreen
 	echo 'Package vokoscreen installed'
 	echo ''
 fi
@@ -731,7 +748,7 @@ fi
 
 # VLC can be used to both play video and also to record your desktop for HowTo videos of your Linux projects:
 if [[ $(dpkg -l | grep vlc) = '' ]]; then
-	apt-get -qy install vlc vlc-plugin-access-extra browser-plugin-vlc
+	apt-get -qqy install vlc vlc-plugin-access-extra browser-plugin-vlc
 	echo 'Packages vlc vlc-plugin-access-extra browser-plugin-vlc installed'
 	echo ''
 fi
@@ -825,24 +842,6 @@ systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
 
-
-
-echo ''
-echo "$(tput setaf 5)****** CAMERA KERNEL DRIVER: Load on Boot  ******$(tput sgr 0)"
-echo ''
-
-
-# Load Kernel module for Pi camera on boot:
-cat <<'EOF'> /etc/modules-load.d/bcm2835-v4l2.conf
-bcm2835-v4l2
-
-EOF
-
-# Rebuild Kernel modules dependencies map
-depmod -a
-
-# Load the Camera Kernel Module
-sudo modprobe bcm2835-v4l2
 
 
 echo ''
@@ -1210,8 +1209,9 @@ echo ''
 cd /home/pi/Dropbox-Uploader/
 su pi -c "./dropbox_uploader.sh upload << 'INPUT'
 $DROPBOXACCESSTOKEN
+echo "y"\n
 INPUT"
-echo "y"
+
 echo "$(tput setaf 1)** Press ENTER to confirm Access Token and continue script execution: **$(tput sgr 0)"
 #echo -ne '\n'
 echo ''
@@ -1248,10 +1248,10 @@ echo ''
 # There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
 
 # Get rid of any dependencies installed from pkgs we removed that are no longer required:
-apt-get -qy autoremove
+apt-get -qqy autoremove
 
 # Now do an upgrade
-apt-get -qy dist-upgrade
+apt-get -qqy dist-upgrade
 echo 'apt-get dist-upgrade executed'
 
 
@@ -1269,8 +1269,8 @@ echo ''
 # kexec-tools
 # --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
-	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selection
-	apt-get -q install kexec-tools
+	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selections
+	apt-get -qq install kexec-tools
 	echo 'kexec-tools Installed'
 fi
 
