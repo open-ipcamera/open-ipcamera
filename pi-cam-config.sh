@@ -3,7 +3,7 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181122
+# Date:    20181126
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -136,17 +136,6 @@ CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cu
 #############################################################
 
 
-
-until apt-get update
-	do
-		echo ''
-		echo "$(tput setaf 5)apt-get update failed. Retrying$(tput sgr 0)"
-		echo "$(tput setaf 3)Check your Internet Connection$(tput sgr 0)"
-		echo ''
-	done
-
-
-
 echo ''
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo ''
@@ -160,18 +149,29 @@ echo 'Consult "LICENSE.txt" for terms of GPL 3 License and conditions of use.'
 read -p 'Press "Enter" to ACCEPT license and warranty terms to continue or "CTRL C" to EXIT'
 
 
+echo ''
+echo "$(tput setaf 5)****** Re-Synch the Package Index:  ******$(tput sgr 0)"
+echo ''
+
+until apt-get -q update
+	do
+		echo ''
+		echo "$(tput setaf 5)apt-get update failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)Check your Internet Connection$(tput sgr 0)"
+		echo ''
+	done
+
 
 echo ''
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo ''
-echo '<rant> This is a camera. We do not need Libre Office and in any event it is just crap.'
+echo '<rant> This is a camera: we do not require it. Were it not we would still remove Libre Office because it is crap.'
 echo 'Dont get me started.  Grrrrr </rant>'
 echo ''
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
 if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
-	apt-get purge -q -y libreoffice*
-	echo ''
+	apt-get -qy purge libreoffice*
 	echo ''
 	echo 'Libre Office wiped from system'
 	echo ''
@@ -179,7 +179,6 @@ if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
 else
 	echo 'Libre Office not found on system'
 fi
-
 
 
 echo ''
@@ -201,17 +200,17 @@ wait $!
 # Delete packages and any related config files with "apt-get purge":
 
 if [[ ! $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	apt-get purge -q -y raspberrypi-kernel-headers
+	apt-get -qy purge raspberrypi-kernel-headers
 fi
 
 
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
-	apt-get purge -q -y motion
+	apt-get -qy purge motion
 fi
 
 
 if [[ ! $(dpkg -l | grep msmtp) = '' ]]; then
-	apt-get purge -q -y msmtp
+	apt-get -qy purge msmtp
 fi
 
 
@@ -220,7 +219,7 @@ if [[ ! $(dpkg -l | grep snmpd) = '' ]]; then
 	systemctl disable snmpd.service
 	rm /etc/snmp/snmp.conf
 	rm /etc/snmp/snmpd.conf
-	apt-get purge -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+	apt-get -qy purge snmp snmpd snmp-mibs-downloader libsnmp-dev
 fi
 
 
@@ -391,14 +390,25 @@ echo ''
 
 # "usbmount" will interfere with the way we are going to mount the storage- ensure it is gone:
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-	apt-get purge -q -y usbmount
+	apt-get -qy purge usbmount
 fi
 
 
-# We use EXFAT for large file size support and its cross-platform OS adoptions:
+
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-	apt-get install -q -y exfat-fuse
+	until apt-get -qy install exfat-fuse
+	do
+		echo ''
+		echo "$(tput setaf 5)Install of pkg * EXFAT-FUSE * failed. Retrying$(tput sgr 0)"
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo ''
+	done
 fi
+
+echo 'Package exfat-fuse installed'
+echo ''
+
+
 
 # Disable automounting by default Filemanager "pcmanfm": it steps on our SystemD automount which gives us flexibility to change mount options:
 if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
@@ -547,7 +557,7 @@ echo ''
 
 # Grab the Kernel headers
 if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	until apt-get install -q -y git
+	until apt-get -qy install raspberrypi-kernel-headers
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * raspberrypi-kernel-headers * failed. Retrying$(tput sgr 0)"
@@ -556,13 +566,12 @@ if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
 	done
 fi
 
-
-
-
+echo 'Package raspberrypi-kernel-headers installed'
+echo ''
 
 # Ensure "git" is installed: required to grab repos using "git clone"
 if [[ $(dpkg -l | grep git) = '' ]]; then
-	until apt-get install -q -y git
+	until apt-get -qy install git
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * GIT * failed. Retrying$(tput sgr 0)"
@@ -571,9 +580,10 @@ if [[ $(dpkg -l | grep git) = '' ]]; then
 	done
 fi
 
+
 # "motion" is the package our camera uses to capture our video evidence
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-	until apt-get install -q -y motion
+	until apt-get -qy install motion
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * MOTION * failed. Retrying$(tput sgr 0)"
@@ -582,10 +592,13 @@ if [[ $(dpkg -l | grep motion) = '' ]]; then
 	done
 fi
 
+echo 'Package motion installed'
+echo ''
+
 
 # "msmtp" is used to relay motion detection email alerts:
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-	until apt-get install -q -y msmtp
+	until apt-get -qy install msmtp
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of pkg * MSMTP * failed. Retrying$(tput sgr 0)"
@@ -594,10 +607,12 @@ if [[ $(dpkg -l | grep msmtp) = '' ]]; then
 	done
 fi
 
+echo 'Package msmtp installed'
+echo ''
 
 # SNMP monitoring will be configured:
 if [[ $(dpkg -l | grep snmpd) = '' ]]; then
-	until apt-get install -q -y snmp snmpd snmp-mibs-downloader libsnmp-dev
+	until apt-get -qy install snmp snmpd snmp-mibs-downloader libsnmp-dev
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
@@ -605,11 +620,14 @@ if [[ $(dpkg -l | grep snmpd) = '' ]]; then
 		echo ''
 	done
 fi
+
+echo 'Packages snmp snmpd snmp-mibs-downloader libsnmp-dev installed'
+echo ''
 
 
 # "debconf-utils" is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
-	until apt-get install -q -y debconf-utils
+	until apt-get -qy install debconf-utils
 	do
 		echo ''
 		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
@@ -617,35 +635,48 @@ if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
 		echo ''
 	done
 fi
+
+echo 'Package debconf-utils installed'
+echo ''
 
 
 
 # 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
 if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
-	apt-get install -q -y libimage-exiftool-perl
+	apt-get -qy install libimage-exiftool-perl
+	echo 'Package libimage-exiftool-perl installed'
+	echo ''
 fi
 
 
 # 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
-	apt-get install -q -y exiv2
+	apt-get -qy install exiv2
+	echo 'Package exiv2 installed'
+	echo ''
 fi
 
 
 if [[ $(dpkg -l | grep mutt) = '' ]]; then
-	apt-get install -q -y mutt
+	apt-get -qy install mutt
+	echo 'Package mutt installed'
+	echo ''
 fi
 
 # vim-tiny- which is crap like nano- will also match unless grep-ed with "word" boundaries:
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
-	apt-get install -q -y vim
+	apt-get -qy install vim
+	echo 'Package vim installed'
+	echo ''
 fi
 
 
 if [[ $(dpkg -l | grep mailutils) = '' ]]; then
-	apt-get install -q -y mailutils
+	apt-get -qy install mailutils
+	echo 'Package mailutils installed'
+	echo ''
 fi
 
 
@@ -655,40 +686,54 @@ fi
 # "screen" creates a shell session that can remain active after an SSH session ends that can be reconnected to on future SSH sessions.
 # If you have a flaky Internet connection or need to start a long running process  screen" is your friend
 if [[ $(dpkg -l | grep screen) = '' ]]; then
-	apt-get install -q -y screen
+	apt-get -qy install screen
+	echo 'Package screen installed'
+	echo ''
 fi
 
 
 # mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
-	apt-get install -q -y mtr
+	apt-get -qy install mtr
+	echo 'Package mtr installed'
+	echo ''
 fi
 
 # tcpdump is a packet sniffer you can use to investigate connectivity issues and analyze traffic:
 if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
-	apt-get install -q -y tcpdump
+	apt-get -qy install tcpdump
+	echo 'Package tcpdump installed'
+	echo ''
 fi
 
 # iptraf-ng can be used to investigate bandwidth issues if you are puking too many chunky images over a thin connection:
 if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
-	apt-get install -q -y iptraf-ng
+	apt-get -qy install iptraf-ng
+	echo 'Package iptraf-ng installed'
+	echo ''
 fi
 
 # Install a screen shotting program: always useful for capturing media for blogs or error reports
 if [[ $(dpkg -l | grep shutter) = '' ]]; then
-	apt-get install -q -y shutter
+	apt-get -qy install shutter
+	echo 'Package shutter installed'
+	echo ''
 fi
 
 # "vokoscreen" is a great screen recorder that can be minimized so it doesn't end-up being in the video
 # "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
 if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
-	apt-get install -q -y vokoscreen
+	apt-get -qy install vokoscreen
+	echo 'Package vokoscreen installed'
+	echo ''
 fi
 
 
 # VLC can be used to both play video and also to record your desktop for HowTo videos of your Linux projects:
 if [[ $(dpkg -l | grep vlc) = '' ]]; then
-	apt-get install -q -y vlc vlc-plugin-access-extra browser-plugin-vlc
+	apt-get -qy install vlc vlc-plugin-access-extra browser-plugin-vlc
+	echo 'Packages vlc vlc-plugin-access-extra browser-plugin-vlc installed'
+	echo ''
 fi
 
 
@@ -1187,8 +1232,6 @@ echo ''
 # Change ownership of all files created by this script FROM user "root" TO user "pi":
 chown -R pi:pi /home/pi
 
-# Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
-rm -rf /home/pi/pi-cam-config
 
 echo ''
 echo "$(tput setaf 5)****** Performing apt-get upgrade and dist-upgrade:  ******$(tput sgr 0)"
@@ -1196,6 +1239,24 @@ echo ''
 
 echo ''
 echo 'Raspbian Version *PRE* Updates'
+lsb_release -a
+echo ''
+echo "Kernel: $(uname -r)"
+echo ''
+
+
+# There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
+
+# Get rid of any dependencies installed from pkgs we removed that are no longer required:
+apt-get -qy autoremove
+
+# Now do an upgrade
+apt-get -qy dist-upgrade
+echo 'apt-get dist-upgrade executed'
+
+
+echo ''
+echo 'Raspbian Version *POST* Updates'
 lsb_release -a
 echo ''
 echo "Kernel: $(uname -r)"
@@ -1209,26 +1270,16 @@ echo ''
 # --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selection
-	apt-get install -q kexec-tools
+	apt-get -q install kexec-tools
+	echo 'kexec-tools Installed'
 fi
 
 
-# There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
-
-# Get rid of any dependencies installed from pkgs we removed- ie Libre Office- that are no longer required:
-apt-get autoremove -q -y
-
-# Now do an upgrade
-apt-get upgrade -q -y
-apt-get dist-upgrade -q -y
+echo 'System will reboot in 10 seconds'
+sleep 10
 
 
-echo ''
-echo 'Raspbian Version *POST* Updates'
-lsb_release -a
-echo ''
-echo "Kernel: $(uname -r)"
-echo ''
-
+# Wipe F1Linux.com "pi-cam-config" files as clear text passwds live in here:
+rm -rf /home/pi/pi-cam-config
 
 #systemctl reboot
