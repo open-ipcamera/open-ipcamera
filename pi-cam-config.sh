@@ -136,6 +136,33 @@ CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cu
 #############################################################
 
 
+# This script is designed to run (mostly) unattended- packages requesting user input is therefore undesirable
+# We will set a non-persistent (will not survive reboot) preference for the duration of the script as "noninteractive":
+export DEBIAN_FRONTEND=noninteractive
+
+
+############## FUNCTIONS: ###############
+
+# Note that "notify-apt-failure" Calls the other function "apt-cmd-last"
+status-apt-cmd () {
+if [[ $(echo $?) != 0]]; then
+	echo "$(tput setaf 1)Apt FAILURE:$(tput sgr 0) $(apt-cmd-last)"
+	echo ''
+else
+	echo "$(tput setaf 2)Apt SUCCESS:$(tput sgr 0) $(apt-cmd-last)"
+	echo ''
+fi
+}
+
+# Below function extracts the LAST apt command executed from the apt history log
+apt-cmd-last () {
+tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
+}
+
+#########################################
+
+
+
 echo ''
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo ''
@@ -392,23 +419,22 @@ echo ''
 
 # "usbmount" will interfere with the way we are going to mount the storage- ensure it is gone:
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-	apt-get -qqy purge usbmount
+	apt-get -qqy purge usbmount > /dev/null
+	status-apt-cmd
 fi
 
 
 
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-	until apt-get -qqy install exfat-fuse
+	until apt-get -qqy install exfat-fuse > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of pkg * EXFAT-FUSE * failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Package exfat-fuse installed'
-echo ''
+status-apt-cmd
 
 
 
@@ -575,39 +601,36 @@ echo ''
 
 # "debconf-utils" is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
-	until apt-get -qqy install debconf-utils
+	until apt-get -qqy install debconf-utils > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Package debconf-utils installed'
+status-apt-cmd
 echo ''
 
 
 # Grab the Kernel headers
 if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	until apt-get -qqy install raspberrypi-kernel-headers
+	until apt-get -qqy install raspberrypi-kernel-headers > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of pkg * raspberrypi-kernel-headers * failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Package raspberrypi-kernel-headers installed'
+status-apt-cmd
 echo ''
 
 # Ensure "git" is installed: required to grab repos using "git clone"
 if [[ $(dpkg -l | grep git) = '' ]]; then
-	until apt-get -qqy install git
+	until apt-get -qqy install git > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of pkg * GIT * failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
@@ -616,141 +639,130 @@ fi
 
 # "motion" is the package our camera uses to capture our video evidence
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-	until apt-get -qqy install motion
+	until apt-get -qqy install motion > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of pkg * MOTION * failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Package motion installed'
+status-apt-cmd
 echo ''
 
 
 # "msmtp" is used to relay motion detection email alerts:
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-	until apt-get -qqy install msmtp
+	until apt-get -qqy install msmtp > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of pkg * MSMTP * failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Package msmtp installed'
+status-apt-cmd
 echo ''
 
 # SNMP monitoring will be configured:
 if [[ $(dpkg -l | grep snmpd) = '' ]]; then
-	until apt-get -qqy install snmp snmpd snmp-mibs-downloader libsnmp-dev
+	until apt-get -qqy install snmp snmpd snmp-mibs-downloader libsnmp-dev > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of SNMP pkgs failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo ''
 	done
 fi
 
-echo 'Packages snmp snmpd snmp-mibs-downloader libsnmp-dev installed'
+status-apt-cmd
 echo ''
 
 
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
-	until apt-get -qqy install vim
+	until apt-get -qqy install vim > /dev/null
 	do
-		echo ''
-		echo "$(tput setaf 5)Install of pkg * VIM * failed. Retrying$(tput sgr 0)"
+		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo ''
 	done
 fi
 
+status-apt-cmd
+echo ''
 
-
+echo ''
+echo ''
 echo 'Following package installations are not required for configuration of your Pi as a Motion Detection Camera'
 echo 'but included as I felt they were useful.  Feel free to remove or replace them with alternatives as you wish:'
+echo ''
 echo ''
 
 # 'libimage-exiftool-perl' used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
 if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
-	apt-get -qqy install libimage-exiftool-perl
-	echo 'Package libimage-exiftool-perl installed'
-	echo ''
+	apt-get -qqy install libimage-exiftool-perl > /dev/null
+	status-apt-cmd
 fi
 
 
 # 'exiv2' is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to 'libimage-exiftool-perl'
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
-	apt-get -qqy install exiv2
-	echo 'Package exiv2 installed'
-	echo ''
+	apt-get -qqy install exiv2 > /dev/null
+	status-apt-cmd
 fi
 
 
 if [[ $(dpkg -l | grep mutt) = '' ]]; then
-	apt-get -qqy install mutt
-	echo 'Package mutt installed'
-	echo ''
+	apt-get -qqy install mutt > /dev/null
+	status-apt-cmd
 fi
 
 
 if [[ $(dpkg -l | grep mailutils) = '' ]]; then
-	apt-get -qqy install mailutils
-	echo 'Package mailutils installed'
-	echo ''
+	apt-get -qqy install mailutils > /dev/null
+	status-apt-cmd
 fi
 
 
 # "screen" creates a shell session that can remain active after an SSH session ends that can be reconnected to on future SSH sessions.
 # If you have a flaky Internet connection or need to start a long running process  screen" is your friend
 if [[ $(dpkg -l | grep screen) = '' ]]; then
-	apt-get -qqy install screen
-	echo 'Package screen installed'
-	echo ''
+	apt-get -qqy install screen > /dev/null
+	status-apt-cmd
 fi
 
 
 # mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
 if [[ $(dpkg -l | grep mtr) = '' ]]; then
-	apt-get -qqy install mtr
-	echo 'Package mtr installed'
-	echo ''
+	apt-get -qqy install mtr > /dev/null
+	status-apt-cmd
 fi
 
 # tcpdump is a packet sniffer you can use to investigate connectivity issues and analyze traffic:
 if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
-	apt-get -qqy install tcpdump
-	echo 'Package tcpdump installed'
-	echo ''
+	apt-get -qqy install tcpdump > /dev/null
+	status-apt-cmd
 fi
 
 # iptraf-ng can be used to investigate bandwidth issues if you are puking too many chunky images over a thin connection:
 if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
-	apt-get -qqy install iptraf-ng
-	echo 'Package iptraf-ng installed'
-	echo ''
+	apt-get -qqy install iptraf-ng > /dev/null
+	status-apt-cmd
 fi
 
 
 # "vokoscreen" is a great screen recorder that can be minimized so it doesn't end-up being in the video
 # "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
 if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
-	apt-get -qqy install vokoscreen
-	echo 'Package vokoscreen installed'
-	echo ''
+	apt-get -qqy install vokoscreen > /dev/null
+	status-apt-cmd
 fi
 
 
 # VLC can be used to both play video and also to record your desktop for HowTo videos of your Linux projects:
 if [[ $(dpkg -l | grep vlc) = '' ]]; then
-	apt-get -qqy install vlc vlc-plugin-access-extra browser-plugin-vlc
-	echo 'Packages vlc vlc-plugin-access-extra browser-plugin-vlc installed'
-	echo ''
+	apt-get -qqy install vlc vlc-plugin-access-extra browser-plugin-vlc > /dev/null
+	status-apt-cmd
 fi
 
 
@@ -1248,11 +1260,14 @@ echo ''
 # There is presently no way to load an updated Kernel on a Raspberry Pi- that I am aware of- without a reboot so we do the upgrade before reboot
 
 # Get rid of any dependencies installed from pkgs we removed that are no longer required:
-apt-get -qqy autoremove
+apt-get -qqy autoremove > /dev/null
+status-apt-cmd
+echo ''
 
 # Now do an upgrade
 apt-get -qqy dist-upgrade
-echo 'apt-get dist-upgrade executed'
+status-apt-cmd
+echo ''
 
 
 echo ''
@@ -1266,12 +1281,13 @@ echo ''
 #	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
 # 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
 
-# kexec-tools
-# --assume-no used below to answer interactive prompt during install asking 'Should kexec-toolshandle reboots(sysvinit only)'
+
+# "boolean false" is piped to debconf-set-selections to pre-seed the answer to interactive prompt 'Should kexec-toolshandle reboots(sysvinit only)' 
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selections
-	apt-get -qq install kexec-tools
-	echo 'kexec-tools Installed'
+	apt-get -qq install kexec-tools > /dev/null
+	status-apt-cmd
+	echo ''
 fi
 
 
