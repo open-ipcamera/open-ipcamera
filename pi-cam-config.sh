@@ -97,6 +97,10 @@ PASSWD='CHANGEME1234'
 # With camera positioned flat on the base of the Smarti Pi case (USB ports facing up) we need to rotate picture 180 degrees:
 ROTATE='180'
 
+# log_level directive values: EMR (1) ALR (2) CRT(3) ERR(4) WRN(5) NTC(6) INF(7) DBG(8) ALL(9)
+# https://motion-project.github.io/motion_config.html#log_level
+LOGLEVEL='4'
+
 # You can change ports below if you configure other web services on camera host and they cause a port conflict.
 # Otherwise the ports do not need to be changed:
 WEBCONTROLPORT='8080'
@@ -147,10 +151,8 @@ export DEBIAN_FRONTEND=noninteractive
 status-apt-cmd () {
 if [[ $(echo $?) != 0 ]]; then
 	echo "$(tput setaf 1)Apt Command FAILURE:$(tput sgr 0)"
-	echo
 else
 	echo "$(tput setaf 2)Apt Command SUCCESS:$(tput sgr 0) $(apt-cmd-last)"
-	echo
 fi
 }
 
@@ -186,7 +188,7 @@ echo
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
 if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
-	apt-get -qqy purge libreoffice*
+	apt-get -qqy purge libreoffice* > /dev/null
 	echo
 	echo "Libre Office wiped from system"
 	echo
@@ -216,17 +218,17 @@ wait $!
 # Delete packages and any related config files with "apt-get purge":
 
 if [[ ! $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	apt-get -qqy purge raspberrypi-kernel-headers
+	apt-get -qqy purge raspberrypi-kernel-headers > /dev/null
 fi
 
 
 if [[ ! $(dpkg -l | grep motion) = '' ]]; then
-	apt-get -qqy purge motion
+	apt-get -qqy purge motion > /dev/null
 fi
 
 
 if [[ ! $(dpkg -l | grep msmtp) = '' ]]; then
-	apt-get -qqy purge msmtp
+	apt-get -qqy purge msmtp > /dev/null
 fi
 
 
@@ -235,7 +237,7 @@ if [[ ! $(dpkg -l | grep snmpd) = '' ]]; then
 	systemctl disable snmpd.service
 	rm /etc/snmp/snmp.conf
 	rm /etc/snmp/snmpd.conf
-	apt-get -qqy purge snmp snmpd snmp-mibs-downloader libsnmp-dev
+	apt-get -qqy purge snmp snmpd snmp-mibs-downloader libsnmp-dev > /dev/null
 fi
 
 
@@ -268,25 +270,6 @@ if [ -f /etc/systemd/system/media-pi.mount ]; then
 	systemctl disable media-pi.mount
 	rm /etc/systemd/system/media-pi.mount
 	rm /etc/systemd/system/media-pi.automount
-fi
-
-
-
-if [ -f /etc/systemd/system/var-log.mount ]; then
-	systemctl stop var-log.mount
-	systemctl disable var-log.mount
-	rm /etc/systemd/system/var-log.mount
-	rm /etc/systemd/system/var-log.automount
-fi
-
-
-
-
-if [ -f /etc/systemd/system/home-pi.mount ]; then
-	systemctl stop home-pi.mount
-	systemctl disable home-pi.mount
-	rm /etc/systemd/system/home-pi.mount
-	rm /etc/systemd/system/home-pi.automount
 fi
 
 
@@ -327,6 +310,10 @@ systemctl daemon-reload
 
 if [ -d /home/pi/scripts ]; then
 	rm -r /home/pi/scripts
+fi
+
+if [-d /media/pi/logs]; then
+	rm -r /media/pi/logs
 fi
 
 # Delete local config files not removed when their package was purged:
@@ -452,78 +439,33 @@ modprobe bcm2835-v4l2
 
 
 
-echo
-echo "$(tput setaf 5)****** SET CPU AFFINITY:  ******$(tput sgr 0)"
-echo
-
-
-echo "The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core."
-echo "By restricting system processes to running on 0-2 CPU when we pin motion to core 3 it will have zero contention for execution cycles"
-sed -i "s/#CPUAffinity=1 2/CPUAffinity=0 1 2/" /etc/systemd/system.conf
-
-
-
-# Automate setting CPU Affinity after motion starts on boot:
-# Note the use of the "Wants" directive to create a dependent relationship on motion already being started
-
-cat <<'EOF'> /home/pi/scripts/set-cpu-affinity.sh
-#!/bin/bash
-
-taskset -cp 3 $(pgrep motion|cut -d ' ' -f2)
-
-EOF
-
-
-chmod 700 /home/pi/scripts/set-cpu-affinity.sh
-chown pi:pi /home/pi/scripts/set-cpu-affinity.sh
-
-
-cat <<EOF> /etc/systemd/system/set-cpu-affinity.service
-[Unit]
-Description=Set CPU Affinity for the Motion process after it starts on boot
-Wants=motion.service
-
-[Service]
-User=root
-Group=root
-Type=oneshot
-ExecStart=/home/pi/scripts/set-cpu-affinity.sh
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-systemctl enable set-cpu-affinity.service
-
-
 
 
 echo
-echo "$(tput setaf 5)****** Configure SystemD Logging:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** Configure Logging:  ******$(tput sgr 0)"
 echo
 
-echo 'Default System log data is non-persistent. It exists im memory and is lost on every reboot'
-echo 'Logging will be made persistent by writing it to disk in lieu of memory'
+echo "Default System log data is non-persistent. It exists im memory and is lost on every reboot"
+echo "Logging will be made persistent by writing it to disk in lieu of memory"
 
-sed -i "s/#Storage=auto/Storage=persistent" /etc/systemd/journald.conf
+sed -i "s/#Storage=auto/Storage=persistent/" /etc/systemd/journald.conf
 # Ensure logs do not eat all our storage space by expressly limiting their TOTAL disk usage:
-sed -i "s/#SystemMaxUse=/SystemMaxUse=200M" /etc/systemd/journald.conf
-# Stop writing log data even if below threshold specified in "SystemMaxUse=" if total diskspace is running low using the "SystemKeepFree" directive:
+sed -i "s/#SystemMaxUse=/SystemMaxUse=200M/" /etc/systemd/journald.conf
+# Stop writing log data even if below threshold specified in "SystemMaxUse=" if total diskspace is running low using the *SystemKeepFree* directive:
 sed -i "s/#SystemKeepFree=/SystemKeepFree=1G/" /etc/systemd/journald.conf
 # Limit the size log files can grow to before rotation:
 sed -i "s/#SystemMaxFileSize=/SystemMaxFileSize=500M/" /etc/systemd/journald.conf
 # Purge log entries older than period specified in "MaxRetentionSec" directive
-sed -i "s/#MaxRetentionSec=/MaxRetentionSec=1week" /etc/systemd/journald.conf
-# Rotate log no later than a week- if not already preempted by the "SystemMaxFileSize" directive forcing a log rotation
+sed -i "s/#MaxRetentionSec=/MaxRetentionSec=1week/" /etc/systemd/journald.conf
+# Rotate log no later than a week- if not already preempted by "SystemMaxFileSize" directive forcing a log rotation
 sed -i "s/#MaxFileSec=1month/MaxFileSec=1week/" /etc/systemd/journald.conf
-# valid values for MaxLevelWall: "emerg", “alert”, “crit”, “err”, “warning”, “notice”, “info” and “debug”
+# Valid values for MaxLevelWall: emerg alert crit err warning notice info debug
 sed -i "s/#MaxLevelWall=emerg/MaxLevelWall=crit/" /etc/systemd/journald.conf
 # Write only "crticial" to disk
 sed -i "s/#MaxLevelStore=debug/MaxLevelStore=crit/" /etc/systemd/journald.conf
 # Max notification level to forward to the Kernel Ring Buffer (/var/log/messages)
 sed -i "s/#MaxLevelKMsg=notice/MaxLevelKMsg=warning/" /etc/systemd/journald.conf
+
 
 # Re-Read changes made to /etc/systemd/journald.conf
 systemctl restart systemd-journald
@@ -538,7 +480,9 @@ echo
 
 
 if [ ! -d /home/pi/scripts ]; then
-	mkdir -p /home/pi/scripts
+	mkdir /home/pi/scripts
+	chown pi:pi /home/pi/scripts
+	chmod 751 /home/pi/scripts
 fi
 
 
@@ -546,28 +490,6 @@ echo 'Set user bash histories to unlimited length:'
 sed -i "s/HISTSIZE=1000/HISTSIZE=/" /home/pi/.bashrc
 sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
 echo
-
-echo "Change default editor from crap *nano* to a universal Unix standard *vi*"
-echo "BEFORE Change:"
-update-alternatives --get-selections|grep editor
-echo
-update-alternatives --set editor /usr/bin/vim.basic
-echo
-echo "AFTER Change:"
-update-alternatives --get-selections|grep editor
-
-if [ -f /home/pi/.selected_editor ]; then
-	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
-fi
-
-cp /usr/share/vim/vimrc /home/pi/.vimrc
-
-# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
-sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
-sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
-
-chown pi:pi /home/pi/.vimrc
-chmod 600 /home/pi/.vimrc
 
 
 echo "Changing default password * raspberry * for user pi"
@@ -623,10 +545,49 @@ systemctl disable autologin@.service
 echo "Disabled autologin"
 
 
+echo "Change default editor from crap *nano* to a universal Unix standard *vi*"
+echo "BEFORE Change:"
+update-alternatives --get-selections|grep editor
+echo
+update-alternatives --set editor /usr/bin/vim.basic
+echo
+echo "AFTER Change:"
+update-alternatives --get-selections|grep editor
+
+if [ -f /home/pi/.selected_editor ]; then
+	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
+fi
+
+cp /usr/share/vim/vimrc /home/pi/.vimrc
+
+# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
+sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
+sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
+
+chown pi:pi /home/pi/.vimrc
+chmod 600 /home/pi/.vimrc
+
+
+# Create Mutt configuration file for user pi
+cat <<EOF> /home/pi/.muttrc
+
+set sendmail=$(command -v msmtp)"
+set use_from=yes
+set realname="$(hostname)"
+set from="pi@$(hostname)"
+set envelope_from=yes
+set editor="vim.basic"
+
+EOF
+
+chown pi:pi /home/pi/.muttrc
+chmod 600 /home/pi/.muttrc
+
+
 
 
 echo
-echo "$(tput setaf 5)****** Re-Synch Package Index:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** Re-Sync Package Index:  ******$(tput sgr 0)"
 echo
 
 until apt-get -qq update > /dev/null
@@ -637,10 +598,8 @@ until apt-get -qq update > /dev/null
 		echo
 	done
 
-status-apt-cmd
+echo "Package Index Updated"
 echo
-
-
 
 
 echo
@@ -821,6 +780,11 @@ if [[ $(dpkg -l | grep vlc) = '' ]]; then
 fi
 
 
+# dstat is an diagnostic tool to gain insight into performance issues regarding memory storage and CPU
+if [[ $(dpkg -l | grep dstat) = '' ]]; then
+	apt-get -qqy install dstat
+	status-apt-cmd
+fi
 
 
 echo
@@ -965,24 +929,25 @@ if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
 fi
 
 
+# Disable automounting by default Filemanager "pcmanfm" if present: it steps on our SystemD automount which offers greater flexibility to change mount options:
+if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
+	sed -i "s/mount_removable=1/mount_removable=0/" /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
+fi
+
+
 
 if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
 	until apt-get -qqy install exfat-fuse > /dev/null
 	do
 		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		status-apt-cmd
 		echo
 	done
 fi
 
 status-apt-cmd
 
-
-
-# Disable automounting by default Filemanager "pcmanfm": it steps on our SystemD automount which gives us flexibility to change mount options:
-if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
-	sed -i "s/mount_removable=1/mount_removable=0/" /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
-fi
 
 
 # SystemD mount file created below should be named same as its mountpoint as specified in "Where" directive below:
@@ -1018,78 +983,10 @@ WantedBy=multi-user.target
 EOF
 
 
-####
-
-
-cat <<EOF> /etc/systemd/system/var-log.mount
-[Unit]
-Description=Create a USB mount to move logging off the MicroSD card
-
-[Mount]
-What=/dev/sda1
-Where=/var/log
-Type=exfat
-Options=defaults
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-cat <<EOF> /etc/systemd/system/var-log.automount
-[Unit]
-Description=Automount the USB storage for log writing
-
-[Automount]
-Where=/var/log
-DirectoryMode=0755
-TimeoutIdleSec=15
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-####
-
-
-cat <<EOF> /etc/systemd/system/home-pi.mount
-[Unit]
-Description=Create a USB mount to move the Pi user home dir
-
-[Mount]
-What=/dev/sda1
-Where=/home/pi
-Type=exfat
-Options=defaults
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-cat <<EOF> /etc/systemd/system/home-pi.automount
-[Unit]
-Description=Automount the USB storage for the Pi user home dir
-
-[Automount]
-Where=/home/pi
-DirectoryMode=0755
-TimeoutIdleSec=15
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
 
 systemctl daemon-reload
 systemctl start media-pi.mount
-systemctl start var-log.mount
-systemctl start home-pi.mount
+
 
 
 
@@ -1123,6 +1020,13 @@ fi
 systemctl enable media-pi.mount
 
 
+# Create a folder on the USB flash storage to write our persistent logs to.
+# We do this to avoid abusing the MicroSD card housing the OS with frequent writes.
+if [ ! -d /media/pi/logs ]; then
+	mkdir /media/pi/logs
+	chown pi:pi /media/pi/logs
+	chmod 751 /media/pi/logs
+fi
 
 
 
@@ -1135,6 +1039,8 @@ echo
 # Configure *BASIC* Settings (just enough to get things generally working):
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
+sed -i 's|logfile /var/log/motion/motion.log|logfile /media/pi/logs/motion.log|' /etc/motion/motion.conf
+sed -i "s/log_level 6/log_level $LOGLEVEL/" /etc/motion/motion.conf
 sed -i "s/rotate 0/rotate $ROTATE/" /etc/motion/motion.conf
 sed -i "s/width 320/width $WIDTH/" /etc/motion/motion.conf
 sed -i "s/height 240/height $HEIGHT/" /etc/motion/motion.conf
@@ -1185,10 +1091,10 @@ defaults
 auth           on
 tls            on
 tls_starttls   on
-logfile        ~/.msmtp.log
+logfile        /media/pi/logs/msmtp.log
 
-# For TLS support uncomment either "tls_trustfile_file" *OR* "tls_fingerprint": NOT BOTH
-# Note: "tls_trust_file" wont work with self-signed certs: use the "tls_fingerprint" directive instead
+# For TLS support uncomment either tls_trustfile_file directive *OR* tls_fingerprint directive: NOT BOTH
+# Note: tls_trust_file wont work with self-signed certs: use the tls_fingerprint directive in lieu
 
 #tls_trust_file /etc/ssl/certs/ca-certificates.crt
 tls_fingerprint $(msmtp --host=$SMTPRELAYFQDN --serverinfo --tls --tls-certcheck=off | grep SHA256 | awk '{ print $2 }')
@@ -1225,26 +1131,11 @@ echo
 # Note: This feature will only work if you have configured a working mail relay for the camera to use
 
 
-# Create Mutt configuration file for user pi
-cat <<EOF> /home/pi/.muttrc
-
-set sendmail=$(command -v msmtp)"
-set use_from=yes
-set realname="$(hostname)"
-set from="pi@$(hostname)"
-set envelope_from=yes
-set editor="vim.basic"
-
-EOF
-
-chown pi:pi /home/pi/.muttrc
-chmod 600 /home/pi/.muttrc
-
 cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
 sleep 30
-mutt -s "IP Address of Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6" $NOTIFICATIONSRECIPIENT
+mail -s "IP Address of Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6" $NOTIFICATIONSRECIPIENT
 
 EOF
 
@@ -1340,6 +1231,56 @@ newaliases
 
 
 
+
+echo
+echo "$(tput setaf 5)****** SET CPU AFFINITY:  ******$(tput sgr 0)"
+echo
+
+
+echo "The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core."
+echo "By restricting system processes to running on 0-2 CPU when we pin motion to core 3 it will have zero contention for execution cycles"
+sed -i "s/#CPUAffinity=1 2/CPUAffinity=0 1 2/" /etc/systemd/system.conf
+
+
+
+# Automate setting CPU Affinity after motion starts on boot:
+# Note the use of the "Wants" directive to create a dependent relationship on motion already being started
+
+cat <<'EOF'> /home/pi/scripts/set-cpu-affinity.sh
+#!/bin/bash
+
+taskset -cp 3 $(pgrep motion|cut -d ' ' -f2)
+
+EOF
+
+
+chmod 700 /home/pi/scripts/set-cpu-affinity.sh
+chown pi:pi /home/pi/scripts/set-cpu-affinity.sh
+
+
+cat <<EOF> /etc/systemd/system/set-cpu-affinity.service
+[Unit]
+Description=Set CPU Affinity for the Motion process after it starts on boot
+Wants=motion.service
+
+[Service]
+User=root
+Group=root
+Type=oneshot
+ExecStart=/home/pi/scripts/set-cpu-affinity.sh
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+systemctl enable set-cpu-affinity.service
+
+
+
+
+
 echo
 echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo
@@ -1387,6 +1328,8 @@ echo "##########################################################################
 
 echo
 echo "$(tput setaf 5)****** POST-CONFIG DIAGNOSTICS:  ****** $(tput sgr 0)"
+echo
+echo "Camera Logs write to USB storage: /media/pi/logs"
 echo
 echo "Pi Temperature reported by * vcgencmd measure_temp * below should be between 40-60 degrees Celcius:"
 echo "----------------------------------------------------------------------------------------------------"
