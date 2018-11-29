@@ -53,13 +53,13 @@
 # - Sets Kernel driver for camera to automatically load on boot
 # - Installs and configures "Motion" video camera package
 # - Installs and configures "MSMTP" package for email alerts on motion detection
-# - Abstracts data from the OS MicroSD card storage to a USB flashdrive formatted for EXFAT
-# - Downloads "Dropbox_Uploader" for copying video & pics to cloud (Note: requires setup in your Dropbox Account)
-# - Configures a SystemD Timer to upload images on USB flash drive to a DropBox account and delete the local copies
+# - Abstracts data from MicroSD card storage which hosts the OS to a USB flashdrive formatted for EXFAT
+# - Uploads camera evidence to a Dropbox account in the cloud
+# - Sets CPU Affinity run OS process on CPUs 0-2 and the application process exclusively on CPU 3 to ensure zero contention
 # - SNMP V3 configured
 # - Heat Monitoring for user configurable thresholds: WARN and SHUTDOWN
 # - Changes default editor FROM crappy nano TO standardized vim
-# - Sets hostname (by variable)
+# - Sets hostname of your specify
 # - Disables Autologin and sets passwords for the users 'pi' and 'root'
 # - Configures passwordless login by adding a Public Key YOU specify in a variable to "~/.ssh/authorized_keys" and configuring "/etc/ssh/sshd_config"
 # - Configures an ECDSA 521 bit SSH Keypair
@@ -142,6 +142,7 @@
 #		If you have, just execute the script again to rebuild everything and fix the error
 
 # # USEFUL LINKS:
+#  "Motion" Project Documentation:	https://motion-project.github.io/motion_guide.html
 #  "Motion" Config Options:         https://motion-project.github.io/motion_config.html
 #  Standard PiCam vs Pi NOIR PiCam: https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/
 #  Pi NoIR: https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/
