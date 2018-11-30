@@ -164,6 +164,24 @@ tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
 
 #########################################
 
+echo
+echo "$(tput setaf 5)****** CREDITS:  ******$(tput sgr 0)"
+echo
+echo "My script takes the work of others folks and stitches it all together into a complete Motion Detection Camera Solution."
+echo "So its right that I take a moment to thank those Open Source folks who toil in anonymity that provided me with the key components for my efforts:"
+echo
+echo "ANDREA FABRIZI: My script pi-cam-config.sh downloads and uses Anreas repo to shift images from local USB Flash storage to Dropbox"
+echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
+echo
+echo "Motion Project Team Members Joseph Heenan * Mr-Dave *  Tosiara.  Their Software is used for Motion Detection"
+echo "		$(tput setaf 2) https://github.com/orgs/Motion-Project/people$(tput sgr 0)"
+echo
+echo "Martin Lambers: MSMTP SMTP client used to squirt motion detection and other alerts"
+echo "		$(tput setaf 2) https://gitlab.marlam.de/marlam/msmtp$(tput sgr 0)"
+echo
+echo "And of Course Thanks to DROPBOX for a really great API that makes shifting the inges up to the cloud possible.  Outstanding company."
+echo
+echo
 
 echo
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
@@ -182,16 +200,17 @@ read -p "Press ENTER to accept license and warranty terms to continue or CTRL + 
 echo
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo
-echo "<rant> This is a camera: we do not require it. Were it not we would still remove Libre Office because it is crap."
-echo "Dont get me started.  Grrrrr </rant>"
+echo "This is a camera: we do not require Libre Office."
 echo
+echo "Checking if Libre Office present and will remove if found."
+echo "Can take over a minute to remove Libre Office- script might appear to hang"
+
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
 if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
 	apt-get -qqy purge libreoffice* > /dev/null
 	echo
 	echo "Libre Office wiped from system"
-	echo
 	echo
 else
 	echo "Libre Office not found on system"
@@ -312,7 +331,7 @@ if [ -d /home/pi/scripts ]; then
 	rm -r /home/pi/scripts
 fi
 
-if [-d /media/pi/logs]; then
+if [-d /media/pi/logs ]; then
 	rm -r /media/pi/logs
 fi
 
@@ -430,14 +449,15 @@ bcm2835-v4l2
 
 EOF
 
+echo "File created to automatically load camera driver on boot:"
+echo "/etc/modules-load.d/bcm2835-v4l2.conf"
+
 # Rebuild Kernel modules dependencies map
 depmod -a
 
-# Load the Camera Kernel Module
-modprobe bcm2835-v4l2
-
-
-
+# Load Camera Kernel Module
+#modprobe bcm2835-v4l2
+# Will automatically load on the reboot at the end of the script
 
 
 
@@ -447,6 +467,10 @@ echo
 
 echo "Default System log data is non-persistent. It exists im memory and is lost on every reboot"
 echo "Logging will be made persistent by writing it to disk in lieu of memory"
+echo
+echo
+
+cp -p /etc/systemd/journald.conf /etc/systemd/journald.conf.ORIGINAL
 
 sed -i "s/#Storage=auto/Storage=persistent/" /etc/systemd/journald.conf
 # Ensure logs do not eat all our storage space by expressly limiting their TOTAL disk usage:
@@ -466,12 +490,23 @@ sed -i "s/#MaxLevelStore=debug/MaxLevelStore=crit/" /etc/systemd/journald.conf
 # Max notification level to forward to the Kernel Ring Buffer (/var/log/messages)
 sed -i "s/#MaxLevelKMsg=notice/MaxLevelKMsg=warning/" /etc/systemd/journald.conf
 
+echo
+echo "Changes made to /etc/systemd/journald.conf by script are (tput setaf 1)RED$(tput sgr 0)"
+echo "Original values are shwon in (tput setaf 2)GREEN$(tput sgr 0)"
+echo
+diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
+echo
+echo
+
 
 # Re-Read changes made to /etc/systemd/journald.conf
 systemctl restart systemd-journald
-systemctl status systemd-journald
 
-
+echo "LOGGING NOTES:"
+echo "Although SystemD logging made persistent verbosity reduced to limit thrashing MicroSD card as much as possible"
+echo "Application logs will be written to USB storage on /home/pi/logs"
+echo "No way similar way to change SystemD log destination by path sadly"
+echo "Review above changes to logging above if you wish to tailor them edit: /etc/systemd/journald.conf"
 
 
 echo
@@ -492,11 +527,11 @@ sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
 echo
 
 
-echo "Changing default password * raspberry * for user pi"
+echo "Changing default password *raspberry* for user *pi*"
 echo "pi:$PASSWDPI"|chpasswd
 
-# Set a password for user 'root'
-echo "Set passwd for user 'root' "
+# Set a password for user *root*
+echo "Set passwd for user *root*"
 echo "root:$PASSWDROOT"|chpasswd
 
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
@@ -515,7 +550,7 @@ if [ ! -d /home/pi/.ssh ]; then
 	chmod 644 /home/pi/.ssh/id_ecdsa.pub
 	chown -R pi:pi /home/pi/
 
-	echo 'ECDSA 521 bit keypair created for user "pi"'
+	echo "ECDSA 521 bit keypair created for user *pi*
 fi
 
 echo
@@ -523,6 +558,7 @@ echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
 echo "Added Your Public Key to 'authorized_keys' file"
 echo
 
+cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
 # Modify default SSH access behaviour by tweaking below directives in /etc/ssh/sshd_config
 sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
 sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
@@ -533,17 +569,25 @@ sed -i "s|#MaxAuthTries 6|MaxAuthTries 3|" /etc/ssh/sshd_config
 sed -i "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|" /etc/ssh/sshd_config
 sed -i "s|#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2|AuthorizedKeysFile     .ssh/authorized_keys|" /etc/ssh/sshd_config
 sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|" /etc/ssh/sshd_config
-sed -i "s|#PermitEmptyPasswords no|#PermitEmptyPasswords no|" /etc/ssh/sshd_config
+sed -i "s|#PermitEmptyPasswords no|PermitEmptyPasswords no|" /etc/ssh/sshd_config
 sed -i "s|#X11Forwarding yes|X11Forwarding yes|" /etc/ssh/sshd_config
 sed -i "s|PrintMotd yes|PrintMotd no|" /etc/ssh/sshd_config
 sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
 sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
+echo
+echo "Changes made to /etc/ssh/sshd_config by script are (tput setaf 1)RED$(tput sgr 0)"
+echo "Original values are shwon in (tput setaf 2)GREEN$(tput sgr 0)"
+echo
+diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
+echo
+echo
 # No need for autologin now that we enabled Public Key Access so we disable it:
 sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
 systemctl disable autologin@.service
+echo
 echo "Disabled autologin"
-
+echo
 
 echo "Change default editor from crap *nano* to a universal Unix standard *vi*"
 echo "BEFORE Change:"
@@ -567,6 +611,7 @@ sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
 chown pi:pi /home/pi/.vimrc
 chmod 600 /home/pi/.vimrc
 
+echo "Created /home/pi/.vimrc"
 
 # Create Mutt configuration file for user pi
 cat <<EOF> /home/pi/.muttrc
@@ -618,7 +663,6 @@ if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
 fi
 
 status-apt-cmd
-echo
 
 
 # Grab the Kernel headers
@@ -633,7 +677,7 @@ if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
 fi
 
 status-apt-cmd
-echo
+
 
 # Ensure git is installed: required to grab repos using * git clone *"
 if [[ $(dpkg -l | grep git) = '' ]]; then
@@ -659,7 +703,6 @@ if [[ $(dpkg -l | grep motion) = '' ]]; then
 fi
 
 status-apt-cmd
-echo
 
 
 # "msmtp" is used to relay motion detection email alerts:
@@ -674,7 +717,7 @@ if [[ $(dpkg -l | grep msmtp) = '' ]]; then
 fi
 
 status-apt-cmd
-echo
+
 
 # SNMP monitoring will be configured:
 if [[ $(dpkg -l | grep snmpd) = '' ]]; then
@@ -688,7 +731,7 @@ if [[ $(dpkg -l | grep snmpd) = '' ]]; then
 fi
 
 status-apt-cmd
-echo
+
 
 
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
@@ -701,13 +744,10 @@ if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
 fi
 
 status-apt-cmd
-echo
 
 echo
-echo
-echo "Following package installations are not required for configuration of your Pi as a Motion Detection Camera"
-echo "but included as I felt they were useful.  Feel free to remove or replace them with alternatives as you wish:"
-echo
+echo "Below package installations not required for configuration as a Motion Detection Camera"
+echo "but included as I felt they were useful.  Feel free to apt-get remove them as you wish:"
 echo
 
 # *libimage-exiftool-perl* used to get metadata from videos and images from the CLI. Top-notch tool
@@ -782,7 +822,7 @@ fi
 
 # dstat is an diagnostic tool to gain insight into performance issues regarding memory storage and CPU
 if [[ $(dpkg -l | grep dstat) = '' ]]; then
-	apt-get -qqy install dstat
+	apt-get -qqy install dstat > /dev/null
 	status-apt-cmd
 fi
 
@@ -850,13 +890,6 @@ fi
 
 chown -R pi:pi /home/pi/Dropbox-Uploader
 
-echo
-echo "$(tput setaf 2) Big Thanks to ANDREA FABRIZI:$(tput sgr 0)"
-echo "-----------------------------------------------------------------------------------------------------------------"
-echo "My script pi-cam-config.sh downloads and uses this repo to shift images from local USB Flash storage to Dropbox"
-echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
-echo
-echo
 
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
@@ -983,11 +1016,8 @@ WantedBy=multi-user.target
 EOF
 
 
-
 systemctl daemon-reload
 systemctl start media-pi.mount
-
-
 
 
 
@@ -1024,7 +1054,6 @@ systemctl enable media-pi.mount
 # We do this to avoid abusing the MicroSD card housing the OS with frequent writes.
 if [ ! -d /media/pi/logs ]; then
 	mkdir /media/pi/logs
-	chown pi:pi /media/pi/logs
 	chmod 751 /media/pi/logs
 fi
 
@@ -1232,6 +1261,8 @@ newaliases
 
 
 
+
+
 echo
 echo "$(tput setaf 5)****** SET CPU AFFINITY:  ******$(tput sgr 0)"
 echo
@@ -1277,7 +1308,8 @@ EOF
 
 systemctl enable set-cpu-affinity.service
 
-
+# Change ownership of all files created by this script FROM user "root" TO user "pi":
+chown -R pi:pi /home/pi
 
 
 
@@ -1297,7 +1329,7 @@ echo "$(sudo systemctl status motion)" >> /etc/motd
 echo >> /etc/motd
 echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
 echo >> /etc/motd
-echo "Camera Temperature:"
+echo "Print Camera Temperature (below should be between 40-60 C):" >> /etc/motd
 echo "/opt/vc/bin/vcgencmd measure_temp" >> /etc/motd
 echo >> /etc/motd
 echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )" >> /etc/motd
@@ -1305,9 +1337,20 @@ echo >> /etc/motd
 echo "To stop/start/reload the Motion daemon:" >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo >> /etc/motd
-echo "Video Camera Logs: /var/log/motion/motion.log" >> /etc/motd
+echo "Video Camera Logs: /media/pi/logs/motion.log" >> /etc/motd
 echo >> /etc/motd
-echo "$(/usr/bin/v4l2-ctl -V)" >> /etc/motd
+echo "To Print Camera Details"
+echo "sudo /usr/bin/v4l2-ctl -V" >> /etc/motd
+echo >> /etc/motd
+echo "To Check Camera Loading Below Command Should Report: supported=1 detected=1" >> /etc/motd
+echo 'vcgencmd get_camera' >> /etc/motd
+echo >> /etc/motd
+echo >> /etc/motd
+echo "To Check Camera Driver Loaded Output of Below Command Should Report Value of 1:" >> /etc/motd
+echo 'lsmod |grep v4l2' >> /etc/motd
+echo >> /etc/motd
+echo "Further Check Camera is Correct: video0 * should be Reported When Below Command is Executed:" >> /etc/motd
+echo 'ls -al /dev | grep video0' >> /etc/motd
 echo >> /etc/motd
 echo "To manually change *VIDEO* resolution using Video4Linux driver tailor below example to your use case:" >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
@@ -1319,48 +1362,13 @@ echo >> /etc/motd
 echo "To see metadata for an image or video:" >> /etc/motd
 echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo >> /etc/motd
-echo "Below tools were installed to assist you in troubleshooting any networking issues:" >> /etc/motd
+echo "Below tools installed to help troubleshoot networking issues:" >> /etc/motd
 echo 'mtr tcpdump and iptraf-ng' >> /etc/motd
 echo "To edit or delete these login messages:  vi /etc/motd" >> /etc/motd
 echo >> /etc/motd
 echo "###############################################################################" >> /etc/motd
 
 
-echo
-echo "$(tput setaf 5)****** POST-CONFIG DIAGNOSTICS:  ****** $(tput sgr 0)"
-echo
-echo "Camera Logs write to USB storage: /media/pi/logs"
-echo
-echo "Pi Temperature reported by * vcgencmd measure_temp * below should be between 40-60 degrees Celcius:"
-echo "----------------------------------------------------------------------------------------------------"
-/opt/vc/bin/vcgencmd measure_temp
-echo
-echo "Output of command * vcgencmd get_camera * below should report: supported=1 detected=1"
-echo "----------------------------------------------------------------------------------------------------"
-vcgencmd get_camera
-echo
-echo "Value below for camera driver bcm2835_v4l2 should report value of 1 (camera driver loaded). If not camera will be down:"
-echo "----------------------------------------------------------------------------------------------------"
-lsmod |grep v4l2
-echo
-echo "Device * video0 * should be shown below. If not your camera will be down:"
-echo "----------------------------------------------------------------------------------------------------"
-ls -al /dev | grep video0
-echo
-echo "Check Host Timekeeping both correct and automated:"
-echo "----------------------------------------------------------------------------------------------------"
-systemctl status systemd-timesyncd.service
-echo
-echo "Open UDP/123 in Router FW if error "Timed out waiting for reply" is reported"
-echo
-echo
-ping -c 2 www.google.com
-echo
-ping -c 2 8.8.8.8
-echo
-echo "If pinging www.google.com above by name failed but pinging 8.8.8.8 succeeded check that port UDP/53 is open"
-echo
-echo
 
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
@@ -1380,7 +1388,7 @@ echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
 
 echo
 echo
-echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOSTS ** $(tput sgr 0)"
+echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOST ** $(tput sgr 0)"
 echo
 echo
 read -p "Press Enter to reboot after reviewing script feedback above"
