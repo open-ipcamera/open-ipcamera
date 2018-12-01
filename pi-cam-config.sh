@@ -173,13 +173,13 @@ echo
 echo "ANDREA FABRIZI: My script pi-cam-config.sh downloads and uses Anreas repo to shift images from local USB Flash storage to Dropbox"
 echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
 echo
-echo "Motion Project Team Members Joseph Heenan * Mr-Dave *  Tosiara.  Their Software is used for Motion Detection"
+echo "Motion Project Team Members: Joseph Heenan * Mr-Dave *  Tosiara.  Their Software is used for Motion Detection"
 echo "		$(tput setaf 2) https://github.com/orgs/Motion-Project/people$(tput sgr 0)"
 echo
 echo "Martin Lambers: MSMTP SMTP client used to squirt motion detection and other alerts"
 echo "		$(tput setaf 2) https://gitlab.marlam.de/marlam/msmtp$(tput sgr 0)"
 echo
-echo "And of Course Thanks to DROPBOX for a really great API that makes shifting the inges up to the cloud possible.  Outstanding company."
+echo "And of Course Thanks to DROPBOX for a really great API that makes shifting the images up to the cloud possible.  Outstanding company."
 echo
 echo
 
@@ -491,8 +491,8 @@ sed -i "s/#MaxLevelStore=debug/MaxLevelStore=crit/" /etc/systemd/journald.conf
 sed -i "s/#MaxLevelKMsg=notice/MaxLevelKMsg=warning/" /etc/systemd/journald.conf
 
 echo
-echo "Changes made to /etc/systemd/journald.conf by script are (tput setaf 1)RED$(tput sgr 0)"
-echo "Original values are shwon in (tput setaf 2)GREEN$(tput sgr 0)"
+echo "Changes made to /etc/systemd/journald.conf by script are $(tput setaf 1)RED$(tput sgr 0)"
+echo "Original values are shown in $(tput setaf 2)GREEN$(tput sgr 0)"
 echo
 diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
 echo
@@ -576,8 +576,8 @@ sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
 sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
 echo
-echo "Changes made to /etc/ssh/sshd_config by script are (tput setaf 1)RED$(tput sgr 0)"
-echo "Original values are shwon in (tput setaf 2)GREEN$(tput sgr 0)"
+echo "Changes made to /etc/ssh/sshd_config by script are $(tput setaf 1)RED$(tput sgr 0)"
+echo "Original values are shwon in $(tput setaf 2)GREEN$(tput sgr 0)"
 echo
 diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
 echo
