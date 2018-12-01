@@ -3,7 +3,7 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181129
+# Date:    20181201
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -32,8 +32,8 @@
 # README.txt file distributed with this script
 # VIDEO:  www.YouTube.com/user/LinuxEngineer
 
-# If I saved you a few hours or possibly DAYS of manually configuring one or more pi-cams consider buying me a beer ;-)
-# paypal.me/TerrenceHoulahan
+# If I saved you a few hours or possibly DAYS manually configuring one or more pi-cams perhaps consider buying me a beer:
+#   paypal.me/TerrenceHoulahan
 
 ######  Variables: ######
 #
@@ -1367,8 +1367,9 @@ echo
 cd /home/pi/Dropbox-Uploader/
 su pi -c "./dropbox_uploader.sh upload << 'INPUT'
 $DROPBOXACCESSTOKEN
-echo "y"\n
 INPUT"
+
+read -p "Press ENTER to confirm the access token is correct:"
 
 echo "$(tput setaf 1)** Press ENTER to confirm Access Token and continue script execution: **$(tput sgr 0)"
 #echo -ne '\n'
@@ -1382,9 +1383,7 @@ echo
 echo
 echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOST ** $(tput sgr 0)"
 echo
-echo
 read -p "Press Enter to reboot after reviewing script feedback above"
-echo
 echo
 
 # Change ownership of all files created by this script FROM user "root" TO user "pi":
@@ -1392,7 +1391,7 @@ chown -R pi:pi /home/pi
 
 
 echo
-echo "$(tput setaf 5)****** Performing apt-get upgrade and dist-upgrade:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** apt-get upgrade and dist-upgrade: ******$(tput sgr 0)"
 echo
 
 echo
@@ -1404,13 +1403,13 @@ echo
 
 
 
-# Get rid of any dependencies installed from pkgs we removed that are no longer required:
+# Remove any dependencies from installed from uninstalled pkgs no longer required:
 apt-get -qqy autoremove > /dev/null
 status-apt-cmd
 echo
 
 # Now do an upgrade
-apt-get -qqy dist-upgrade
+apt-get -qqy dist-upgrade > /dev/null
 status-apt-cmd
 echo
 
