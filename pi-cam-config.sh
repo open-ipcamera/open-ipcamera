@@ -550,7 +550,7 @@ if [ ! -d /home/pi/.ssh ]; then
 	chmod 644 /home/pi/.ssh/id_ecdsa.pub
 	chown -R pi:pi /home/pi/
 
-	echo "ECDSA 521 bit keypair created for user *pi*
+	echo "ECDSA 521 bit keypair created for user *pi*"
 fi
 
 echo
