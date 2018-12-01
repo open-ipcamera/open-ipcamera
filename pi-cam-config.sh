@@ -1159,6 +1159,11 @@ echo
 cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
+
+CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d '/' -f1|cut -d ':' -f2)"
+CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
+
+
 sleep 30
 mail -s "IP Address of Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6" $NOTIFICATIONSRECIPIENT
 

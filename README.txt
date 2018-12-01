@@ -48,7 +48,8 @@
 # -  To receive email alerts for motion detection events an SMTP server with both an MX and PTR DNS record to relay alert emails from the Pi
 
 # 5. SCRIPT FEATURES:
-# - Automatically configures the IP address in the configuration files
+# - Automatically configures camera IP address in configuration files
+# - Camera emails you its address so you can find it when connected to a HotSpot
 # - Enables camera in Raspbian and disables its' red LED activity light
 # - Sets Kernel driver for camera to automatically load on boot
 # - Installs and configures "Motion" video camera package
