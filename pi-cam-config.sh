@@ -467,8 +467,6 @@ echo
 
 echo "Default System log data is non-persistent. It exists im memory and is lost on every reboot"
 echo "Logging will be made persistent by writing it to disk in lieu of memory"
-echo
-echo
 
 cp -p /etc/systemd/journald.conf /etc/systemd/journald.conf.ORIGINAL
 
@@ -496,8 +494,6 @@ echo "Original values are shown in $(tput setaf 2)GREEN$(tput sgr 0)"
 echo
 diff --color /etc/systemd/journald.conf /etc/systemd/journald.conf.ORIGINAL
 echo
-echo
-
 
 # Re-Read changes made to /etc/systemd/journald.conf
 systemctl restart systemd-journald
@@ -875,8 +871,7 @@ echo
 echo "https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md"
 echo
 
-# "Dropbox-Uploader" facilitates copying images from local USB Flash storage to cloud safeguarding evidence from theft or destruction of Pi-Cam
-echo
+# *Dropbox-Uploader* facilitates copying images from local USB Flash storage to cloud safeguarding evidence from theft or destruction of Pi-Cam
 
 if [ ! -d /home/pi/Dropbox-Uploader ]; then
 	cd /home/pi
@@ -952,7 +947,7 @@ echo
 
 echo "To stop frequent writes from trashing the MicroSD card the Pi OS lives on"
 echo "directories with frequent write activity will be mounted on USB storage"
-
+echo
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
 
@@ -1260,10 +1255,6 @@ newaliases
 
 
 
-
-
-
-
 echo
 echo "$(tput setaf 5)****** SET CPU AFFINITY:  ******$(tput sgr 0)"
 echo
@@ -1271,8 +1262,8 @@ echo
 
 echo "The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core."
 echo "By restricting system processes to running on 0-2 CPU when we pin motion to core 3 it will have zero contention for execution cycles"
+echo
 sed -i "s/#CPUAffinity=1 2/CPUAffinity=0 1 2/" /etc/systemd/system.conf
-
 
 
 # Automate setting CPU Affinity after motion starts on boot:
@@ -1318,7 +1309,7 @@ echo
 echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
-echo "Configured messages in /etc/motd to display on user login"
+echo "Configured Help Messages/Tips in /etc/motd to display on user login"
 echo
 echo "###############################################################################" >> /etc/motd
 echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer!$(tput sgr 0) ##" >> /etc/motd
@@ -1340,7 +1331,7 @@ echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo >> /etc/motd
 echo "Video Camera Logs: /media/pi/logs/motion.log" >> /etc/motd
 echo >> /etc/motd
-echo "To Print Camera Details"
+echo "To Print Camera Details" >> /etc/motd
 echo "sudo /usr/bin/v4l2-ctl -V" >> /etc/motd
 echo >> /etc/motd
 echo "To Check Camera Loading Below Command Should Report: supported=1 detected=1" >> /etc/motd
