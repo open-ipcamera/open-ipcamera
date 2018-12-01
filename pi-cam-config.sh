@@ -170,7 +170,7 @@ echo
 echo "My script takes the work of others folks and stitches it all together into a complete Motion Detection Camera Solution."
 echo "So its right that I take a moment to thank those Open Source folks who toil in anonymity that provided me with the key components for my efforts:"
 echo
-echo "ANDREA FABRIZI: My script pi-cam-config.sh downloads and uses Anreas repo to shift images from local USB Flash storage to Dropbox"
+echo "ANDREA FABRIZI: My script pi-cam-config.sh downloads and uses Andrea repo to shift images from local USB Flash storage to Dropbox"
 echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
 echo
 echo "Motion Project Team Members: Joseph Heenan * Mr-Dave *  Tosiara.  Their Software is used for Motion Detection"
@@ -331,7 +331,7 @@ if [ -d /home/pi/scripts ]; then
 	rm -r /home/pi/scripts
 fi
 
-if [-d /media/pi/logs ]; then
+if [ -d /media/pi/logs ]; then
 	rm -r /media/pi/logs
 fi
 
@@ -494,7 +494,7 @@ echo
 echo "Changes made to /etc/systemd/journald.conf by script are $(tput setaf 1)RED$(tput sgr 0)"
 echo "Original values are shown in $(tput setaf 2)GREEN$(tput sgr 0)"
 echo
-diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
+diff --color /etc/systemd/journald.conf /etc/systemd/journald.conf.ORIGINAL
 echo
 echo
 
@@ -559,6 +559,7 @@ echo "Added Your Public Key to 'authorized_keys' file"
 echo
 
 cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
+
 # Modify default SSH access behaviour by tweaking below directives in /etc/ssh/sshd_config
 sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
 sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
