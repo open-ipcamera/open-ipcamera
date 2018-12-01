@@ -140,8 +140,8 @@ CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cu
 #############################################################
 
 
-# This script is designed to run (mostly) unattended- package installation requiring user input is therefore undesirable
-# We will set a non-persistent (will not survive reboot) preference for the duration of the script as "noninteractive":
+# This script is designed to run *mostly* unattended. Package installation requiring user input is therefore undesirable
+# We will set a non-persistent (will not survive reboot) preference for duration of our script as *noninteractive*:
 export DEBIAN_FRONTEND=noninteractive
 
 
@@ -200,7 +200,7 @@ read -p "Press ENTER to accept license and warranty terms to continue or close t
 echo
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo
-echo "This is a camera: we do not require Libre Office."
+echo "This is a camera: we do not require office applications."
 echo
 echo "Checking if Libre Office present and will remove if found."
 echo "Can take over a minute to remove Libre Office- script might appear to hang"
@@ -355,12 +355,9 @@ if [ -f /home/pi/.muttrc ]; then
 	rm /home/pi/.muttrc
 fi
 
-# apt-get purge does not delete log which will contain errors from previous builds: we will truncate it so only new messages from latest build are present:
-if [ -f /var/log/motion/motion.log ]; then
-	truncate -s 0 /var/log/motion/motion.log
-fi
 
-# Messages are appended to MOTD by this script: we truncate the file to wipe existing messages to stop being repeatedly appended every time we execute it
+
+# Truncate any messages previously appended to MOTD by this script:
 truncate -s 0 /etc/motd
 
 
@@ -503,127 +500,6 @@ echo "Although SystemD logging made persistent verbosity reduced to limit thrash
 echo "Application logs will be written to USB storage on /home/pi/logs"
 echo "No way similar way to change SystemD log destination by path sadly"
 echo "Review above changes to logging above if you wish to tailor them edit: /etc/systemd/journald.conf"
-
-
-echo
-echo "$(tput setaf 5)****** USER CONFIGURATION: ******$(tput sgr 0)"
-echo
-
-
-if [ ! -d /home/pi/scripts ]; then
-	mkdir /home/pi/scripts
-	chown pi:pi /home/pi/scripts
-	chmod 751 /home/pi/scripts
-fi
-
-
-echo 'Set user bash histories to unlimited length:'
-sed -i "s/HISTSIZE=1000/HISTSIZE=/" /home/pi/.bashrc
-sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
-echo
-
-
-echo "Changing default password *raspberry* for user *pi*"
-echo "pi:$PASSWDPI"|chpasswd
-
-# Set a password for user *root*
-echo "Set passwd for user *root*"
-echo "root:$PASSWDROOT"|chpasswd
-
-# Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
-if [ ! -d /home/pi/.ssh ]; then
-	mkdir /home/pi/.ssh
-	chmod 700 /home/pi/.ssh
-	chown pi:pi /home/pi/.ssh
-	touch /home/pi/.ssh/authorized_keys
-	chown pi:pi /home/pi/.ssh/authorized_keys
-
-	# https://www.ssh.com/ssh/keygen/
-	sudo -u pi ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -q -P ''&
-	wait $!
-
-	chmod 600 /home/pi/.ssh/id_ecdsa
-	chmod 644 /home/pi/.ssh/id_ecdsa.pub
-	chown -R pi:pi /home/pi/
-
-	echo "ECDSA 521 bit keypair created for user *pi*"
-fi
-
-echo
-echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
-echo "Added Your Public Key to 'authorized_keys' file"
-echo
-
-cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
-
-# Modify default SSH access behaviour by tweaking below directives in /etc/ssh/sshd_config
-sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
-sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
-sed -i "s|#SyslogFacility AUTH|SyslogFacility AUTH|" /etc/ssh/sshd_config
-sed -i "s|#LogLevel INFO|LogLevel INFO|" /etc/ssh/sshd_config
-sed -i "s|#LoginGraceTime 2m|LoginGraceTime 1m|" /etc/ssh/sshd_config
-sed -i "s|#MaxAuthTries 6|MaxAuthTries 3|" /etc/ssh/sshd_config
-sed -i "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|" /etc/ssh/sshd_config
-sed -i "s|#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2|AuthorizedKeysFile     .ssh/authorized_keys|" /etc/ssh/sshd_config
-sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|" /etc/ssh/sshd_config
-sed -i "s|#PermitEmptyPasswords no|PermitEmptyPasswords no|" /etc/ssh/sshd_config
-sed -i "s|#X11Forwarding yes|X11Forwarding yes|" /etc/ssh/sshd_config
-sed -i "s|PrintMotd yes|PrintMotd no|" /etc/ssh/sshd_config
-sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
-sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
-
-echo
-echo "Changes made to /etc/ssh/sshd_config by script are $(tput setaf 1)RED$(tput sgr 0)"
-echo "Original values are shwon in $(tput setaf 2)GREEN$(tput sgr 0)"
-echo
-diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
-echo
-echo
-# No need for autologin now that we enabled Public Key Access so we disable it:
-sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
-systemctl disable autologin@.service
-echo
-echo "Disabled autologin"
-echo
-
-echo "Change default editor from crap *nano* to a universal Unix standard *vi*"
-echo "BEFORE Change:"
-update-alternatives --get-selections|grep editor
-echo
-update-alternatives --set editor /usr/bin/vim.basic
-echo
-echo "AFTER Change:"
-update-alternatives --get-selections|grep editor
-
-if [ -f /home/pi/.selected_editor ]; then
-	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
-fi
-
-cp /usr/share/vim/vimrc /home/pi/.vimrc
-
-# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
-sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
-sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
-
-chown pi:pi /home/pi/.vimrc
-chmod 600 /home/pi/.vimrc
-
-echo "Created /home/pi/.vimrc"
-
-# Create Mutt configuration file for user pi
-cat <<EOF> /home/pi/.muttrc
-
-set sendmail=$(command -v msmtp)"
-set use_from=yes
-set realname="$(hostname)"
-set from="pi@$(hostname)"
-set envelope_from=yes
-set editor="vim.basic"
-
-EOF
-
-chown pi:pi /home/pi/.muttrc
-chmod 600 /home/pi/.muttrc
 
 
 
@@ -824,6 +700,132 @@ if [[ $(dpkg -l | grep dstat) = '' ]]; then
 fi
 
 
+
+
+
+echo
+echo "$(tput setaf 5)****** USER CONFIGURATION: ******$(tput sgr 0)"
+echo
+
+
+if [ ! -d /home/pi/scripts ]; then
+	mkdir /home/pi/scripts
+	chown pi:pi /home/pi/scripts
+	chmod 751 /home/pi/scripts
+fi
+
+
+echo 'Set user bash histories to unlimited length:'
+sed -i "s/HISTSIZE=1000/HISTSIZE=/" /home/pi/.bashrc
+sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
+echo
+
+
+echo "Changing default password *raspberry* for user *pi*"
+echo "pi:$PASSWDPI"|chpasswd
+
+# Set a password for user *root*
+echo "Set passwd for user *root*"
+echo "root:$PASSWDROOT"|chpasswd
+
+# Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
+if [ ! -d /home/pi/.ssh ]; then
+	mkdir /home/pi/.ssh
+	chmod 700 /home/pi/.ssh
+	chown pi:pi /home/pi/.ssh
+	touch /home/pi/.ssh/authorized_keys
+	chown pi:pi /home/pi/.ssh/authorized_keys
+
+	# https://www.ssh.com/ssh/keygen/
+	sudo -u pi ssh-keygen -t ecdsa -b 521 -f /home/pi/.ssh/id_ecdsa -q -P ''&
+	wait $!
+
+	chmod 600 /home/pi/.ssh/id_ecdsa
+	chmod 644 /home/pi/.ssh/id_ecdsa.pub
+	chown -R pi:pi /home/pi/
+
+	echo "ECDSA 521 bit keypair created for user *pi*"
+fi
+
+echo
+echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
+echo "Added Your Public Key to 'authorized_keys' file"
+echo
+
+cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
+
+# Modify default SSH access behaviour by tweaking below directives in /etc/ssh/sshd_config
+sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
+sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
+sed -i "s|#SyslogFacility AUTH|SyslogFacility AUTH|" /etc/ssh/sshd_config
+sed -i "s|#LogLevel INFO|LogLevel INFO|" /etc/ssh/sshd_config
+sed -i "s|#LoginGraceTime 2m|LoginGraceTime 1m|" /etc/ssh/sshd_config
+sed -i "s|#MaxAuthTries 6|MaxAuthTries 3|" /etc/ssh/sshd_config
+sed -i "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|" /etc/ssh/sshd_config
+sed -i "s|#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2|AuthorizedKeysFile     .ssh/authorized_keys|" /etc/ssh/sshd_config
+sed -i "s|#PasswordAuthentication yes|PasswordAuthentication yes|" /etc/ssh/sshd_config
+sed -i "s|#PermitEmptyPasswords no|PermitEmptyPasswords no|" /etc/ssh/sshd_config
+sed -i "s|#X11Forwarding yes|X11Forwarding yes|" /etc/ssh/sshd_config
+sed -i "s|PrintMotd yes|PrintMotd no|" /etc/ssh/sshd_config
+sed -i "s|#PrintLastLog yes|PrintLastLog yes|" /etc/ssh/sshd_config
+sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
+
+echo
+echo "Changes made to /etc/ssh/sshd_config by script are $(tput setaf 1)RED$(tput sgr 0)"
+echo "Original values are shwon in $(tput setaf 2)GREEN$(tput sgr 0)"
+echo
+diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
+echo
+echo
+# No need for autologin now that we enabled Public Key Access so we disable it:
+sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
+systemctl disable autologin@.service
+echo
+echo "Disabled autologin"
+echo
+
+echo "Change default editor from crap *nano* to a universal Unix standard *vi*"
+echo "BEFORE Change:"
+update-alternatives --get-selections|grep editor
+echo
+update-alternatives --set editor /usr/bin/vim.basic
+echo
+echo "AFTER Change:"
+update-alternatives --get-selections|grep editor
+
+if [ -f /home/pi/.selected_editor ]; then
+	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
+fi
+
+cp /usr/share/vim/vimrc /home/pi/.vimrc
+
+# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
+sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
+sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
+
+chown pi:pi /home/pi/.vimrc
+chmod 600 /home/pi/.vimrc
+
+echo "Created /home/pi/.vimrc"
+
+# Create Mutt configuration file for user pi
+cat <<EOF> /home/pi/.muttrc
+
+set sendmail=$(command -v msmtp)"
+set use_from=yes
+set realname="$(hostname)"
+set from="pi@$(hostname)"
+set envelope_from=yes
+set editor="vim.basic"
+
+EOF
+
+chown pi:pi /home/pi/.muttrc
+chmod 600 /home/pi/.muttrc
+
+
+
+
 echo
 echo "$(tput setaf 5)****** SNMP Configuration:  ******$(tput sgr 0)"
 echo
@@ -945,9 +947,10 @@ echo
 echo "$(tput setaf 5)****** USB Flash Storage Configuration:  ******$(tput sgr 0)"
 echo
 
-echo "To stop frequent writes from trashing the MicroSD card the Pi OS lives on"
+echo "To stop frequent writes from trashing MicroSD card the Pi OS lives on"
 echo "directories with frequent write activity will be mounted on USB storage"
 echo
+
 # Interesting thread on auto mounting choices:
 # https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
 
@@ -1092,11 +1095,11 @@ sed -i "s/webcontrol_port 8080/webcontrol_port $WEBCONTROLPORT/" /etc/motion/mot
 sed -i "s/; webcontrol_authentication username:password/webcontrol_authentication $USER:$PASSWD/" /etc/motion/motion.conf
 
 
-# Configure Motion to run by daemon:
+echo "Configure Motion to run by daemon"
 # Remark the path is different to the target of foregoing sed expressions
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
 
-# Set motion to start on boot:
+echo "Set motion to start on boot"
 systemctl enable motion.service
 
 
@@ -1147,11 +1150,12 @@ EOF
  
 
 
+
 echo
 echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and Heat  ******$(tput sgr 0)"
 echo
 
-# Apple offers no way to identify the IP of a device tethered to an iPhone HotSpot.
+# Apple offers means to identify the IP of a device tethered to an iPhone HotSpot.
 # This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "NOTIFICATIONSRECIPIENT"
 # Note: This feature will only work if you have configured a working mail relay for the camera to use
 
@@ -1160,12 +1164,14 @@ cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
 
+NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
+
+# Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
 CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d '/' -f1|cut -d ':' -f2)"
 CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
 
-
 sleep 30
-mail -s "IP Address of Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6" $NOTIFICATIONSRECIPIENT
+mail -s "IP Address of Camera $(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" \$NOTIFICATIONSRECIPIENT
 
 EOF
 
@@ -1198,10 +1204,20 @@ systemctl enable email-camera-address.service
 cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
-if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]]; then
-	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mail -s "Heat Alert $(hostname)" $NOTIFICATIONSRECIPIENT
-elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: $HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n $(hostname) \n $CAMERAIPV4 \n $CAMERAIPV6” | mail -s "Shutdown Alert $(hostname)" $NOTIFICATIONSRECIPIENT
+# Edit values in variables belowrather than editing the script itself to avoid introducing a fault
+NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
+HEATTHRESHOLDWARN='71'
+HEATTHRESHOLDSHUTDOWN='91'
+
+# But do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
+CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d '/' -f1|cut -d ':' -f2)"
+CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
+
+
+if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]]; then
+	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n \$(hostname) \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mail -s "Heat Alert \$(hostname)" \$NOTIFICATIONSRECIPIENT
+elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]]; then
+	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n \$(hostname) \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mail -s "Shutdown Alert \$(hostname)" \$NOTIFICATIONSRECIPIENT
 	systemctl poweroff
 else
 	exit
@@ -1266,17 +1282,30 @@ echo
 
 
 echo "The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core."
-echo "By restricting system processes to running on 0-2 CPU when we pin motion to core 3 it will have zero contention for execution cycles"
+echo "By restricting SYSTEM processes to living on CPUs 0-2 when we pin motion to core that leaves 3 uncontended for Motion to use"
 echo
+
+cp -p /etc/systemd/system.conf /etc/systemd/system.conf.ORIGINAL
+
 sed -i "s/#CPUAffinity=1 2/CPUAffinity=0 1 2/" /etc/systemd/system.conf
 
 
-# Automate setting CPU Affinity after motion starts on boot:
-# Note the use of the "Wants" directive to create a dependent relationship on motion already being started
+echo
+echo "Changes made to/etc/systemd/system.conf by script are $(tput setaf 1)RED$(tput sgr 0)"
+echo "Original values are shwon in $(tput setaf 2)GREEN$(tput sgr 0)"
+echo
+diff --color /etc/systemd/system.conf /etc/systemd/system.conf.ORIGINAL
+echo
+
+
+
+echo "Automate setting CPU Affinity for Motion on boot"
+# Note use of * Wants * directive to create a dependent relationship on Motion already being started
 
 cat <<'EOF'> /home/pi/scripts/set-cpu-affinity.sh
 #!/bin/bash
 
+# Note: the number following cp is the CPU/core number in this case three
 taskset -cp 3 $(pgrep motion|cut -d ' ' -f2)
 
 EOF
@@ -1317,7 +1346,7 @@ echo
 echo "Configured Help Messages/Tips in /etc/motd to display on user login"
 echo
 echo "###############################################################################" >> /etc/motd
-echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer!$(tput sgr 0) ##" >> /etc/motd
+echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer either in person or PayPal:$(tput sgr 0) ##" >> /etc/motd
 echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
 echo "###############################################################################" >> /etc/motd
 echo >> /etc/motd
@@ -1369,8 +1398,8 @@ echo "##########################################################################
 
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
-echo "By default the Dropbox API used to upload images breaks scripted automation by requiring user input on first access."
-echo 'So we initiate an access, supply Access Token via a variable and automate answering the question to confirm oken we supplied to save it'
+echo "By default Dropbox API used to upload images breaks scripted automation by requiring user input on first access."
+echo 'So we initiate an access then spit back the token supplied in variable DROPBOXACCESSTOKEN and finally acknowledge it is correct'
 echo
 cd /home/pi/Dropbox-Uploader/
 su pi -c "printf '\n'|./dropbox_uploader.sh upload << 'INPUT'
