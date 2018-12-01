@@ -193,7 +193,7 @@ echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
 echo "Consult * LICENSE.txt * for terms of GPL 3 License and conditions of use."
 
-read -p "Press ENTER to accept license and warranty terms to continue or CTRL + C to EXIT this script"
+read -p "Press ENTER to accept license and warranty terms to continue or close this bash shell to exit the script"
 
 
 
@@ -1364,26 +1364,27 @@ echo "##########################################################################
 
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
+echo "By default the Dropbox API used to upload images breaks scripted automation by requiring user input on first access."
+echo 'So we initiate an access, supply Access Token via a variable and automate answering the question to confirm oken we supplied to save it'
+echo
 cd /home/pi/Dropbox-Uploader/
-su pi -c "./dropbox_uploader.sh upload << 'INPUT'
+su pi -c "printf '\n'|./dropbox_uploader.sh upload << 'INPUT'
 $DROPBOXACCESSTOKEN
+y
 INPUT"
 
-read -p "Press ENTER to confirm the access token is correct:"
 
-echo "$(tput setaf 1)** Press ENTER to confirm Access Token and continue script execution: **$(tput sgr 0)"
-#echo -ne '\n'
-echo
-
-echo "Note the address of your camera below to access it via web browser after reboot:"
+echo "Note address of your camera below to access it via web browser after reboot:"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
 echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
+echo
+echo "If you SSH into the camera its address will also be printed in the MOTD upon login"
 
 echo
 echo
 echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOST ** $(tput sgr 0)"
 echo
-read -p "Press Enter to reboot after reviewing script feedback above"
+read -p "Press Enter to perform an upgrade and reboot after reviewing script feedback for errors or config detail of interest"
 echo
 
 # Change ownership of all files created by this script FROM user "root" TO user "pi":
@@ -1403,12 +1404,12 @@ echo
 
 
 
-# Remove any dependencies from installed from uninstalled pkgs no longer required:
+echo "Remove any dependencies of uninstalled packages:"
 apt-get -qqy autoremove > /dev/null
 status-apt-cmd
 echo
 
-# Now do an upgrade
+echo "Now execute the dist-upgrade"
 apt-get -qqy dist-upgrade > /dev/null
 status-apt-cmd
 echo
@@ -1440,6 +1441,6 @@ sleep 10
 
 
 # Wipe F1Linux.com pi-cam-config files as clear text passwds live in here:
-#rm -rf /home/pi/pi-cam-config
+rm -rf /home/pi/pi-cam-config
 
 #systemctl reboot
