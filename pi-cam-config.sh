@@ -87,7 +87,7 @@ NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
 
 # Only modify "Subject: Motion Detected" if you want to change it. Take care not to delete any of the encasing single quote marks
-ONEVENTSTART='echo '"'Subject: Motion Detected ${HOSTNAME}'"' | msmtp '"'$NOTIFICATIONSRECIPIENT'"''
+ONEVENTSTART='echo '"'Subject: Motion Detected ${hostname}'"' | msmtp '"'$NOTIFICATIONSRECIPIENT'"''
 
 IPV6ENABLED='on'
 # NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
@@ -498,7 +498,7 @@ systemctl restart systemd-journald
 echo "LOGGING NOTES:"
 echo "Although SystemD logging made persistent verbosity reduced to limit thrashing MicroSD card as much as possible"
 echo "Application logs will be written to USB storage on /home/pi/logs"
-echo "No way similar way to change SystemD log destination by path sadly"
+echo "No similar way to change SystemD log destination by path sadly"
 echo "Review above changes to logging above if you wish to tailor them edit: /etc/systemd/journald.conf"
 
 
@@ -772,7 +772,7 @@ sed -i "s|#TCPKeepAlive yes|TCPKeepAlive yes|" /etc/ssh/sshd_config
 
 echo
 echo "Changes made to /etc/ssh/sshd_config by script are $(tput setaf 1)RED$(tput sgr 0)"
-echo "Original values are shwon in $(tput setaf 2)GREEN$(tput sgr 0)"
+echo "Original values are shown in $(tput setaf 2)GREEN$(tput sgr 0)"
 echo
 diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
 echo
@@ -1163,15 +1163,20 @@ echo
 cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
-
 NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
+
+SNMPV3AUTHPASSWD='"'$SNMPV3AUTHPASSWD'"'
+SNMPV3ENCRYPTPASSWD='"'$SNMPV3ENCRYPTPASSWD'"'
+SNMPV3ROUSER='"'$SNMPV3ROUSER'"'
 
 # Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
 CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d '/' -f1|cut -d ':' -f2)"
 CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
 
-sleep 30
-mail -s "IP Address of Camera $(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" \$NOTIFICATIONSRECIPIENT
+sleep 20
+#echo "IP Address of Camera $(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP Address of Camera $(hostname)" \$NOTIFICATIONSRECIPIENT
+
+echo "IP Address of Camera $(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP Address of Camera: \$(snmpget -v3 -a SHA -x AES -A \$SNMPV3AUTHPASSWD -X \$SNMPV3ENCRYPTPASSWD -l authNoPriv -u \$SNMPV3ROUSER \$CAMERAIPV4 sysLocation.0)" \$NOTIFICATIONSRECIPIENT
 
 EOF
 
@@ -1292,7 +1297,7 @@ sed -i "s/#CPUAffinity=1 2/CPUAffinity=0 1 2/" /etc/systemd/system.conf
 
 echo
 echo "Changes made to/etc/systemd/system.conf by script are $(tput setaf 1)RED$(tput sgr 0)"
-echo "Original values are shwon in $(tput setaf 2)GREEN$(tput sgr 0)"
+echo "Original values are shown in $(tput setaf 2)GREEN$(tput sgr 0)"
 echo
 diff --color /etc/systemd/system.conf /etc/systemd/system.conf.ORIGINAL
 echo
