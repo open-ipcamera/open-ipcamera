@@ -508,7 +508,7 @@ echo
 echo "$(tput setaf 5)****** Re-Sync Package Index:  ******$(tput sgr 0)"
 echo
 
-until apt-get -qq update > /dev/null
+until apt-get -qqy update > /dev/null
 	do
 		echo
 		echo "$(tput setaf 5)apt-get update failed. Retrying$(tput sgr 0)"
@@ -524,6 +524,8 @@ echo
 echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo
 
+# All the following packages could be installed in a single command but are done separately
+# with a description to give you visibility into what this script is installing on your Pi
 
 # debconf-utils is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
@@ -564,9 +566,10 @@ if [[ $(dpkg -l | grep git) = '' ]]; then
 fi
 
 
-# * motion * is the package our camera uses to capture our video evidence
+# * motion * is the package used by camera to capture video evidence
+# Note: ffmpeg is not a dependency of the motion package but shown as a "recommends" so we will install it
 if [[ $(dpkg -l | grep motion) = '' ]]; then
-	until apt-get -qqy install motion > /dev/null
+	until apt-get -qqy install motion ffmpeg > /dev/null
 	do
 		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
@@ -592,6 +595,20 @@ fi
 status-apt-cmd
 
 
+# Pi user sends scripted alerts with mutt
+if [[ $(dpkg -l | grep mutt) = '' ]]; then
+	until apt-get -qqy install mutt > /dev/null
+	do
+		status-apt-cmd
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo
+		sleep 2
+	done
+fi
+
+status-apt-cmd
+
+
 # SNMP monitoring will be configured:
 if [[ $(dpkg -l | grep snmpd) = '' ]]; then
 	until apt-get -qqy install snmp snmpd snmp-mibs-downloader libsnmp-dev > /dev/null
@@ -606,7 +623,6 @@ fi
 status-apt-cmd
 
 
-
 if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
 	until apt-get -qqy install vim > /dev/null
 	do
@@ -619,8 +635,10 @@ fi
 status-apt-cmd
 
 echo
-echo "Below package installations not required for configuration as a Motion Detection Camera"
-echo "but included as I felt they were useful.  Feel free to apt-get remove them as you wish:"
+echo "Below packages not required for configuration as a Motion Detection Camera"
+echo "but included as they are useful tools to have on the sysatem:"
+echo
+echo "For info about any of the packages: $(tput setaf 1)sudo apt-cache show packagename$(tput sgr 0)"
 echo
 
 # *libimage-exiftool-perl* used to get metadata from videos and images from the CLI. Top-notch tool
@@ -635,12 +653,6 @@ fi
 # http://www.exiv2.org/
 if [[ $(dpkg -l | grep exiv2) = '' ]]; then
 	apt-get -qqy install exiv2 > /dev/null
-	status-apt-cmd
-fi
-
-
-if [[ $(dpkg -l | grep mutt) = '' ]]; then
-	apt-get -qqy install mutt > /dev/null
 	status-apt-cmd
 fi
 
@@ -681,7 +693,7 @@ fi
 # "vokoscreen" is a great screen recorder that can be minimized so it is not visible in video
 # "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
 if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
-	apt-get -qqy install vokoscreen > /dev/null
+	apt-get -qqy install vokoscreen libx264-148 > /dev/null
 	status-apt-cmd
 fi
 
@@ -698,7 +710,6 @@ if [[ $(dpkg -l | grep dstat) = '' ]]; then
 	apt-get -qqy install dstat > /dev/null
 	status-apt-cmd
 fi
-
 
 
 
