@@ -56,12 +56,15 @@ MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75t
 DROPBOXACCESSTOKEN='ABCD1234'
 
 # Set a threshold value to be notified when Pi exceeds it:
-HEATTHRESHOLDWARN='71'
-HEATTHRESHOLDSHUTDOWN='91'
+HEATTHRESHOLDWARN='69'
+# WARNING: Do NOT set the SHUTDOWN threshold too low or the test will prove true as soon as the pi boots causing it to just keep rebooting
+# Pi3B+ can run hot: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=138193
+HEATTHRESHOLDSHUTDOWN='89'
 
 ### Variables: SNMP Monitoring
 # "SNMPLOCATION" is a descriptive location of the area the camera covers
 SNMPLOCATION='Back Door'
+SNMPSYSCONTACT='terrence.houlahan.devices@gmail.com'
 SNMPV3AUTHPASSWD='PiDemo1234'
 SNMPV3ENCRYPTPASSWD='PiDemo1234'
 SNMPV3ROUSER='pi'
@@ -86,13 +89,10 @@ NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
 ### Variables: Camera Application "Motion"
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
 
-# Only modify "Subject: Motion Detected" if you want to change it. Take care not to delete any of the encasing single quote marks
-ONEVENTSTART='echo '"'Subject: Motion Detected ${hostname}'"' | msmtp '"'$NOTIFICATIONSRECIPIENT'"''
-
 IPV6ENABLED='on'
 # NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
 USER='me'
-PASSWD='CHANGEME1234'
+PASSWD='ChangeMe1234'
 
 # With camera positioned flat on the base of the Smarti Pi case (USB ports facing up) we need to rotate picture 180 degrees:
 ROTATE='180'
@@ -131,8 +131,10 @@ WEBCONTROLLOCALHOST='off'
 
 # Below variables are self-populating- DO NOT EDIT THESE:
 # They automagically identify the IP address of camera and inserts it in config files where an IP needs to be specified
-CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
-CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2}'|cut -d '/' -f1)"
+#CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
+
+CAMERAIPV4="$(ip addr list|grep wlan0 | awk '{print$2}'| cut -d$'\n' -f2|cut -d '/' -f1)"
+CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2 }'|cut -d '/' -f1)"
 
 
 #############################################################
@@ -366,7 +368,7 @@ truncate -s 0 /etc/motd
 
 # Remove any aliases created for sending root's mail in /etc/aliases:
 if [ -f /etc/aliases ]; then
-	sed  -i '/root: $NOTIFICATIONSRECIPIENT/d' /etc/aliases
+	sed  -i '/root: $SNMPSYSCONTACT/d' /etc/aliases
 fi
 
 
@@ -496,10 +498,14 @@ echo
 systemctl restart systemd-journald
 
 echo "LOGGING NOTES:"
-echo "Although SystemD logging made persistent verbosity reduced to limit thrashing MicroSD card as much as possible"
-echo "Application logs will be written to USB storage on /home/pi/logs"
-echo "No similar way to change SystemD log destination by path sadly"
-echo "Review above changes to logging above if you wish to tailor them edit: /etc/systemd/journald.conf"
+echo "--------------"
+echo "1. Although SystemD logging has been changed to persistent by writing the logs to disk"
+echo "verbosity was also reduced to limit the writes to bare minimum to hammering MicroSD card."
+echo
+echo "2. Application log paths have been changed to /home/pi/logs to limit abusing the MicroSD card."
+echo "Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card"
+echo
+echo "3. Changes in $(tput setaf 1)RED$(tput sgr 0) can be reverted in: /etc/systemd/journald.conf"
 
 
 
@@ -524,8 +530,8 @@ echo
 echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo
 
-# All the following packages could be installed in a single command but are done separately
-# with a description to give you visibility into what this script is installing on your Pi
+echo "All the following packages could be installed in a single command but are done separately"
+echo "both to illustrate what is being installed and to make it easier to change packages by functionality"
 
 # debconf-utils is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
@@ -847,13 +853,25 @@ sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /et
 
 # *ENABLE* remote SNMP connectivity to cameras:
 # A further reminder to please restrict access by firewall to your cameras
-sed -i "s/#agentAddress  udp:161,udp6:[::1]:161/agentAddress  udp:161,udp6:161/" /etc/snmp/snmpd.conf
+sed -i "s/#agentAddress  udp:161,udp6:\[::1\]:161/agentAddress  udp:161,udp6:161/" /etc/snmp/snmpd.conf
+
+# *DISABLE* access using default v1/2 community string *public*
+# We are enabling SNMP V3 access so only a downside to leaving SNMP v1/2 access by a universally known community string
+sed -i "s/ rocommunity public  default    -V systemonly/# rocommunity public  default    -V systemonly/" /etc/snmp/snmpd.conf
+sed -i "s/ rocommunity6 public  default   -V systemonly/# rocommunity6 public  default   -V systemonly/" /etc/snmp/snmpd.conf
+
 
 # Enable loading of MIBs:
 sed -i "s/mibs :/#mibs :/" /etc/snmp/snmp.conf
 
+# Next comment-out below line in /etc/default/snmpd as we *ARE* loading MIBs (we grabbed them when we installed snmp-mibs-downloader with the other SNMP packages):
+sed -i "s/export MIBS=/#export MIBS=/" /etc/default/snmpd
+
 # Describe location of camera:
 sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCATION/" /etc/snmp/snmpd.conf
+
+# email alerts will pull the contact email address via SNMP from the variable "SNMPSYSCONTACT"
+sed -i "s/sysContact     Me <me@example.org>/sysContact     $SNMPSYSCONTACT/" /etc/snmp/snmpd.conf
 
 # Stop SNMP daemon to create a Read-Only user:
 systemctl stop snmpd.service
@@ -863,6 +881,12 @@ systemctl stop snmpd.service
 net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
 echo
 
+# Append a note after the ACCESS CONTROL header in snmpd.conf detailing where our v3 SNMP credentials live to avoid future confusion:
+sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 Access Token Added by net-snmp-config to /var/lib/snmp/snmpd.conf by pi-cam-config.sh script' /etc/snmp/snmpd.conf
+sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 User Added by net-snmp-config to /usr/share/snmp/snmpd.conf by pi-cam-config.sh script' /etc/snmp/snmpd.conf
+
+
+
 systemctl enable snmpd.service
 systemctl start snmpd.service
 
@@ -870,7 +894,7 @@ echo
 
 echo "Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):"
 echo "---------------------------------------------------------------------------------------------"
-snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u pi $CAMERAIPV4 sysLocation.0
+snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
 echo
 echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
 echo
@@ -1076,6 +1100,12 @@ echo "Further Info: https://motion-project.github.io/motion_config.html"
 echo
 
 # Configure *BASIC* Settings (just enough to get things generally working):
+
+# "on_event_start:" First sed expression configures the Motion Detection Alerts to include the IP address in the subject of the email
+# The second (commented) sed expression configures the Motion Detection Alerts to send the HOSTNAME in the Subject line of the email.
+sed "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
+#sed "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
+
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
 sed -i 's|logfile /var/log/motion/motion.log|logfile /media/pi/logs/motion.log|' /etc/motion/motion.conf
@@ -1089,7 +1119,6 @@ sed -i "s/quality 75/quality $QUALITY/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_output_movies off/ffmpeg_output_movies $FFMPEGOUTPUTMOVIES/" /etc/motion/motion.conf
 sed -i "s/max_movie_time 0/max_movie_time $MAXMOVIETIME/" /etc/motion/motion.conf
 sed -i "s/ffmpeg_video_codec mpeg4/ffmpeg_video_codec $FFMPEGVIDEOCODEC/" /etc/motion/motion.conf
-sed -i "s/; on_event_start value/on_event_start $ONEVENTSTART/" /etc/motion/motion.conf
 sed -i "s/threshold 1500/threshold $THRESHOLD/" /etc/motion/motion.conf
 sed -i "s/locate_motion_mode off/locate_motion_mode $LOCATEMOTIONMODE/" /etc/motion/motion.conf
 sed -i "s/locate_motion_style box/locate_motion_style $LOCATEMOTIONSTYLE/" /etc/motion/motion.conf
@@ -1167,27 +1196,28 @@ echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and Heat  ****
 echo
 
 # Apple offers means to identify the IP of a device tethered to an iPhone HotSpot.
-# This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "NOTIFICATIONSRECIPIENT"
-# Note: This feature will only work if you have configured a working mail relay for the camera to use
+# This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "SNMPSYSCONTACT"
+# Note: This feature will only work if a working mail relay for the camera has been specified
 
 
 cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
-NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
 
-SNMPV3AUTHPASSWD='"'$SNMPV3AUTHPASSWD'"'
-SNMPV3ENCRYPTPASSWD='"'$SNMPV3ENCRYPTPASSWD'"'
-SNMPV3ROUSER='"'$SNMPV3ROUSER'"'
+#CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
+CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+
+# Do *NOT* edit alert recipient in below variable. to change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
+NOTIFICATIONSRECIPIENT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
-CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d '/' -f1|cut -d ':' -f2)"
+CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
 CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
 
-sleep 20
-#echo "IP Address of Camera $(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP Address of Camera $(hostname)" \$NOTIFICATIONSRECIPIENT
+sleep 5
 
-echo "IP Address of Camera $(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP Address of Camera: \$(snmpget -v3 -a SHA -x AES -A \$SNMPV3AUTHPASSWD -X \$SNMPV3ENCRYPTPASSWD -l authNoPriv -u \$SNMPV3ROUSER \$CAMERAIPV4 sysLocation.0)" \$NOTIFICATIONSRECIPIENT
+echo "IP Address of \$CAMERALOCATION Camera \$(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP of Camera: \$(echo \$CAMERAIPV4)" \$NOTIFICATIONSRECIPIENT
+
 
 EOF
 
@@ -1220,20 +1250,32 @@ systemctl enable email-camera-address.service
 cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
-# Edit values in variables belowrather than editing the script itself to avoid introducing a fault
-NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
+# Edit values in variables below rather than editing the script itself to avoid introducing a fault
+# NOTE: No need to restart service after changing a threshhold value: script is fired-off anew every 5 minutes by the SystemD timer.
 HEATTHRESHOLDWARN='71'
 HEATTHRESHOLDSHUTDOWN='91'
 
-# But do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
-CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d '/' -f1|cut -d ':' -f2)"
-CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
 
+#CAMERALOCATION: Do *NOT edit this variable directly: edit value of "sysLocation" in /etc/snmp/snmpd.conf which this variable pulls the value from
+# sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
+CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+
+# Do *NOT* edit alert recipient in below variable. to change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
+NOTIFICATIONSRECIPIENT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+
+# Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
+CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
+CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2 }'|cut -d '/' -f1)"
+
+
+# NOTE: A delay ("sleep 20") is inserted before shutdown where HEATTHRESHOLDSHUTDOWN tests TRUE to a) allow time to send the notification and
+# b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing it to just reboot in a loop
 
 if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]]; then
-	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C \n Timer controlling frequency of this alert: heat-alert.timer \n \$(hostname) \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mail -s "Heat Alert \$(hostname)" \$NOTIFICATIONSRECIPIENT
+	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C.Timer controlling frequency of this alert: heat-alert.timer '\n' \$(hostname) / \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera \$(echo \$CAMERAIPV4)" \$NOTIFICATIONSRECIPIENT
 elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C \n \n Pi was shutdown due to excessive heat condition \n \$(hostname) \n \$CAMERAIPV4 \n \$CAMERAIPV6” | mail -s "Shutdown Alert \$(hostname)" \$NOTIFICATIONSRECIPIENT
+	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C. Pi was shutdown due to excessive heat condition '\n' \$(hostname) \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Shutdown Alert Camera \$(echo \$CAMERAIPV4)" \$NOTIFICATIONSRECIPIENT
+	sleep 20
 	systemctl poweroff
 else
 	exit
@@ -1361,10 +1403,10 @@ echo
 
 echo "Configured Help Messages/Tips in /etc/motd to display on user login"
 echo
-echo "###############################################################################" >> /etc/motd
-echo "##  $(tput setaf 4)If this script saved you lots of time doing manual config buy me a beer either in person or PayPal:$(tput sgr 0) ##" >> /etc/motd
-echo "##                      $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                      ##" >> /etc/motd
-echo "###############################################################################" >> /etc/motd
+echo "###############################################################################################################" >> /etc/motd
+echo "##  $(tput setaf 4)If I saved you lots of time manually configuring buy me a beer either in person or PayPal:$(tput sgr 0) ##" >> /etc/motd
+echo "##                          $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                          ##" >> /etc/motd
+echo "###############################################################################################################" >> /etc/motd
 echo >> /etc/motd
 echo "Video Camera Status:" >> /etc/motd
 echo "$(sudo systemctl status motion)" >> /etc/motd
@@ -1491,6 +1533,6 @@ sleep 10
 
 
 # Wipe F1Linux.com pi-cam-config files as clear text passwds live in here:
-rm -rf /home/pi/pi-cam-config
+#rm -rf /home/pi/pi-cam-config
 
 #systemctl reboot
