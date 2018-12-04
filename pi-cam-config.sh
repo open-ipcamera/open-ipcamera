@@ -64,6 +64,7 @@ HEATTHRESHOLDSHUTDOWN='89'
 ### Variables: SNMP Monitoring
 # "SNMPLOCATION" is a descriptive location of the area the camera covers
 SNMPLOCATION='Back Door'
+# NOTE: The email address specified in variable SNMPSYSCONTACT will be the one used for ALL System Alerts
 SNMPSYSCONTACT='terrence.houlahan.devices@gmail.com'
 SNMPV3AUTHPASSWD='PiDemo1234'
 SNMPV3ENCRYPTPASSWD='PiDemo1234'
@@ -81,10 +82,6 @@ SMTPRELAYFROM='terrence@houlahan.co.uk'
 GMAILADDRESS='terrence.houlahan.devices@gmail.com'
 GMAILPASSWD='YourGmailPasswdHere'
 
-
-# Specify an email address where IP of camera will be sent to you
-# This email address can be different than the one specified in 'ONEVENTSTART' variable below
-NOTIFICATIONSRECIPIENT='terrence.houlahan.devices@gmail.com'
 
 ### Variables: Camera Application "Motion"
 # NOTE: "motion.conf" has many more adjustable parameters than those below, which are a subset of just very useful or required ones:
@@ -1103,8 +1100,8 @@ echo
 
 # "on_event_start:" First sed expression configures the Motion Detection Alerts to include the IP address in the subject of the email
 # The second (commented) sed expression configures the Motion Detection Alerts to send the HOSTNAME in the Subject line of the email.
-sed "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
-#sed "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
+sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
+#sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
@@ -1208,15 +1205,15 @@ cat <<EOF> /home/pi/scripts/email-camera-address.sh
 CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit alert recipient in below variable. to change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
-NOTIFICATIONSRECIPIENT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+SYSCONTACT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
 CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
 CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
 
-sleep 5
+sleep 30
 
-echo "IP Address of \$CAMERALOCATION Camera \$(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP of Camera: \$(echo \$CAMERAIPV4)" \$NOTIFICATIONSRECIPIENT
+echo "IP Address of \$CAMERALOCATION Camera \$(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP of Camera: \$(echo \$CAMERAIPV4)" \$SYSCONTACT
 
 
 EOF
@@ -1261,7 +1258,7 @@ HEATTHRESHOLDSHUTDOWN='91'
 CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit alert recipient in below variable. to change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
-NOTIFICATIONSRECIPIENT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+SYSCONTACT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
 CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
@@ -1272,9 +1269,9 @@ CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2 }'
 # b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing it to just reboot in a loop
 
 if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]]; then
-	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C.Timer controlling frequency of this alert: heat-alert.timer '\n' \$(hostname) / \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera \$(echo \$CAMERAIPV4)" \$NOTIFICATIONSRECIPIENT
+	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C.Timer controlling frequency of this alert: heat-alert.timer '\n' \$(hostname) / \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
 elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C. Pi was shutdown due to excessive heat condition '\n' \$(hostname) \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Shutdown Alert Camera \$(echo \$CAMERAIPV4)" \$NOTIFICATIONSRECIPIENT
+	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C. Pi was shutdown due to excessive heat condition '\n' \$(hostname) \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Shutdown Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
 	sleep 20
 	systemctl poweroff
 else
@@ -1329,7 +1326,7 @@ systemctl list-timers --all
 
 
 # Since we are doing mail thingies here we will alias roots mail to a real account:
-echo "root: $NOTIFICATIONSRECIPIENT" >> /etc/aliases
+echo "root: $SNMPSYSCONTACT" >> /etc/aliases
 newaliases
 
 
@@ -1408,39 +1405,41 @@ echo "##  $(tput setaf 4)If I saved you lots of time manually configuring buy me
 echo "##                          $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                          ##" >> /etc/motd
 echo "###############################################################################################################" >> /etc/motd
 echo >> /etc/motd
-echo "Video Camera Status:" >> /etc/motd
+echo >> /etc/motd
+echo "LOGS: Camera: /media/pi/logs/motion.log" >> /etc/motd
+echo >> /etc/motd
+echo "LOGS: Email Alerts: /media/pi/logs/msmtp.log" >> /etc/motd
+echo >> /etc/motd
+echo "Camera Status:" >> /etc/motd
 echo "$(sudo systemctl status motion)" >> /etc/motd
 echo >> /etc/motd
 echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
 echo >> /etc/motd
-echo "Print Camera Temperature (below should be between 40-60 C):" >> /etc/motd
+echo "Camera Temperature (should be between 40-60 C -ish ):" >> /etc/motd
 echo "/opt/vc/bin/vcgencmd measure_temp" >> /etc/motd
 echo >> /etc/motd
 echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )" >> /etc/motd
 echo >> /etc/motd
-echo "To stop/start/reload the Motion daemon:" >> /etc/motd
+echo "stop/start/reload Motion daemon:" >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo >> /etc/motd
-echo "Video Camera Logs: /media/pi/logs/motion.log" >> /etc/motd
-echo >> /etc/motd
-echo "To Print Camera Details" >> /etc/motd
+echo "Camera Details" >> /etc/motd
 echo "sudo /usr/bin/v4l2-ctl -V" >> /etc/motd
 echo >> /etc/motd
-echo "To Check Camera Loading Below Command Should Report: supported=1 detected=1" >> /etc/motd
+echo "Check Camera is Loaded: feedback of below command should Report: supported=1 detected=1" >> /etc/motd
 echo 'vcgencmd get_camera' >> /etc/motd
 echo >> /etc/motd
-echo >> /etc/motd
-echo "To Check Camera Driver Loaded Output of Below Command Should Report Value of 1:" >> /etc/motd
+echo "Check Camera Driver Loaded: Output of Below Command Should Report Value of 1:" >> /etc/motd
 echo 'lsmod |grep v4l2' >> /etc/motd
 echo >> /etc/motd
-echo "Further Check Camera is Correct: video0 * should be Reported When Below Command is Executed:" >> /etc/motd
+echo "Further Check Camera is Correct: video0 * should be seen in output of below command:" >> /etc/motd
 echo 'ls -al /dev | grep video0' >> /etc/motd
 echo >> /etc/motd
-echo "To manually change *VIDEO* resolution using Video4Linux driver tailor below example to your use case:" >> /etc/motd
+echo "Manually change *VIDEO* resolution using Video4Linux driver: tailor below example to your own use-case:" >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
 echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
 echo >> /etc/motd
-echo "To obtain resolution and other data from an image file:" >> /etc/motd
+echo "Obtain resolution and other data from an image file:" >> /etc/motd
 echo 'exiv2 /media/pi/imageName.jpg' >> /etc/motd
 echo >> /etc/motd
 echo "To see metadata for an image or video:" >> /etc/motd
