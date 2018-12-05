@@ -166,21 +166,26 @@ tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
 echo
 echo "$(tput setaf 5)****** CREDITS:  ******$(tput sgr 0)"
 echo
-echo "My script takes the work of others folks and stitches it all together into a complete Motion Detection Camera Solution."
-echo "So its right that I take a moment to thank those Open Source folks who toil in anonymity that provided me with the key components for my efforts:"
+echo "My script is a wrapper that stitches together the work of the below projects into a complete Motion Detection Camera Solution."
+echo "Just wanted to take a moment to thank these Open Source folks who toil in anonymity that provided me with the key components for my efforts:"
 echo
-echo "ANDREA FABRIZI: My script pi-cam-config.sh downloads and uses Andrea repo to shift images from local USB Flash storage to Dropbox"
+echo "Dropbox_Uploader Developer Andrea Fabrizi whose scripts are used by my wrapper to shift images from local USB Flash storage to Dropbox"
 echo "		$(tput setaf 2) https://github.com/andreafabrizi/Dropbox-Uploader.git $(tput sgr 0)"
 echo
-echo "Motion Project Team Members: Joseph Heenan * Mr-Dave *  Tosiara.  Their Software is used for Motion Detection"
+echo "Motion Project Developers Joseph Heenan * Mr-Dave *  Tosiara.  Motion is used for motion detection image capture"
 echo "		$(tput setaf 2) https://github.com/orgs/Motion-Project/people$(tput sgr 0)"
 echo
-echo "Martin Lambers: MSMTP SMTP client used to squirt motion detection and other alerts"
+echo "MSMTP Developer Martin Lambers: SMTP client used to relay alerts"
 echo "		$(tput setaf 2) https://gitlab.marlam.de/marlam/msmtp$(tput sgr 0)"
 echo
-echo "And of Course Thanks to DROPBOX for a really great API that makes shifting the images up to the cloud possible.  Outstanding company."
+echo "Mutt Email Client Developers Michael R Elkins and Jeremy Blosser.  Mutt used to squirt email motion detection and heat alerts"
+echo "		$(tput setaf 2) http://www.mutt.org/$(tput sgr 0)"
 echo
+echo "And kudos to DROPBOX for providing their Enterprise-grade APIused for shifting images from the USB storage up to the cloud.  Outstanding company."
 echo
+echo " $(tput setaf 4)- Terrence Houlahan Linux Engineer ( houlahan@F1Linux.com )$(tput sgr 0)"
+echo
+
 
 echo
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
@@ -192,7 +197,7 @@ echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
 echo "Consult * LICENSE.txt * for terms of GPL 3 License and conditions of use."
 
-read -p "Press ENTER to accept license and warranty terms to continue or close this bash shell to exit the script"
+read -p "Press ENTER to accept license and warranty terms to continue or close this bash shell to exit script"
 
 
 
