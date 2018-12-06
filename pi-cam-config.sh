@@ -502,7 +502,7 @@ systemctl restart systemd-journald
 echo "LOGGING NOTES:"
 echo "--------------"
 echo "1. Although SystemD logging has been changed to persistent by writing the logs to disk"
-echo "verbosity was also reduced to limit the writes to bare minimum to hammering MicroSD card."
+echo "verbosity was also reduced to limit the writes to bare minimum to avoid hammering the MicroSD card."
 echo
 echo "2. Application log paths have been changed to /home/pi/logs to limit abusing the MicroSD card."
 echo "Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card"
@@ -534,10 +534,10 @@ echo
 
 echo "All the following packages could be installed in a single command but are done separately"
 echo "both to illustrate what is being installed and to make it easier to change packages by functionality"
-
+echo
 echo '"apt-get --install-recommends install packageName" could be used to install recommended pkgs but this is a blunt instrument that frequently installs tons of crap.'
 echo 'So only selective recommended packages (per "apt-cache show packageName") have been added to each "apt-get install" command where appropriate'
-
+echo
 # debconf-utils is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
 	until apt-get -qqy install debconf-utils > /dev/null
@@ -1217,18 +1217,28 @@ echo
 cat <<EOF> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
+# Redirect output of "set -x" to a log to capture any errors as script executed as a SystemD Service
+# varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
+exec {varFD}>/media/pi/logs/script-email-camera-address.log
+BASH_XTRACEFD=\$varFD
+
+set -x
+
+
+# The "sleep" used here pauses script until networking is level.
+# The SystemD multi-user target allows script to execute before networking is finished which breaks it
+# NOTE the "sleep" precedes variables "CAMERAIPV4=" and "CAMERAIPV6=": these were not building correctly without it
+sleep 30
 
 #CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
 CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit alert recipient in below variable. to change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
+# Do *NOT* edit alert recipient in below variable. To change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
 SYSCONTACT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
 CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
-CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2}'|cut -d '/' -f1)"
-
-sleep 30
+CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{print \$2}'|cut -d '/' -f1)"
 
 echo "IP Address of \$CAMERALOCATION Camera \$(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP of Camera: \$(echo \$CAMERAIPV4)" \$SYSCONTACT
 
@@ -1264,6 +1274,15 @@ systemctl enable email-camera-address.service
 cat <<EOF> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
+
+# Redirect output of "set -x" to a log to capture any errors as script executed as a SystemD Service
+# varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
+exec {varFD}>/media/pi/logs/script-heat-alert.log
+BASH_XTRACEFD=\$varFD
+
+set -x
+
+
 # Edit values in variables below rather than editing the script itself to avoid introducing a fault
 # NOTE: No need to restart service after changing a threshhold value: script is fired-off anew every 5 minutes by the SystemD timer.
 HEATTHRESHOLDWARN='71'
@@ -1286,9 +1305,9 @@ CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2 }'
 # b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing it to just reboot in a loop
 
 if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]]; then
-	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C.Timer controlling frequency of this alert: heat-alert.timer '\n' \$(hostname) / \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
+	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C.Timer controlling frequency of this alert: heat-alert.timer '\n' \$(hostname) / \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: \$(date)” | mutt -s "Heat Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
 elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C. Pi was shutdown due to excessive heat condition '\n' \$(hostname) \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Shutdown Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
+	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C. Pi was shutdown due to excessive heat condition '\n' \$(hostname) \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: \$(date)” | mutt -s "Shutdown Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
 	sleep 20
 	systemctl poweroff
 else
@@ -1530,7 +1549,8 @@ chmod 700 /home/pi/scripts/troubleshooting-helper.sh
 chown pi:pi /home/pi/scripts/troubleshooting-helper.sh
 
 
-
+echo 'Created /home/pi/scripts/troubleshooting-helper.sh'
+echo
 
 
 echo
@@ -1601,7 +1621,8 @@ echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
 echo "Configured Help Messages/Tips in /etc/motd to display on user login"
-echo
+echo >> /etc/motd
+echo >> /etc/motd
 echo "###############################################################################################################" >> /etc/motd
 echo "##  $(tput setaf 4)If I saved you lots of time manually configuring buy me a beer either in person or PayPal:$(tput sgr 0) ##" >> /etc/motd
 echo "##                          $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                          ##" >> /etc/motd
@@ -1609,7 +1630,7 @@ echo "##########################################################################
 echo >> /etc/motd
 echo >> /etc/motd
 echo "Troubleshooting: Execute below script to gather data to investigate the fault:" >> /etc/motd
-echo 'cd /home/pi/scripts'
+echo 'cd /home/pi/scripts' >> /etc/motd
 echo './troubleshooting-helper.sh' >> /etc/motd
 echo >> /etc/motd
 echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
@@ -1631,7 +1652,8 @@ echo >> /etc/motd
 echo "To edit or delete these login messages:  vi /etc/motd" >> /etc/motd
 echo >> /etc/motd
 echo "###############################################################################" >> /etc/motd
-
+echo >> /etc/motd
+echo >> /etc/motd
 
 
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
