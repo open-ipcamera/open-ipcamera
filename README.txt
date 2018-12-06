@@ -65,6 +65,7 @@
 # - Configures passwordless login by adding a Public Key YOU specify in a variable to "~/.ssh/authorized_keys" and configuring "/etc/ssh/sshd_config"
 # - Configures an ECDSA 521 bit SSH Keypair
 # - Disables boot splash screen so errors can be observed as host rises-up
+# - Troubleshooting script automates fault analysis (do a degree) using a structured approach
 # Note: Users must configure firewall rules to restrict access to the camera
 
 # 6. MINIMAL PI SETUP:

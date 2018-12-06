@@ -3,7 +3,7 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181201
+# Date:    20181206
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -535,6 +535,9 @@ echo
 echo "All the following packages could be installed in a single command but are done separately"
 echo "both to illustrate what is being installed and to make it easier to change packages by functionality"
 
+echo '"apt-get --install-recommends install packageName" could be used to install recommended pkgs but this is a blunt instrument that frequently installs tons of crap.'
+echo 'So only selective recommended packages (per "apt-cache show packageName") have been added to each "apt-get install" command where appropriate'
+
 # debconf-utils is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
 	until apt-get -qqy install debconf-utils > /dev/null
@@ -648,6 +651,15 @@ echo "but included as they are useful tools to have on the sysatem:"
 echo
 echo "For info about any of the packages: $(tput setaf 1)sudo apt-cache show packagename$(tput sgr 0)"
 echo
+
+
+# apt-file is a package searching tool.  Handy addition to any Debian-based system
+if [[ $(dpkg -l | grep apt-file) = '' ]]; then
+	apt-get -qqy install apt-file > /dev/null
+	apt update > /dev/null
+	status-apt-cmd
+fi
+
 
 # *libimage-exiftool-perl* used to get metadata from videos and images from the CLI. Top-notch tool
 # http://owl.phy.queensu.ca/~phil/exiftool/
@@ -1330,9 +1342,194 @@ systemctl list-timers --all
 
 
 
-# Since we are doing mail thingies here we will alias roots mail to a real account:
-echo "root: $SNMPSYSCONTACT" >> /etc/aliases
-newaliases
+
+
+
+echo
+echo "$(tput setaf 5)****** TROUBLESHOOTING SCRIPT:  ******$(tput sgr 0)"
+echo
+
+
+cat <<'EOF'> /home/pi/scripts/troubleshooting-helper.sh
+#!/bin/bash
+echo
+echo
+echo "The Pi-Cam configured by this script has several dependencies which can make isolating the cause of a fault more challenging."
+echo "To help you quickly drill-down potential causes of a fault I wrote this script which provides a structured troubleshooting approach."
+echo "Please note these tests/tools are not exhaustive but merely a starting point to provide some baseline info to analyze."
+echo
+echo
+echo "########  HARDWARE ANALYSIS:  ########"
+echo
+echo 'Camera Temperature: compare temp below with 63-65C which (in my experience) is normal operating temperature (boot is 38C):'
+/opt/vc/bin/vcgencmd measure_temp
+
+echo
+echo
+echo 'Does the OS know about the camera? Output below should report "supported=1 detected=1"'
+sudo /opt/vc/bin/vcgencmd get_camera
+echo
+echo
+echo 'Does "lsmod" Report a value of "1" for "v4l2" Camera Kernel Module?:'
+sudo lsmod |grep v4l2
+echo
+echo
+echo 'Is device "video0" in reported below?:'
+sudo ls -al /dev | grep video0
+echo
+echo
+echo 'Camera Details per "v4l2-ctl":'
+sudo /usr/bin/v4l2-ctl -V
+echo
+echo
+
+
+
+
+echo "########  STORAGE ANALYSIS:  ########"
+echo
+echo "Is system at 100 pct disk use?:"
+echo
+df -h
+echo
+echo
+echo 'Is USB flash storage mounting? The mount "/media/pi" should be reported below:'
+echo
+sudo cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }'
+echo
+echo
+
+
+
+echo "########  PROCESS ANALYSIS:  ########"
+echo
+echo "Any processes hung at 100 percent?"
+echo
+ps --sort=-pcpu | head -n 5
+echo
+echo
+echo "Check key processes are up and running without error"
+echo
+sudo systemctl status motion
+echo
+sudo systemctl status msmtp
+echo
+echo "NOTE: If mail relay MSMTP is down neither Motion nor the system can email alerts"
+echo
+echo
+echo "Review last few messages sent in mail log:"
+echo 'Note: All mail sent is logged in "msmtp.log"'
+tail -6 /media/pi/logs/msmtp.log
+echo
+echo
+
+
+
+echo "########  LOG ANALYSIS:  ########"
+echo
+echo "Filter logs by priority (-p) to show ALL errors:"
+echo
+sudo journalctl -p err
+echo
+echo
+echo "Check application-specific logs for anything interesting:"
+echo "Motion Log:"
+journalctl -u motion.service
+echo
+echo "MSMTP Log:"
+journalctl -u msmtp.service
+echo
+echo
+
+
+
+echo "########  NETWORKING ANALYSIS:  ########"
+echo
+echo 'Does host have a routable (non-local) address? Check DHCP if not'
+echo
+ip addr list|grep wlan0 | awk '{print$2}'| cut -d$'\n' -f2|cut -d '/' -f1
+ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2 }'|cut -d '/' -f1
+echo
+echo
+echo "Check DNS by pinging Google by DNS name:"
+echo
+ping -c2 www.google.com
+echo
+echo
+echo "Ping Google by IP address:"
+echo
+ping -c2 8.8.8.8
+echo
+echo "If pinging by *DNS Name* fails but succeeds by IP then DNS is broken or UDP/53 is blocked"
+echo "If pinging by *IP* fails check your Internet connection and/or firewall"
+echo
+echo
+echo "Does your gateway look sensible in below routing table?:"
+route -n
+echo
+echo
+echo "Other tools you can use to troubleshoot network issues that I installed on your system during Pi-Cam config:"
+echo
+echo 'mtr tcpdump and iptraf-ng'
+echo
+echo
+
+
+echo "########  CHANGE ANALYSIS:  ########"
+echo
+echo 'If a system previously running correctly is now in error- barring bugs or resourcing issues- likely had help getting broken ;->'
+echo "Too frequently $(tput setaf 1)the cause of a fault is poorly planned/tested changes.$(tput sgr 0)"
+echo
+echo "Check Apt Log for system upgrades which might have changed package/library binaries and/or config files: "
+sudo tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
+echo
+echo
+echo 'Check "uptime" for recent system restart. Non-persistent changes (those made to running processes in memory) are lost on reboot:'
+echo
+uptime
+echo
+echo
+echo 'Any recent transformative and/or non-persistent commands found in the last 15 entries in "pi" and/or "root" bash histories?'
+echo
+echo '"pi" user last 15 commands issued:'
+sudo tail -15 /home/pi/.bash_history
+echo
+echo '"root" user last 15 commands issued:'
+if [-f /root/.bash_history]; then
+	sudo tail -15 /root/.bash_history
+fi
+echo
+echo
+echo "Review last logins to see who has recently worked on the system:"
+echo 'NOTE: Command "last" used in lieu of "lastlog" as it shows multiple logins by a single user'
+last
+echo
+echo
+echo "Does fault occur at predictable times? Check jobs executing from SystemD Timers:"
+echo
+sudo systemctl list-timers --all
+echo
+echo
+
+echo "Although it is better to understand HOW something broke remember you have the option of just rebuilding the Pi-Cam by"
+echo 're-excuting the "pi-cam-config.sh" script.  If this resolves the error then the fault was configuration-related.'
+echo
+echo "If re-executing the script does $(tput setaf 1)*NOT*$(tput sgr 0) resolve error and all values supplied in "variables" section are correct and valid then"
+echo "refocus your investigations to things in front of the Pi-Cam like networking and firewalls."
+echo
+echo
+echo "As a last resort if unable to successfully identify the source of a fault there is always the Pi forums:"
+echo "$(tput setaf 4)               https://www.raspberrypi.org/forums/               $(tput sgr 0)"
+echo "However you will never up your Linux game asking others to solve your problems. You have to earn your bones."
+echo
+echo '     -Terrence Houlahan Linux & Network Engineer F1Linux.com"
+
+EOF
+
+chmod 700 /home/pi/scripts/troubleshooting-helper.sh
+chown pi:pi /home/pi/scripts/troubleshooting-helper.sh
+
+
 
 
 
@@ -1411,34 +1608,14 @@ echo "##                          $(tput setaf 4)paypal.me/TerrenceHoulahan $(t
 echo "###############################################################################################################" >> /etc/motd
 echo >> /etc/motd
 echo >> /etc/motd
-echo "LOGS: Camera: /media/pi/logs/motion.log" >> /etc/motd
-echo >> /etc/motd
-echo "LOGS: Email Alerts: /media/pi/logs/msmtp.log" >> /etc/motd
-echo >> /etc/motd
-echo "Camera Status:" >> /etc/motd
-echo "$(sudo systemctl status motion)" >> /etc/motd
+echo "Troubleshooting: Execute below script to gather data to investigate the fault:" >> /etc/motd
+echo 'cd /home/pi/scripts'
+echo './troubleshooting-helper.sh' >> /etc/motd
 echo >> /etc/motd
 echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
 echo >> /etc/motd
-echo "Camera Temperature (should be between 40-60 C -ish ):" >> /etc/motd
-echo "/opt/vc/bin/vcgencmd measure_temp" >> /etc/motd
-echo >> /etc/motd
-echo "Local Images Written To: $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' )" >> /etc/motd
-echo >> /etc/motd
 echo "stop/start/reload Motion daemon:" >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
-echo >> /etc/motd
-echo "Camera Details" >> /etc/motd
-echo "sudo /usr/bin/v4l2-ctl -V" >> /etc/motd
-echo >> /etc/motd
-echo "Check Camera is Loaded: feedback of below command should Report: supported=1 detected=1" >> /etc/motd
-echo 'vcgencmd get_camera' >> /etc/motd
-echo >> /etc/motd
-echo "Check Camera Driver Loaded: Output of Below Command Should Report Value of 1:" >> /etc/motd
-echo 'lsmod |grep v4l2' >> /etc/motd
-echo >> /etc/motd
-echo "Further Check Camera is Correct: video0 * should be seen in output of below command:" >> /etc/motd
-echo 'ls -al /dev | grep video0' >> /etc/motd
 echo >> /etc/motd
 echo "Manually change *VIDEO* resolution using Video4Linux driver: tailor below example to your own use-case:" >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
@@ -1450,8 +1627,7 @@ echo >> /etc/motd
 echo "To see metadata for an image or video:" >> /etc/motd
 echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo >> /etc/motd
-echo "Below tools installed to help troubleshoot networking issues:" >> /etc/motd
-echo 'mtr tcpdump and iptraf-ng' >> /etc/motd
+echo >> /etc/motd
 echo "To edit or delete these login messages:  vi /etc/motd" >> /etc/motd
 echo >> /etc/motd
 echo "###############################################################################" >> /etc/motd
