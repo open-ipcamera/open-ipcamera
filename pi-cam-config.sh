@@ -510,7 +510,7 @@ echo "--------------"
 echo "1. Although SystemD logging has been changed to persistent by writing the logs to disk"
 echo "verbosity was also reduced to limit the writes to bare minimum to avoid hammering the MicroSD card."
 echo
-echo "2. Application log paths have been changed to /home/pi/logs to limit abusing the MicroSD card."
+echo "2. Application log paths have been changed to /media/pi/logs on the USB storage to limit abuse to the MicroSD card."
 echo "Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card"
 echo
 echo "3. Changes in $(tput setaf 1)RED$(tput sgr 0) can be reverted in: /etc/systemd/journald.conf"
@@ -1298,7 +1298,7 @@ HEATTHRESHOLDWARN='65'
 HEATTHRESHOLDSHUTDOWN='85'
 
 
-SCRIPTLOCATION="$(readlink -f 0)"
+SCRIPTLOCATION="$(readlink -f $0)"
 
 #CAMERALOCATION: Do *NOT edit this variable directly: edit value of "sysLocation" in /etc/snmp/snmpd.conf which this variable pulls the value from
 # sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
@@ -1316,8 +1316,8 @@ CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'
 # b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing Pi to just reboot in a loop
 
 if [[ $(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]]; then
-	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C. To adjust WARN alert Threshold edit: $SCRIPTLOCATION '\n' Sender of Alert: $(hostname) / $CAMERAIPV4 / $CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera $(echo $CAMERAIPV4)" $SYSCONTACT
-elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]]; then
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C. '\n' To adjust WARN alert Threshold edit: $SCRIPTLOCATION '\n' Sender of Alert: $(hostname) / $CAMERAIPV4 / $CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera $(echo $CAMERAIPV4)" $SYSCONTACT
+elif [[ $(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]]; then
 	echo -e “Pi shutdown due to Heat Threshold: $HEATTHRESHOLDSHUTDOWN C being reached '\n' To adjust shutdown Heat Threshold edit: $SCRIPTLOCATION '\n' Sender of Alert: $(hostname) $CAMERAIPV4 / $CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Shutdown Alert Camera $(echo $CAMERAIPV4)" $SYSCONTACT
 	sleep 20
 	systemctl poweroff
@@ -1680,11 +1680,7 @@ y
 INPUT"
 
 
-echo "Note address of your camera below to access it via web browser after reboot:"
-echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
-echo "$(tput setaf 2) ** Camera Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
-echo
-echo "If you SSH into the camera its address will also be printed in the MOTD upon login"
+
 
 echo
 echo
@@ -1740,6 +1736,20 @@ if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	status-apt-cmd
 	echo
 fi
+
+
+
+echo "Note address of your camera below to access it via web browser after reboot:"
+echo "$(tput setaf 2) ** Camera IPv4 Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
+
+if [[ $CAMERAIPV6 != '' ]]; then
+	echo "$(tput setaf 2) ** Camera IPv6 Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
+fi
+
+echo
+echo "If you SSH into the camera its address will also be printed in the MOTD upon login"
+echo
+
 
 
 echo "System will reboot in 10 seconds"
