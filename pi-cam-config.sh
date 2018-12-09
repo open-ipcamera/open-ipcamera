@@ -3,7 +3,7 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181206
+# Date:    20181209
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -56,10 +56,10 @@ MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75t
 DROPBOXACCESSTOKEN='ABCD1234'
 
 # Set a threshold value to be notified when Pi exceeds it:
-HEATTHRESHOLDWARN='69'
+HEATTHRESHOLDWARN='65'
 # WARNING: Do NOT set the SHUTDOWN threshold too low or the test will prove true as soon as the pi boots causing it to just keep rebooting
-# Pi3B+ can run hot: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=138193
-HEATTHRESHOLDSHUTDOWN='89'
+# NOTE: Pi3B+ can run hot: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=138193
+HEATTHRESHOLDSHUTDOWN='85'
 
 ### Variables: SNMP Monitoring
 # "SNMPLOCATION" is a descriptive location of the area the camera covers
@@ -126,12 +126,12 @@ STREAMAUTHMETHOD='0'
 WEBCONTROLLOCALHOST='off'
 
 
-# Below variables are self-populating- DO NOT EDIT THESE:
-# They automagically identify the IP address of camera and inserts it in config files where an IP needs to be specified
-#CAMERAIPV4="$(ip addr list|grep wlan0|awk '{print $2}'|cut -d '/' -f1|cut -d ':' -f2)"
+# DO NOT EDIT BELOW VARIABLES: they self-resolve host IPv4/6v addresses so they can be automatically inserted in config files to avoid manual configuration
 
-CAMERAIPV4="$(ip addr list|grep wlan0 | awk '{print$2}'| cut -d$'\n' -f2|cut -d '/' -f1)"
-CAMERAIPV6="$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2 }'|cut -d '/' -f1)"
+# 'CAMERAIPV4' Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on the implied logic cable connected for some reason
+CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
+# 'CAMERAIPV6' Looks for and prints an IPv6  Global Unicast Address if such an interface is configured
+CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
 
 
 #############################################################
@@ -1210,37 +1210,40 @@ echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and Heat  ****
 echo
 
 # Apple offers means to identify the IP of a device tethered to an iPhone HotSpot.
-# This systemd service emails the camera IP address assigned by a HotSpot to email specified in variable "SNMPSYSCONTACT"
-# Note: This feature will only work if a working mail relay for the camera has been specified
+# This systemd service emails camera IP address assigned by a HotSpot to email specified in variable "SNMPSYSCONTACT"
+# If you want to change the email address this notification (or any other system alert) is sent to edit "sysContact" in /etc/snmp/snmpd.conf directly.
+# Note: email alerts will only work if a valid mail relay with correct credentials has been specified.
 
 
-cat <<EOF> /home/pi/scripts/email-camera-address.sh
+cat <<'EOF'> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
-# Redirect output of "set -x" to a log to capture any errors as script executed as a SystemD Service
+# Redirect output of "set -x" to a log to capture any potential errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
 exec {varFD}>/media/pi/logs/script-email-camera-address.log
-BASH_XTRACEFD=\$varFD
+BASH_XTRACEFD=$varFD
 
 set -x
 
 
-# The "sleep" used here pauses script until networking is level.
 # The SystemD multi-user target allows script to execute before networking is finished which breaks it
-# NOTE the "sleep" precedes variables "CAMERAIPV4=" and "CAMERAIPV6=": these were not building correctly without it
-sleep 30
+# A "sleep" has been inserted before variable declaration section to allow "CAMERAIPV4=" and "CAMERAIPV6=" to populate correctly AFTER networking has settled
+sleep 60
+
+SCRIPTLOCATION="$(readlink -f $0)"
 
 #CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
-CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit alert recipient in below variable. To change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
-SYSCONTACT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
-CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
-CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{print \$2}'|cut -d '/' -f1)"
+# Do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
+CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
+CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
 
-echo "IP Address of \$CAMERALOCATION Camera \$(hostname) is: \$CAMERAIPV4 / \$CAMERAIPV6" | mutt -s "IP of Camera: \$(echo \$CAMERAIPV4)" \$SYSCONTACT
+
+echo "IP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" | mutt -s "IP of Camera: $(echo $CAMERAIPV4)" $SYSCONTACT
 
 
 EOF
@@ -1250,7 +1253,7 @@ chmod 700 /home/pi/scripts/email-camera-address.sh
 chown pi:pi /home/pi/scripts/email-camera-address.sh
 
 
-cat <<EOF> /etc/systemd/system/email-camera-address.service
+cat <<'EOF'> /etc/systemd/system/email-camera-address.service
 [Unit]
 Description=Email IP Address of Camera on Boot
 #Before=
@@ -1271,43 +1274,45 @@ systemctl enable email-camera-address.service
 
 
 
-cat <<EOF> /home/pi/scripts/heat-alert.sh
+cat <<'EOF'> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
 
 # Redirect output of "set -x" to a log to capture any errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
 exec {varFD}>/media/pi/logs/script-heat-alert.log
-BASH_XTRACEFD=\$varFD
+BASH_XTRACEFD=$varFD
 
 set -x
 
 
-# Edit values in variables below rather than editing the script itself to avoid introducing a fault
-# NOTE: No need to restart service after changing a threshhold value: script is fired-off anew every 5 minutes by the SystemD timer.
-HEATTHRESHOLDWARN='71'
-HEATTHRESHOLDSHUTDOWN='91'
+# Edit values in variables below rather than editing script itself to avoid introducing a fault
+# NOTE: Do NOT restart service after changing a threshhold value- script is fired-off anew every 5 minutes by the SystemD timer "heat-alert.timer".
+HEATTHRESHOLDWARN='65'
+HEATTHRESHOLDSHUTDOWN='85'
 
+
+SCRIPTLOCATION="$(readlink -f 0)"
 
 #CAMERALOCATION: Do *NOT edit this variable directly: edit value of "sysLocation" in /etc/snmp/snmpd.conf which this variable pulls the value from
 # sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
-CAMERALOCATION="\$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit alert recipient in below variable. to change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
-SYSCONTACT="\$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+# Do *NOT* edit alert recipient in below variable. To change alert address edit value of "sysContact" directly in /etc/snmp/snmpd.conf
+SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit the below variables: these are self-populating and resolve to the ip address of this host
-CAMERAIPV4="\$(ip addr list|grep wlan0|awk '{print \$2}'|cut -d\$'\n' -f2|cut -d '/' -f1)"
-CAMERAIPV6="\$(ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print \$2 }'|cut -d '/' -f1)"
+# Do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
+CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
+CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
 
 
 # NOTE: A delay ("sleep 20") is inserted before shutdown where HEATTHRESHOLDSHUTDOWN tests TRUE to a) allow time to send the notification and
-# b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing it to just reboot in a loop
+# b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing Pi to just reboot in a loop
 
-if [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDWARN ]]; then
-	echo -e “Temp exceeds WARN threshold: \$HEATTHRESHOLDWARN C.Timer controlling frequency of this alert: heat-alert.timer '\n' \$(hostname) / \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: \$(date)” | mutt -s "Heat Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
-elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt \$HEATTHRESHOLDSHUTDOWN ]]; then
-	echo -e “Temp exceeds SHUTDOWN threshold: \$HEATTHRESHOLDSHUTDOWN C. Pi was shutdown due to excessive heat condition '\n' \$(hostname) \$CAMERAIPV4 / \$CAMERAIPV6 '\n' Alert Sent: \$(date)” | mutt -s "Shutdown Alert Camera \$(echo \$CAMERAIPV4)" \$SYSCONTACT
+if [[ $(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]]; then
+	echo -e “Temp exceeds WARN threshold: $HEATTHRESHOLDWARN C. To adjust WARN alert Threshold edit: $SCRIPTLOCATION '\n' Sender of Alert: $(hostname) / $CAMERAIPV4 / $CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Heat Alert Camera $(echo $CAMERAIPV4)" $SYSCONTACT
+elif [[ \$(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDSHUTDOWN ]]; then
+	echo -e “Pi shutdown due to Heat Threshold: $HEATTHRESHOLDSHUTDOWN C being reached '\n' To adjust shutdown Heat Threshold edit: $SCRIPTLOCATION '\n' Sender of Alert: $(hostname) $CAMERAIPV4 / $CAMERAIPV6 '\n' Alert Sent: $(date)” | mutt -s "Shutdown Alert Camera $(echo $CAMERAIPV4)" $SYSCONTACT
 	sleep 20
 	systemctl poweroff
 else
@@ -1321,7 +1326,7 @@ chmod 700 /home/pi/scripts/heat-alert.sh
 chown pi:pi /home/pi/scripts/heat-alert.sh
 
 
-cat <<EOF> /etc/systemd/system/heat-alert.service
+cat <<'EOF'> /etc/systemd/system/heat-alert.service
 [Unit]
 Description=Email Heat Alerts
 
@@ -1341,7 +1346,7 @@ systemctl enable heat-alert.service
 
 
 
-cat <<EOF> /etc/systemd/system/heat-alert.timer
+cat <<'EOF'> /etc/systemd/system/heat-alert.timer
 [Unit]
 Description=Email Heat Alerts
 
