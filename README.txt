@@ -1,9 +1,9 @@
 # Author:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181116
+# Date:    20181209
 
-# "pi-cam-config.sh": Installs & configs Raspberry Pi camera application drivers and Kernel module
+# "pi-cam-config.sh": Installs and configs Raspberry Pi as a Motion Detection Camera which sends images to Dropbox acct and sends alerts
 
 # README CONTENTS:
 # 	1. LICENCE
@@ -34,18 +34,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # 2. COMPATIBILITY: Script known to work with following configurations (but might work with others)
-# - OS Version:	Raspbian "Stretch"
+# - OS Version:	Raspbian "Stretch" 9.6
 # - Pi Model:	3B+ and Pi Zero W
 # - Cameras:	Picams 1.3 and 2.1
 
 # 3. SCRIPT PREREQUISITES:
-# - DHCP IP addressing: If the camera can just catch an address it will configure the rest of the networking
+# - DHCP IP addressing: If camera can just catch an address it will configure the applications with the right IPv/6 addresses automatically
 # - Internet connection (wired or Ethernet)
 # - USB flash drive formatted for EXFAT filesystem
-# - Dropbox Account Access Token: My script copies images from the Pi's local USB storage into cloud via Dropbox API. See "DROPBOXACCESSTOKEN" variable in script for further info
+# - Dropbox Account Access Token: My script copies images from Pi local USB storage to a Dropbox account in Cloud via Dropbox API.
+#   See "DROPBOXACCESSTOKEN" variable in "pi-cam-config.sh" for further details
 
 # 4. OPTIONAL FUNCTIONALITY:
 # -  To receive email alerts for motion detection events an SMTP server with both an MX and PTR DNS record to relay alert emails from the Pi
+# -  Either use your own SMTP server to relay alerts or a PAID business Gmail hosted mail account.
 
 # 5. SCRIPT FEATURES:
 # - Automatically configures camera IP address in configuration files
@@ -66,12 +68,12 @@
 # - Configures an ECDSA 521 bit SSH Keypair
 # - Disables boot splash screen so errors can be observed as host rises-up
 # - Troubleshooting script automates fault analysis (do a degree) using a structured approach
-# Note: Users must configure firewall rules to restrict access to the camera
+# Note: Users must configure firewall rules either on the router in front of the camera or the camer itself to prevent unauthorized access
 
 # 6. MINIMAL PI SETUP:
 # Skip below (3) steps if already completed:
 # Using a wireless or wired keyboard connected to a USB port on the Pi:
-#	a. Install the Pi's Raspbian OS on a MicroSD card (short video detailing how can be found at below URL):
+#	a. Install Raspbian OS on a MicroSD card. A short HowTo video is available at:
 #		www.YouTube.com/user/LinuxEngineer
 #	b. Enable SSH:
 #		sudo raspi-config
@@ -80,7 +82,7 @@
 #	c. Join your Pi to WiFi:
 #		raspi-config
 #		"Network Options" > "Wi-Fi" > Then enter SSID and password when prompted
-#	NOTE: If Camera will also be used with a phone HotSpot additionally set this network
+#	NOTE: If Camera will also be used with a mobile phone HotSpot additionally configure access to this WiFi network too
 
 # 7. CONFIGURE DROPBOX ACCESS TOKEN:
 # Skip this step for all subsequent Pi-Cam setups- only needs to be done just once
