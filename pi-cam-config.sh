@@ -47,13 +47,13 @@ OURDOMAIN='f1linux.com'
 PASSWDPI='ChangeMe1234'
 PASSWDROOT='ChangeMe1234'
 
-# ** WARNING ** REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN. If your Pi is behind a NAT I cannot reach it but leaving my Key is a really bad idea
+# ** WARNING ** REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN. If your camera is behind a NATed connection I cannot reach it however bad security granting PubKey access folks without need
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 
 #### Dropbox-Uploader Variables:
 # Dropbox used to shift video and pics to the cloud to prevent evidence being destroyed or stolen
 # Please consult "README.txt" for how to obtain the value for below variable
-DROPBOXACCESSTOKEN='ABCD1234'
+DROPBOXACCESSTOKEN='ReplaceThisStringWithYourAccessToken'
 
 # Set a threshold value to be notified when Pi exceeds it:
 HEATTHRESHOLDWARN='65'
@@ -71,15 +71,21 @@ SNMPV3ENCRYPTPASSWD='PiDemo1234'
 SNMPV3ROUSER='pi'
 
 ### Variables: MSMTP (to send alerts):
-# SELF-HOSTED SMTP Relay Mail Server:
+
+# NOTE: Both Self-Hosted and GMAIL SMTP Relay Accounts will be configured using below variables.
+#	However only 1 of the 2 accounts needs to work for the email alerts to start flowing
+
+# SELF-HOSTED SMTP Relay Mail Server: This is the Primary MSMTP relay account that is configured
 SMTPRELAYPORT='25'
 SASLUSER='terrence'
 SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
 SMTPRELAYFQDN='mail.linuxengineer.co.uk'
 SMTPRELAYFROM='terrence@houlahan.co.uk'
 
-# GMAIL SMTP Relay Server:  NOTE: Requires a PAID Google-hosted mail account
-GMAILADDRESS='terrence.houlahan.devices@gmail.com'
+# GMAIL SMTP Relay Server:  This is the secondary MSMTP Relay that is configured
+# NOTE 1: Requires a PAID Gmail account to *RELAY* alerts. However you can *RECEIVE* alerts on a free Gmail account.
+# NOTE 2: If NOT using a Gmail SMTP Relay then just leave the example values unchanged
+GMAILADDRESS='yourAcctName@gmail.com'
 GMAILPASSWD='YourGmailPasswdHere'
 
 
@@ -1243,7 +1249,7 @@ CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{
 CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
 
 
-echo "IP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" | mutt -s "IP of Camera: $(echo $CAMERAIPV4)" $SYSCONTACT
+echo -e "IP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" | mutt -s "IP of Camera: $(echo $CAMERAIPV4)" $SYSCONTACT
 
 
 EOF
@@ -1660,7 +1666,8 @@ echo "##########################################################################
 echo >> /etc/motd
 echo >> /etc/motd
 
-
+echo
+echo
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
 echo "By default Dropbox API used to upload images breaks scripted automation by requiring user input on first access."
@@ -1743,3 +1750,19 @@ sleep 10
 #rm -rf /home/pi/pi-cam-config
 
 #systemctl reboot
+
+
+# This script is Copyright (C) 2018 Terrence Houlahan
+# License: GPL 3:
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not see <https://www.gnu.org/licenses/>.
