@@ -4,7 +4,7 @@
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20181210
-# Version 1.0
+# Version 1.01
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -66,7 +66,7 @@ HEATTHRESHOLDSHUTDOWN='85'
 # "SNMPLOCATION" is a descriptive location of the area the camera covers
 SNMPLOCATION='Back Door'
 # NOTE: The email address specified in variable SNMPSYSCONTACT will be the one used for ALL System Alerts
-SNMPSYSCONTACT='terrence.houlahan.devices@gmail.com'
+SNMPSYSCONTACT='accountToReceiveAlerts@domain.com'
 SNMPV3AUTHPASSWD='PiDemo1234'
 SNMPV3ENCRYPTPASSWD='PiDemo1234'
 SNMPV3ROUSER='pi'
