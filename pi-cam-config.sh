@@ -77,10 +77,10 @@ SNMPV3ROUSER='pi'
 
 # SELF-HOSTED SMTP Relay Mail Server: This is the Primary MSMTP relay account that is configured
 SMTPRELAYPORT='25'
-SASLUSER='terrence'
-SASLPASSWD='xUn&G5d4RqYk9Lj%4R3D2V8z&2HapP@7EywfG6!b3Mi?B7'
-SMTPRELAYFQDN='mail.linuxengineer.co.uk'
-SMTPRELAYFROM='terrence@houlahan.co.uk'
+SASLUSER='yourSASLuserName'
+SASLPASSWD='yourSASLpasswdGoesHere'
+SMTPRELAYFQDN='mail.your-SMTP-relay-goes-here.co.uk'
+SMTPRELAYFROM='yourName@domainYouWantAlertsToAppearToBeSentFrom.com'
 
 # GMAIL SMTP Relay Server:  This is the secondary MSMTP Relay that is configured
 # NOTE 1: Requires a PAID Gmail account to *RELAY* alerts. However you can *RECEIVE* alerts on a free Gmail account.
