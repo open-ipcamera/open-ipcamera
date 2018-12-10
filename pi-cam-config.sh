@@ -4,7 +4,7 @@
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20181210
-# Version 1.01
+# Version 1.02
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -1752,18 +1752,20 @@ echo "If you SSH into the camera its address will also be printed in the MOTD up
 echo
 
 
+# Wipe F1Linux.com pi-cam-config files as clear text passwds live in here:
+rm -rf /home/pi/pi-cam-config
+
+echo "Deleted the pi-cam-config repo directory which has clear-text passwords in it."
+
 
 echo "System will reboot in 10 seconds"
 sleep 10
 
 
-# Wipe F1Linux.com pi-cam-config files as clear text passwds live in here:
-#rm -rf /home/pi/pi-cam-config
-
-#systemctl reboot
+systemctl reboot
 
 
-# This script is Copyright (C) 2018 Terrence Houlahan
+# "pi-cam-config.sh" is Copyright (C) 2018 Terrence Houlahan
 # License: GPL 3:
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
