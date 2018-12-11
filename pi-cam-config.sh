@@ -4,7 +4,7 @@
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20181211
-# Version 1.03
+# Version 1.04
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -56,11 +56,11 @@ MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75t
 # Please consult "README.txt" for how to obtain the value for below variable
 DROPBOXACCESSTOKEN='ReplaceThisStringWithYourAccessToken'
 
-# Set a threshold value to be notified when Pi exceeds it:
-HEATTHRESHOLDWARN='65'
-# WARNING: Do NOT set the SHUTDOWN threshold too low or the test will prove true as soon as the pi boots causing it to just keep rebooting
+# Set a threshold value to be notified when Pi temperature exceeds it:
+HEATTHRESHOLDWARN='60'
+# WARNING: Do NOT set SHUTDOWN threshold too low or test will evaluate true as soon as pi boots causing it to just keep rebooting
 # NOTE: Pi3B+ can run hot: https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=138193
-HEATTHRESHOLDSHUTDOWN='85'
+HEATTHRESHOLDSHUTDOWN='75'
 
 ### Variables: SNMP Monitoring
 # "SNMPLOCATION" is a descriptive location of the area the camera covers
@@ -103,7 +103,11 @@ GMAILPASSWD='YourGmailPasswdHere'
 IPV6ENABLED='on'
 # NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
 USER='me'
-PASSWD='ChangeMe1234'
+
+# WARNING: Do * NOT * use the special characters '&' or '/' in the variable 'PASSWD' when creating a complex password.:
+# The 'PASSWD' variable below is expanded inside a sed expression and these characters will be interpreted even if encased between single quotes:
+# https://stackoverflow.com/questions/11307759/how-to-escape-the-ampersand-character-while-using-sed
+PASSWD='ChangeMe-But-Dont-Use-Ampersands-Or-Forward-Slashes'
 
 # With camera positioned flat on the base of the Smarti Pi case (USB ports facing up) we need to rotate picture 180 degrees:
 ROTATE='180'
@@ -1149,6 +1153,10 @@ echo
 sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 #sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 
+# Below 2 sed expressions inject the auth credentials for camera by expanding variables so they have a special construction to stop special characters in complex passwords being interpreted
+sed -i 's/; stream_authentication username:password/stream_authentication '"$USER:$PASSWD"'/' /etc/motion/motion.conf
+sed -i 's/; webcontrol_authentication username:password/webcontrol_authentication '"$USER:$PASSWD"'/' /etc/motion/motion.conf
+
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
 sed -i 's|logfile /var/log/motion/motion.log|logfile /media/pi/logs/motion.log|' /etc/motion/motion.conf
@@ -1172,10 +1180,9 @@ sed -i "s/stream_quality 50/stream_quality $STREAMQUALITY/" /etc/motion/motion.c
 sed -i "s/stream_motion off/stream_motion $STREAMMOTION/" /etc/motion/motion.conf
 sed -i "s/stream_localhost on/stream_localhost $STREAMLOCALHOST/" /etc/motion/motion.conf
 sed -i "s/stream_auth_method 0/stream_auth_method $STREAMAUTHMETHOD/" /etc/motion/motion.conf
-sed -i "s/; stream_authentication username:password/stream_authentication $USER:$PASSWD/" /etc/motion/motion.conf
 sed -i "s/webcontrol_localhost on/webcontrol_localhost $WEBCONTROLLOCALHOST/" /etc/motion/motion.conf
 sed -i "s/webcontrol_port 8080/webcontrol_port $WEBCONTROLPORT/" /etc/motion/motion.conf
-sed -i "s/; webcontrol_authentication username:password/webcontrol_authentication $USER:$PASSWD/" /etc/motion/motion.conf
+
 
 
 echo "Configure Motion to run by daemon"
@@ -1264,10 +1271,10 @@ SCRIPTLOCATION="$(readlink -f $0)"
 #CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
 CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit alert recipient in below variable. To change alert address edit the value of "sysContact" directly in /etc/snmp/snmpd.conf
+# Do *NOT* edit alert recipient in below variable. To change alert address edit value of "sysContact" directly in /etc/snmp/snmpd.conf
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
+# Do *NOT* edit below variables: they are self-populating and resolve to the ip address of this host
 CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
 CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
 
@@ -1317,8 +1324,8 @@ set -x
 
 # Edit values in variables below rather than editing script itself to avoid introducing a fault
 # NOTE: Do NOT restart service after changing a threshhold value- script is fired-off anew every 5 minutes by the SystemD timer "heat-alert.timer".
-HEATTHRESHOLDWARN='65'
-HEATTHRESHOLDSHUTDOWN='85'
+HEATTHRESHOLDWARN='60'
+HEATTHRESHOLDSHUTDOWN='75'
 
 
 SCRIPTLOCATION="$(readlink -f $0)"
