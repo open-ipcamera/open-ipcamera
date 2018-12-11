@@ -3,8 +3,8 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181210
-# Version 1.02
+# Date:    20181211
+# Version 1.03
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -65,10 +65,17 @@ HEATTHRESHOLDSHUTDOWN='85'
 ### Variables: SNMP Monitoring
 # "SNMPLOCATION" is a descriptive location of the area the camera covers
 SNMPLOCATION='Back Door'
+
 # NOTE: The email address specified in variable SNMPSYSCONTACT will be the one used for ALL System Alerts
 SNMPSYSCONTACT='accountToReceiveAlerts@domain.com'
-SNMPV3AUTHPASSWD='PiDemo1234'
-SNMPV3ENCRYPTPASSWD='PiDemo1234'
+
+# ** IMPORTANT: PLEASE READ **:
+# NOTE 1: Below two variables are encased between a double and single quote. DO NOT DELETE THEM when setting a password
+# NOTE 2: Additionally neither should your complex passwords for below variables incorporate single or double quote marks.  All other special characters OK to use
+SNMPV3AUTHPASSWD="'PiDemo1234'"
+SNMPV3ENCRYPTPASSWD="'PiDemo1234'"
+
+# Can just leave value as "pi" for Read-Only SNMP user
 SNMPV3ROUSER='pi'
 
 ### Variables: MSMTP (to send alerts):
@@ -666,6 +673,21 @@ if [[ $(dpkg -l | grep apt-file) = '' ]]; then
 	apt update > /dev/null
 	status-apt-cmd
 fi
+
+
+
+# netselect-apt analyzes available mirrors by running some tests and then sets fastest one for you
+# Great tool but has firewall dependencies on UDP traceroute and ICMP it uses for testing latency so decided not to configure it during the Pi-Cam config
+# To MANUALLY configure netselect-apt:
+#      sudo netselect-apt --arch armhf --nonfree --outfile /etc/apt/sources.list
+# Then edit the "sources.list" file and change "stable" TO "stretch" (or whatever the current Raspbian flavour of the day is)
+if [[ $(dpkg -l | grep netselect-apt) = '' ]]; then
+	apt-get -qqy install netselect-apt > /dev/null
+	apt update > /dev/null
+	status-apt-cmd
+fi
+
+
 
 
 # *libimage-exiftool-perl* used to get metadata from videos and images from the CLI. Top-notch tool
