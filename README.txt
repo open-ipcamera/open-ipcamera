@@ -1,8 +1,8 @@
 # Author:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181211
-# Version 1.04
+# Date:    20181214
+# Version 1.05
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi as a Motion Detection Camera which sends images to Dropbox acct and sends alerts
 
