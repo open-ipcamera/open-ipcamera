@@ -3,8 +3,8 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181211
-# Version 1.04
+# Date:    20181214
+# Version 1.05
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -1323,7 +1323,9 @@ set -x
 
 
 # Edit values in variables below rather than editing script itself to avoid introducing a fault
-# NOTE: Do NOT restart service after changing a threshhold value- script is fired-off anew every 5 minutes by the SystemD timer "heat-alert.timer".
+# NOTE1: Do NOT restart service after changing a threshhold value- script is fired-off anew every 5 minutes by the SystemD timer "heat-alert.timer".
+# NOTE2: Temperature units are in CELCIUS
+# NOTE3: Baseline temperature of a cold Pi at boot is about 35C
 HEATTHRESHOLDWARN='60'
 HEATTHRESHOLDSHUTDOWN='75'
 
