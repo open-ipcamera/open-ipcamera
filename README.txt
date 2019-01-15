@@ -1,8 +1,8 @@
 # Author:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181214
-# Version 1.05
+# Date:    20190115
+# Version 1.06
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi as a Motion Detection Camera which sends images to Dropbox acct and sends alerts
 
@@ -20,7 +20,7 @@
 #	11.USEFUL LINKS
 
 # 1. LICENSE: GPL version 3
-# Copyright (C) 2018 Terrence Houlahan
+# Copyright (C) 2018 2019 Terrence Houlahan
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -35,9 +35,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # 2. COMPATIBILITY: Script known to work with following configurations (but might work with others)
-# - OS Version:	Raspbian "Stretch" 9.6
-# - Pi Model:	3B+ and Pi Zero W
-# - Cameras:	Picams 1.3 and 2.1
+# - Refer to header in "pi-cam-config.sh" for hardware and OS version compatibility details
 
 # 3. SCRIPT PREREQUISITES:
 # - DHCP IP addressing: If camera can just catch an address it will configure the applications with the right IPv/6 addresses automatically
@@ -72,10 +70,12 @@
 # Note: Users must configure firewall rules either on the router in front of the camera or the camer itself to prevent unauthorized access
 
 # 6. MINIMAL PI SETUP:
+# NOTE: A comprehensive HowTo video detailing all required steps to use this script to produce an enterprise-quality Pi-Cam can be found at:
+#		www.YouTube.com/user/LinuxEngineer
+# The video begins with a section index to enable you to skip ahead to part of video of particular interest
 # Skip below (3) steps if already completed:
 # Using a wireless or wired keyboard connected to a USB port on the Pi:
-#	a. Install Raspbian OS on a MicroSD card. A short HowTo video is available at:
-#		www.YouTube.com/user/LinuxEngineer
+#	a. Install Raspbian OS on a MicroSD card
 #	b. Enable SSH:
 #		sudo raspi-config
 #		Then choose "Interfacing Options" > "SSH" > Choose "Yes" to enable SSH
