@@ -3,8 +3,8 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20181214
-# Version 1.05
+# Date:    20190115
+# Version 1.06
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -12,7 +12,7 @@
 
 ######  License: ######
 #
-# Copyright (C) 2018 Terrence Houlahan
+# Copyright (C) 2018 2019 Terrence Houlahan
 # License: GPL 3:
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@
 
 # README.txt file distributed with this script
 # VIDEO:  www.YouTube.com/user/LinuxEngineer
+#         The Video contains all steps required to produce an enterprise-grade Motion Detection Camera using this script
+#         And most helpfully the video begins with a section index to enable skipping directly to the section you want
 
 # If I saved you a few hours or possibly DAYS manually configuring one or more pi-cams perhaps consider buying me a beer:
 #   paypal.me/TerrenceHoulahan
@@ -147,9 +149,9 @@ WEBCONTROLLOCALHOST='off'
 # DO NOT EDIT BELOW VARIABLES: they self-resolve host IPv4/6v addresses so they can be automatically inserted in config files to avoid manual configuration
 
 # 'CAMERAIPV4' Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on the implied logic cable connected for some reason
-CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
-# 'CAMERAIPV6' Looks for and prints an IPv6  Global Unicast Address if such an interface is configured
-CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
+CAMERAIPV4="$(ip addr list|grep eth0|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1)"
+# 'CAMERAIPV6' Looks for and prints an IPv6 Global Unicast Address if such an interface is configured
+CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
 #############################################################
@@ -209,7 +211,7 @@ echo
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo
 
-echo '"pi-cam-config.sh" Copyright (C) 2018 Terrence Houlahan'
+echo '"pi-cam-config.sh" Copyright (C) 2018 2019 Terrence Houlahan'
 echo
 echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
@@ -765,6 +767,35 @@ if [[ $(dpkg -l | grep dstat) = '' ]]; then
 fi
 
 
+# ipcalc useful for perform IPv4 calculations and processing the results in scripts
+if [[ $(dpkg -l | grep ipcalc) = '' ]]; then
+	apt-get -qqy install ipcalc > /dev/null
+	status-apt-cmd
+fi
+
+
+# ipv6calc another IP calculations tool useful for extracting and manipulating addressing info in scripted tests
+if [[ $(dpkg -l | grep ipv6calc) = '' ]]; then
+	apt-get -qqy install ipv6calc > /dev/null
+	status-apt-cmd
+fi
+
+
+# bc is a useful tool for working with calculations in scripts
+if [[ $(dpkg -l | grep bc) = '' ]]; then
+	apt-get -qqy install bc > /dev/null
+	status-apt-cmd
+fi
+
+
+# "expect" is a tool for automating interactive processes in scripts by providing an answer to a question that would break unattended execution of a script
+if [[ $(dpkg -l | grep expect) = '' ]]; then
+	apt-get -qqy install expect > /dev/null
+	status-apt-cmd
+fi
+
+
+
 
 
 echo
@@ -822,7 +853,10 @@ cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
 sed -i "s|#ListenAddress 0.0.0.0|ListenAddress 0.0.0.0|" /etc/ssh/sshd_config
 sed -i "s|#ListenAddress ::|ListenAddress ::|" /etc/ssh/sshd_config
 sed -i "s|#SyslogFacility AUTH|SyslogFacility AUTH|" /etc/ssh/sshd_config
-sed -i "s|#LogLevel INFO|LogLevel INFO|" /etc/ssh/sshd_config
+
+# LogLevel Values: QUIET \ FATAL \ ERROR \ INFO (default) \ VERBOSE \ DEBUG \ DEBUG1 \ DEBUG2 \ DEBUG3. DEBUG and DEBUG1 equivalent. Using a DEBUG level violates users privacy
+sed -i "s|#LogLevel INFO|LogLevel VERBOSE|" /etc/ssh/sshd_config
+
 sed -i "s|#LoginGraceTime 2m|LoginGraceTime 1m|" /etc/ssh/sshd_config
 sed -i "s|#MaxAuthTries 6|MaxAuthTries 3|" /etc/ssh/sshd_config
 sed -i "s|#PubkeyAuthentication yes|PubkeyAuthentication yes|" /etc/ssh/sshd_config
@@ -1217,6 +1251,10 @@ logfile        /media/pi/logs/msmtp.log
 #tls_trust_file /etc/ssl/certs/ca-certificates.crt
 tls_fingerprint $(msmtp --host=$SMTPRELAYFQDN --serverinfo --tls --tls-certcheck=off | grep SHA256 | awk '{ print $2 }')
 
+echo
+echo "$(tput setaf 1)If port TCP25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file$(tput sgr 0)"
+echo "$(tput setaf 1)IT will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server$(tput sgr 0)"
+echo
 
 # Self-Hosted Mail Account
 account     $SMTPRELAYFQDN
@@ -1275,8 +1313,8 @@ CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.co
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: they are self-populating and resolve to the ip address of this host
-CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
-CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
+CAMERAIPV4="$(ip addr list|grep eth0|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1)"
+CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
 echo -e "IP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" | mutt -s "IP of Camera: $(echo $CAMERAIPV4)" $SYSCONTACT
@@ -1340,8 +1378,8 @@ CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.co
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
-CAMERAIPV4="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/[^127][1-9].*\./{p;q}'| cut -d '/' -f1)"
-CAMERAIPV6="$(ip addr list|grep inet|awk '{print $2}'|sed -n '/^[1-9].*\:/{p;q}'| cut -d '/' -f1)"
+CAMERAIPV4="$(ip addr list|grep eth0|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1)"
+CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
 # NOTE: A delay ("sleep 20") is inserted before shutdown where HEATTHRESHOLDSHUTDOWN tests TRUE to a) allow time to send the notification and
@@ -1676,7 +1714,7 @@ echo "Troubleshooting: Execute below script to gather data to investigate the fa
 echo 'cd /home/pi/scripts' >> /etc/motd
 echo './troubleshooting-helper.sh' >> /etc/motd
 echo >> /etc/motd
-echo "Camera Address: $CAMERAIPV4:8080" >> /etc/motd
+echo 'Camera Feed Access: Append :8080 to IP of this host in a web browser to view camera stream' >> /etc/motd
 echo >> /etc/motd
 echo "stop/start/reload Motion daemon:" >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
@@ -1761,7 +1799,7 @@ echo
 # 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
 
 
-# * boolean false * is piped to debconf-set-selections to pre-seed the answer to interactive prompt * Should kexec-toolshandle reboots(sysvinit only) *
+# * boolean false * is piped to debconf-set-selections to pre-seed the answer to interactive install question "Should kexec-tools handle reboots(sysvinit only)?"
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selections
 	apt-get -qq install kexec-tools > /dev/null
@@ -1796,7 +1834,7 @@ sleep 10
 systemctl reboot
 
 
-# "pi-cam-config.sh" is Copyright (C) 2018 Terrence Houlahan
+# "pi-cam-config.sh" is Copyright (C) 2018 2019 Terrence Houlahan
 # License: GPL 3:
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
