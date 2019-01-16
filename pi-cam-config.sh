@@ -3,8 +3,8 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20190115
-# Version 1.06
+# Date:    20190116
+# Version 1.06.1
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -148,8 +148,8 @@ WEBCONTROLLOCALHOST='off'
 
 # DO NOT EDIT BELOW VARIABLES: they self-resolve host IPv4/6v addresses so they can be automatically inserted in config files to avoid manual configuration
 
-# 'CAMERAIPV4' Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on the implied logic cable connected for some reason
-CAMERAIPV4="$(ip addr list|grep eth0|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1)"
+# 'CAMERAIPV4' Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on implied logic cable was connected for some reason
+CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
 # 'CAMERAIPV6' Looks for and prints an IPv6 Global Unicast Address if such an interface is configured
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
@@ -280,6 +280,7 @@ if [[ ! $(dpkg -l | grep snmpd) = '' ]]; then
 	systemctl disable snmpd.service
 	rm /etc/snmp/snmp.conf
 	rm /etc/snmp/snmpd.conf
+	rm /usr/share/snmp/snmpd.conf
 	apt-get -qqy purge snmp snmpd snmp-mibs-downloader libsnmp-dev > /dev/null
 fi
 
@@ -1253,7 +1254,7 @@ tls_fingerprint $(msmtp --host=$SMTPRELAYFQDN --serverinfo --tls --tls-certcheck
 
 echo
 echo "$(tput setaf 1)If port TCP25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file$(tput sgr 0)"
-echo "$(tput setaf 1)IT will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server$(tput sgr 0)"
+echo "$(tput setaf 1)It will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server$(tput sgr 0)"
 echo
 
 # Self-Hosted Mail Account
@@ -1313,7 +1314,7 @@ CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.co
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: they are self-populating and resolve to the ip address of this host
-CAMERAIPV4="$(ip addr list|grep eth0|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1)"
+CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
@@ -1378,7 +1379,7 @@ CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.co
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
-CAMERAIPV4="$(ip addr list|grep eth0|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1)"
+CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
