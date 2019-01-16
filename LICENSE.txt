@@ -3,7 +3,7 @@
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20190116
-# Version 1.06.1
+# Version 1.07
 
 
 GNU GENERAL PUBLIC LICENSE
