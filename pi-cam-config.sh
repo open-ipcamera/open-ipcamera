@@ -4,7 +4,7 @@
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
 # Date:    20190116
-# Version 1.06.1
+# Version 1.07
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -397,6 +397,108 @@ fi
 
 # Revert back to default CPU Affinity:
 sed -i "s/CPUAffinity=0 1 2/#CPUAffinity=1 2/" /etc/systemd/system.conf
+
+
+
+
+echo
+echo "$(tput setaf 5)****** USB Flash Storage Configuration:  ******$(tput sgr 0)"
+echo
+
+echo "To stop frequent writes from trashing MicroSD card where the Pi OS lives"
+echo "directories with frequent write activity will be mounted on USB storage"
+echo
+
+
+# The package *usbmount* will interfere with SystemD Auto-mounts which we will use for the USB Flash Drive where video and images are written locally to.
+# We check to see if it is present and if test evalutes *true* we get rid of it
+if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
+	apt-get -qqy purge usbmount > /dev/null
+	status-apt-cmd
+fi
+
+
+# Disable automounting by default Filemanager "pcmanfm" if present: it steps on our SystemD automount which offers greater flexibility to change mount options:
+if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
+	sed -i "s/mount_removable=1/mount_removable=0/" /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
+fi
+
+
+if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
+	until apt-get -qqy install exfat-fuse > /dev/null
+	do
+		status-apt-cmd
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		status-apt-cmd
+		echo
+	done
+fi
+
+status-apt-cmd
+
+
+
+# SystemD mount file created below should be named same as its mountpoint as specified in "Where" directive below:
+cat <<EOF> /etc/systemd/system/media-pi.mount
+[Unit]
+Description=Create mount for USB storage for videos and images
+
+[Mount]
+What=/dev/sda1
+Where=/media/pi
+Type=exfat
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in "Where" directive below:
+cat <<EOF> /etc/systemd/system/media-pi.automount
+[Unit]
+Description=Automount USB storage mount for videos and images
+
+[Automount]
+Where=/media/pi
+DirectoryMode=0755
+TimeoutIdleSec=15
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+systemctl daemon-reload
+systemctl start media-pi.mount
+
+
+# After mounting USB Flash Drive we next test it for ExFAT formatting:
+if [ $(lsblk -f|grep sda1|awk '{print $2}') != 'exfat' ]; then
+	echo
+	echo "ERROR: ExFAT formatted USB flash drive REQUIRED to write video to"
+	echo "Format a USB Flash Drive for ExFAT and re-excute $0. Exiting script"
+	echo
+	exit
+else
+	echo
+	echo "ExFAT Formatted USB Flash Drive Found. Script will continue"
+fi
+
+
+systemctl enable media-pi.mount
+
+
+# Create a folder on the USB flash storage to write our persistent logs to.
+# We do this to avoid abusing the MicroSD card housing the OS with frequent writes
+if [ ! -d /media/pi/logs ]; then
+	mkdir /media/pi/logs
+	chmod 751 /media/pi/logs
+else
+	echo "Unable to create directory /media/pi/logs on USB Flash Storage"
+fi
 
 
 
@@ -1056,122 +1158,6 @@ EOF
 systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
-
-
-
-
-echo
-echo "$(tput setaf 5)****** USB Flash Storage Configuration:  ******$(tput sgr 0)"
-echo
-
-echo "To stop frequent writes from trashing MicroSD card the Pi OS lives on"
-echo "directories with frequent write activity will be mounted on USB storage"
-echo
-
-# Interesting thread on auto mounting choices:
-# https://unix.stackexchange.com/questions/374103/systemd-automount-vs-autofs
-
-# *usbmount* will interfere with the way we are going to mount the storage: check to see if it is present and if true get rid of it
-if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-	apt-get -qqy purge usbmount > /dev/null
-	status-apt-cmd
-fi
-
-
-# Disable automounting by default Filemanager "pcmanfm" if present: it steps on our SystemD automount which offers greater flexibility to change mount options:
-if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
-	sed -i "s/mount_removable=1/mount_removable=0/" /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
-fi
-
-
-
-if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-	until apt-get -qqy install exfat-fuse > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		status-apt-cmd
-		echo
-	done
-fi
-
-status-apt-cmd
-
-
-
-# SystemD mount file created below should be named same as its mountpoint as specified in "Where" directive below:
-cat <<EOF> /etc/systemd/system/media-pi.mount
-[Unit]
-Description=Create mount for USB storage for videos and images
-
-[Mount]
-What=/dev/sda1
-Where=/media/pi
-Type=exfat
-Options=defaults
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in "Where" directive below:
-cat <<EOF> /etc/systemd/system/media-pi.automount
-[Unit]
-Description=Automount USB storage mount for videos and images
-
-[Automount]
-Where=/media/pi
-DirectoryMode=0755
-TimeoutIdleSec=15
-
-[Install]
-WantedBy=multi-user.target
-
-EOF
-
-
-systemctl daemon-reload
-systemctl start media-pi.mount
-
-
-
-# Exit script if NO USB storage attached:
-if [[ $( cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }' ) = '' ]]; then
-	echo
-	echo "ERROR: Attach an EXFAT formatted USB flash drive to be a target for video to be written"
-	echo "Re-run script after minimum storage requirements met. Exiting"
-	echo
-	exit
-else
-	echo
-	echo "USB STORAGE FOUND"
-fi
-
-# Exit script USB storage attached but not formatted for EXFAT filesystem:
-if [[ $(lsblk -f|grep sda1|awk '{print $2}') = '' ]]; then
-	echo
-	echo "ERROR: USB flash drive NOT formatted for * EXFAT * filesystem"
-	echo "Re-execute script after minimum storage requirements met. Exiting"
-	echo
-	exit
-else
-	echo
-	echo "USB STORAGE IS EXFAT:"
-	echo "Script will proceed"
-	echo
-fi
-
-systemctl enable media-pi.mount
-
-
-# Create a folder on the USB flash storage to write our persistent logs to.
-# We do this to avoid abusing the MicroSD card housing the OS with frequent writes.
-if [ ! -d /media/pi/logs ]; then
-	mkdir /media/pi/logs
-	chmod 751 /media/pi/logs
-fi
 
 
 
