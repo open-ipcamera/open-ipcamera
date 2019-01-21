@@ -3,8 +3,8 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20190116
-# Version 1.07
+# Date:    20190121
+# Version 1.08
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -768,6 +768,24 @@ fi
 
 status-apt-cmd
 
+
+# nmap used to test ports during install to alert user of potential connectivity issues
+if [[ $(dpkg -l | grep nmap) = '' ]]; then
+	until apt-get -qqy install nmap > /dev/null
+	do
+		status-apt-cmd
+		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
+		echo
+		sleep 2
+	done
+fi
+
+status-apt-cmd
+
+
+
+
+
 echo
 echo "Below packages not required for configuration as a Motion Detection Camera"
 echo "but included as they are useful tools to have on the sysatem:"
@@ -897,6 +915,78 @@ if [[ $(dpkg -l | grep expect) = '' ]]; then
 	status-apt-cmd
 fi
 
+
+
+
+
+echo
+echo "$(tput setaf 5)****** Set Host Time: systemd-timesyncd.service Config ******$(tput sgr 0)"
+echo
+
+
+# USEFUL REFERENCES:
+#       https://www.digitalocean.com/community/tutorials/how-to-set-up-time-synchronization-on-ubuntu-16-04
+#       https://wiki.archlinux.org/index.php/systemd-timesyncd
+#       https://www.freedesktop.org/software/systemd/man/timedatectl.html
+
+
+echo
+echo "$(tput setaf 6)Config Pi-Cam to keep accurate time when recording security events$(tput sgr 0)"
+echo
+
+
+# NOTE: When time servers are allocated by DHCP they can be found at below path:
+#	   /run/dhcpcd/ntp.conf/wlan0.dhcp
+
+# Set systemd-timesyncd to start on boot if it is not already:
+if [[ $(systemctl list-unit-files|grep systemd-timesyncd.service|awk '{print $2}') = 'enabled' ]]; then
+        timedatectl set-ntp on
+        systemctl start systemd-timesyncd
+fi
+
+# Check if UDP 123 is open to allow the Pi to update its time and warn if not:
+if [[ $(nmap -sU -p 123 0.pool.ntp|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1) != 'open' ]]; then
+        echo
+        echo "$(tput setaf 5)WARNING: Port UDP 123 CLOSED:$(tput sgr 0) host has no external connectivity to NTP servers)"
+        echo
+fi
+
+
+# If file /etc/systemd/timesyncd.conf.ORIGINAL exists then use it to overwrite the edited config and make backup of it again:
+if [ -f /etc/systemd/timesyncd.conf.ORIGINAL ]; then
+        mv /etc/systemd/timesyncd.conf.ORIGINAL /etc/systemd/timesyncd.conf
+        cp -p /etc/systemd/timesyncd.conf /etc/systemd/timesyncd.conf.ORIGINAL
+else
+        cp -p /etc/systemd/timesyncd.conf /etc/systemd/timesyncd.conf.ORIGINAL
+fi
+
+
+sed -i "s/#NTP=/NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org/" /etc/systemd/timesyncd.conf
+sed -i "s/#FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org/FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org/" /etc/systemd/timesyncd.conf
+
+# Below (3) directives absent from Raspbian default timesyncd.conf config file as of  Raspbian v9.6 Stretch.
+# Check to see if they were written previously by script and if not whack them in:
+#
+if [[ $(grep "RootDistanceMaxSec" /etc/systemd/timesyncd.conf) = '' ]]; then
+        # "RootDistanceMaxSec": 5 seconds is default value
+        echo "RootDistanceMaxSec=5" >> /etc/systemd/timesyncd.conf
+fi
+
+if [[ $(grep "PollIntervalMinSec" /etc/systemd/timesyncd.conf) = '' ]]; then
+        # "PollIntervalMinSec": 32 seconds is default value NOTE: Cannot be less than 16 seconds
+        echo "PollIntervalMinSec=32" >> /etc/systemd/timesyncd.conf
+fi
+
+if [[ $(grep "PollIntervalMaxSec" /etc/systemd/timesyncd.conf) = '' ]]; then
+        # "PollIntervalMaxSec": 2048 seconds is default value NOTE: Cannot be less than value set for "PollIntervalMinSec"
+        echo "PollIntervalMaxSec=2048" >> /etc/systemd/timesyncd.conf
+fi
+
+
+# Re-read config with the new changes:
+systemctl daemon-reload
+
+timedatectl status
 
 
 
@@ -1238,10 +1328,6 @@ logfile        /media/pi/logs/msmtp.log
 #tls_trust_file /etc/ssl/certs/ca-certificates.crt
 tls_fingerprint $(msmtp --host=$SMTPRELAYFQDN --serverinfo --tls --tls-certcheck=off | grep SHA256 | awk '{ print $2 }')
 
-echo
-echo "$(tput setaf 1)If port TCP25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file$(tput sgr 0)"
-echo "$(tput setaf 1)It will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server$(tput sgr 0)"
-echo
 
 # Self-Hosted Mail Account
 account     $SMTPRELAYFQDN
@@ -1262,6 +1348,15 @@ password    $GMAILPASSWD
 account default : $SMTPRELAYFQDN
 
 EOF
+
+
+echo
+echo "MSMTP config file /etc/msmtprc created"
+
+echo
+echo "$(tput setaf 1)If port TCP25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file$(tput sgr 0)"
+echo "$(tput setaf 1)It will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server$(tput sgr 0)"
+echo
  
 
 
