@@ -3,8 +3,8 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20190121
-# Version 1.08
+# Date:    20190123
+# Version 1.09
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
@@ -197,9 +197,6 @@ echo "		$(tput setaf 2) https://github.com/orgs/Motion-Project/people$(tput sgr 
 echo
 echo "MSMTP Developer Martin Lambers: SMTP client used to relay alerts"
 echo "		$(tput setaf 2) https://gitlab.marlam.de/marlam/msmtp$(tput sgr 0)"
-echo
-echo "Mutt Email Client Developers Michael R Elkins and Jeremy Blosser.  Mutt used to squirt email motion detection and heat alerts"
-echo "		$(tput setaf 2) http://www.mutt.org/$(tput sgr 0)"
 echo
 echo "And kudos to DROPBOX for providing their Enterprise-grade APIused for shifting images from the USB storage up to the cloud.  Outstanding company."
 echo
@@ -1102,7 +1099,7 @@ echo "Created /home/pi/.vimrc"
 # Create Mutt configuration file for user pi
 cat <<EOF> /home/pi/.muttrc
 
-set sendmail=$(command -v msmtp)"
+set sendmail="$(command -v msmtp)"
 set use_from=yes
 set realname="$(hostname)"
 set from="pi@$(hostname)"
@@ -1399,8 +1396,11 @@ CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
-echo -e "IP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" | mutt -s "IP of Camera: $(echo $CAMERAIPV4)" $SYSCONTACT
 
+echo -e "Subject: IP of Camera: $( echo $CAMERAIPV4 )\r\n\r\nIP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" |msmtp $SYSCONTACT
+
+# Below comand has the --debug switch: uncomment if you want to tweak the command and get granular visibility
+#echo -e "Subject: IP of Camera: $( echo $CAMERAIPV4 )\r\n\r\nIP Address of $CAMERALOCATION Camera $(hostname) is: $CAMERAIPV4 / $CAMERAIPV6 '\n' Script sending this email: $SCRIPTLOCATION" |msmtp --debug $SYSCONTACT
 
 EOF
 
@@ -1427,6 +1427,75 @@ EOF
 
 
 systemctl enable email-camera-address.service
+
+
+
+
+cat <<'EOF'> /home/pi/scripts/motion-detection-camera-address.sh
+#!/bin/bash
+
+# Redirect output of "set -x" to a log to capture any potential errors as script executed as a SystemD Service
+# varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
+exec {varFD}>/media/pi/logs/script-motion-detection-camera-address.log
+BASH_XTRACEFD=$varFD
+
+set -x
+
+
+SCRIPTLOCATION="$(readlink -f $0)"
+
+#CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
+CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+
+# Do *NOT* edit alert recipient in below variable. To change alert address edit value of "sysContact" directly in /etc/snmp/snmpd.conf
+SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
+
+# Do *NOT* edit below variables: they are self-populating and resolve to the ip address of this host
+CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
+CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
+
+if [ ! -f /etc/motion/motion.conf.ORIGINAL ]; then
+        cp -p /etc/motion/motion.conf /etc/motion/motion.conf.ORIGINAL
+fi
+
+
+if [[ $( grep "on_event_start" /etc/motion/motion.conf ) != '' ]]; then
+
+sed -i "/on_event_start/d" /etc/motion/motion.conf
+
+fi
+
+
+echo 'on_event_start echo '"\"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SYSCONTACT\""'' >> /etc/motion/motion.conf
+
+EOF
+
+
+
+chmod 700 /home/pi/scripts/motion-detection-camera-address.sh
+chown pi:pi /home/pi/scripts/motion-detection-camera-address.sh
+
+
+
+cat <<'EOF'> /etc/systemd/system/motion-detection-camera-address.service
+[Unit]
+Description=Update IP of Camera in motion.conf for notify email generated on motion detection events ensuring if DHCP IP changes it is automatically updated every boot
+#Before=
+
+[Service]
+User=pi
+Group=pi
+Type=oneshot
+ExecStart=/home/pi/scripts/motion-detection-camera-address.sh
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+systemctl enable motion-detection-camera-address.service
+
 
 
 
@@ -1521,7 +1590,6 @@ EOF
 
 systemctl enable heat-alert.timer
 systemctl list-timers --all
-
 
 
 
@@ -1740,7 +1808,6 @@ echo
 
 
 echo "Automate setting CPU Affinity for Motion on boot"
-# Note use of * Wants * directive to create a dependent relationship on Motion already being started
 
 cat <<'EOF'> /home/pi/scripts/set-cpu-affinity.sh
 #!/bin/bash
@@ -1754,7 +1821,7 @@ EOF
 chmod 700 /home/pi/scripts/set-cpu-affinity.sh
 chown pi:pi /home/pi/scripts/set-cpu-affinity.sh
 
-
+# Note use of * Wants * directive to create a dependent relationship on Motion already being started
 cat <<EOF> /etc/systemd/system/set-cpu-affinity.service
 [Unit]
 Description=Set CPU Affinity for the Motion process after it starts on boot
