@@ -3,11 +3,11 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20190123
-# Version 1.09
+# Date:    20190128
+# Version 1.15
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
-#   Hardware:   Raspberry Pi 2/3B+ *AND* Pi Zero W
+#   Hardware:   Raspberry Pi 2/3B+
 #   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
 
 ######  License: ######
@@ -106,8 +106,8 @@ IPV6ENABLED='on'
 # NOTE: user for Camera application "Motion" login does not need to be a Linux system user account created with "useradd" command: can be arbitrary
 USER='me'
 
-# WARNING: Do * NOT * use the special characters '&' or '/' in the variable 'PASSWD' when creating a complex password.:
-# The 'PASSWD' variable below is expanded inside a sed expression and these characters will be interpreted even if encased between single quotes:
+# WARNING: Do * NOT * use the special characters ampersand * & * or forward-slash * / * in the variable * PASSWD * when creating a complex password:
+# The * PASSWD * variable below is expanded inside a sed expression and these characters will be interpreted even if encased between single quotes:
 # https://stackoverflow.com/questions/11307759/how-to-escape-the-ampersand-character-while-using-sed
 PASSWD='ChangeMe-But-Dont-Use-Ampersands-Or-Forward-Slashes'
 
@@ -148,9 +148,9 @@ WEBCONTROLLOCALHOST='off'
 
 # DO NOT EDIT BELOW VARIABLES: they self-resolve host IPv4/6v addresses so they can be automatically inserted in config files to avoid manual configuration
 
-# 'CAMERAIPV4' Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on implied logic cable was connected for some reason
+# * CAMERAIPV4 * Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on implied logic cable was connected for some reason
 CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
-# 'CAMERAIPV6' Looks for and prints an IPv6 Global Unicast Address if such an interface is configured
+# * CAMERAIPV6 * Looks for and prints an IPv6 Global Unicast Address if such an interface is configured
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
@@ -198,9 +198,9 @@ echo
 echo "MSMTP Developer Martin Lambers: SMTP client used to relay alerts"
 echo "		$(tput setaf 2) https://gitlab.marlam.de/marlam/msmtp$(tput sgr 0)"
 echo
-echo "And kudos to DROPBOX for providing their Enterprise-grade APIused for shifting images from the USB storage up to the cloud.  Outstanding company."
+echo "And kudos to DROPBOX for providing their Enterprise-grade API used for shifting images from the USB storage up to the cloud.  Outstanding company."
 echo
-echo " $(tput setaf 4)- Terrence Houlahan Linux Engineer ( houlahan@F1Linux.com )$(tput sgr 0)"
+echo "$(tput setaf 6)     - Terrence Houlahan Linux Engineer ( houlahan@F1Linux.com )$(tput sgr 0)"
 echo
 
 
@@ -208,7 +208,7 @@ echo
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo
 
-echo '"pi-cam-config.sh" Copyright (C) 2018 2019 Terrence Houlahan'
+echo '*pi-cam-config.sh* Copyright (C) 2018 2019 Terrence Houlahan'
 echo
 echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
@@ -221,38 +221,46 @@ read -p "Press ENTER to accept license and warranty terms to continue or close t
 echo
 echo "$(tput setaf 5)****** DELETE LIBRE OFFICE:  ******$(tput sgr 0)"
 echo
-echo "This is a camera: we do not require office applications."
+echo "Checking if Libre Office present and will remove that pig if found."
 echo
-echo "Checking if Libre Office present and will remove if found."
-echo "Can take over a minute to remove Libre Office- script might appear to hang"
 
 
 # Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
 if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
+	echo "Libre Office found."
+	echo "Can take over a minute to remove it. Script might appear to hang"
 	apt-get -qqy purge libreoffice* > /dev/null
 	echo
 	echo "Libre Office wiped from system"
 	echo
 else
+	echo
 	echo "Libre Office not found on system"
+	echo
 fi
 
 
 
 echo
-echo "$(tput setaf 5)****** DELETE DETRITUS FROM PRIOR INSTALLS:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  DELETE DETRITUS FROM PRIOR INSTALLS:  ******$(tput sgr 0)"
 echo
 echo "$(tput setaf 2)### Restore Pi to predictable known state by removing artefacts left by prior executions of this script: ###$(tput sgr 0)"
 echo
 
-# Reset the hosts file back to default state
+# Reset the /etc/hosts file back to default state
 sed -i "s/127\.0\.0\.1.*/127\.0\.1\.1      raspberrypi/" /etc/hosts
 sed -i "s/::1.*/::1     raspberrypi/" /etc/hosts
 
-# Restore the default hostname:
+# Restore default hostname:
 hostnamectl set-hostname raspberrypi
 systemctl restart systemd-hostnamed&
 wait $!
+
+
+# Reset TimesyncD Config back to the default:
+if [ -f /etc/systemd/timesyncd.conf.ORIGINAL ]; then
+	mv /etc/systemd/timesyncd.conf.ORIGINAL /etc/systemd/timesyncd.conf
+fi
 
 
 # Delete packages and any related config files with "apt-get purge":
@@ -282,8 +290,22 @@ if [[ ! $(dpkg -l | grep snmpd) = '' ]]; then
 fi
 
 
+# Delete SSH keys and furniture if an .ssh folder exists for user pi:
+if [ -d /home/pi/.ssh ]; then
+	rm -r /home/pi/.ssh
+fi
 
-# Delete "Dropbox-Uploader"
+# Reset sshd config back to default
+if [ -f /etc/ssh/sshd_config.ORIGINAL ]; then
+	mv /etc/ssh/sshd_config.ORIGINAL /etc/ssh/sshd_config
+fi
+
+# Reset JournalD config back to default:
+if [ -f /etc/systemd/journald.conf.ORIGINAL ]; then
+	mv /etc/systemd/journald.conf.ORIGINAL /etc/systemd/journald.conf
+fi
+
+# Delete * Dropbox-Uploader *
 if [ -d /home/pi/Dropbox-Uploader ]; then
 	rm -rf /home/pi/Dropbox-Uploader
 fi
@@ -294,25 +316,13 @@ if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
 fi
 
 
-### Uninstall any SystemD services and their related files:
-
+### Uninstall any SystemD Services and their related files:
 
 if [ -f /etc/systemd/system/set-cpu-affinity.service ]; then
 	systemctl disable set-cpu-affinity.service
 	rm /etc/systemd/system/set-cpu-affinity.service
 	rm /home/pi/scripts/set-cpu-affinity.sh
 fi
-
-
-
-# Uninstall automount service for USB flash storage:
-if [ -f /etc/systemd/system/media-pi.mount ]; then
-	systemctl stop media-pi.mount
-	systemctl disable media-pi.mount
-	rm /etc/systemd/system/media-pi.mount
-	rm /etc/systemd/system/media-pi.automount
-fi
-
 
 
 # Uninstall dropbox photo uploader SystemD service:
@@ -322,39 +332,90 @@ if [ -f /etc/systemd/system/Dropbox-Uploader.service ]; then
 	systemctl disable Dropbox-Uploader.timer
 	rm /etc/systemd/system/Dropbox-Uploader.service
 	rm /etc/systemd/system/Dropbox-Uploader.timer
+	rm /home/pi/scripts/Dropbox-Uploader.sh
 fi
 
 
 if [ -f /etc/systemd/system/email-camera-address.service ]; then
-	systemctl stop email-camera-address.service
 	systemctl disable email-camera-address.service
 	rm /etc/systemd/system/email-camera-address.service
+	rm /home/pi/scripts/email-camera-address.sh
+fi
+
+
+if [ -f /etc/systemd/system/motion-detection-camera-address.service ]; then
+	systemctl disable motion-detection-camera-address.service
+	rm /etc/systemd/system/motion-detection-camera-address.service
+	rm /home/pi/scripts/motion-detection-camera-address.sh
 fi
 
 
 if [ -f /etc/systemd/system/heat-alert.service ]; then
-	systemctl stop heat-alert.service
-	systemctl disable heat-alert.service
 	systemctl stop heat-alert.timer
 	systemctl disable heat-alert.timer
+	systemctl stop heat-alert.service
+	systemctl disable heat-alert.service
 	rm /etc/systemd/system/heat-alert.service
 	rm /etc/systemd/system/heat-alert.timer
+	rm /home/pi/scripts/heat-alert.sh
 fi
 
 
+if [ -f /etc/systemd/system/boot_service_order_dependencies_graph.service ]; then
+	systemctl disable boot_service_order_dependencies_graph.service
+	rm /etc/systemd/system/boot_service_order_dependencies_graph.service
+	rm /home/pi/scripts/boot_service_order_dependencies_graph.sh
+fi
 
-# Update the system to changes we made above to services:
+
+# Uninstall automount service for USB flash storage:
+if [ -f /etc/systemd/system/media-automount1.automount ]; then
+	systemctl stop media-automount1.automount
+	systemctl disable media-automount1.automount
+	rm /etc/systemd/system/media-automount1.mount
+	rm /etc/systemd/system/media-automount1.automount
+fi
+
+
+if [ -f /etc/systemd/system/media-automount2.automount ]; then
+	systemctl stop media-automount2.automount
+	systemctl disable media-automount2.automount
+	rm /etc/systemd/system/media-automount2.mount
+	rm /etc/systemd/system/media-automount2.automount
+fi
+
+if [ -f /etc/systemd/system/media-automount3.automount ]; then
+	systemctl stop media-automount3.automount
+	systemctl disable media-automount3.automount
+	rm /etc/systemd/system/media-automount3.mount
+	rm /etc/systemd/system/media-automount3.automount
+fi
+
+
+if [ -f /etc/systemd/system/media-automount4.automount ]; then
+	systemctl stop media-automount4.automount
+	systemctl disable media-automount4.automount
+	rm /etc/systemd/system/media-automount4.mount
+	rm /etc/systemd/system/media-automount4.automount
+fi
+
+
+if [ -f /home/pi/scripts/troubleshooting-helper.sh ]; then
+	rm /home/pi/scripts/troubleshooting-helper.sh
+fi
+
+
 systemctl daemon-reload
 
 
-# Delete scripts home-rolled scripts created by here-doc from previous runs of "pi-cam-config.sh" that SystemD services were calling:
+# Delete scripts home-rolled scripts created by here-doc from previous runs of*"pi-cam-config.sh* that SystemD services were calling:
 
 if [ -d /home/pi/scripts ]; then
 	rm -r /home/pi/scripts
 fi
 
-if [ -d /media/pi/logs ]; then
-	rm -r /media/pi/logs
+if [ -d /media/automount1/logs ]; then
+	rm -r /media/automount1/logs
 fi
 
 # Delete local config files not removed when their package was purged:
@@ -363,7 +424,6 @@ fi
 if [ -d /home/pi/.ssh ]; then
 	rm -R /home/pi/.ssh
 fi
-
 
 if [ -f /home/pi/.vimrc ]; then
 	rm /home/pi/.vimrc
@@ -379,21 +439,34 @@ fi
 
 
 
+# Remove any aliases created for sending roots mail in /etc/aliases:
+if [ -f /etc/aliases ]; then
+	sed  -i "/root: $SNMPSYSCONTACT/d" /etc/aliases
+fi
+
+
+# Revert CPU Affinity back to default:
+if [ -f /etc/systemd/system.conf.ORIGINAL ]; then
+	mv /etc/systemd/system.conf.ORIGINAL /etc/systemd/system.conf
+fi
+
+
 # Truncate any messages previously appended to MOTD by this script:
 truncate -s 0 /etc/motd
 
 
 
-### Revert any changes to config files:
+echo
+echo "$(tput setaf 5)******  Create a Scripts Directory:  ******$(tput sgr 0)"
+echo
 
-# Remove any aliases created for sending root's mail in /etc/aliases:
-if [ -f /etc/aliases ]; then
-	sed  -i '/root: $SNMPSYSCONTACT/d' /etc/aliases
+if [ ! -d /home/pi/scripts ]; then
+	mkdir /home/pi/scripts
+	chown pi:pi /home/pi/scripts
+	chmod 751 /home/pi/scripts
+	echo "Created /home/pi/scripts Directory"
 fi
 
-
-# Revert back to default CPU Affinity:
-sed -i "s/CPUAffinity=0 1 2/#CPUAffinity=1 2/" /etc/systemd/system.conf
 
 
 
@@ -407,7 +480,7 @@ echo "directories with frequent write activity will be mounted on USB storage"
 echo
 
 
-# The package *usbmount* will interfere with SystemD Auto-mounts which we will use for the USB Flash Drive where video and images are written locally to.
+# The package * usbmount * will interfere with SystemD Auto-mounts which we will use for the USB Flash Drive where video and images are written locally to.
 # We check to see if it is present and if test evalutes *true* we get rid of it
 if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
 	apt-get -qqy purge usbmount > /dev/null
@@ -415,7 +488,7 @@ if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
 fi
 
 
-# Disable automounting by default Filemanager "pcmanfm" if present: it steps on our SystemD automount which offers greater flexibility to change mount options:
+# Disable automounting by default Filemanager * pcmanfm * if present: it steps on our SystemD automount which offers greater flexibility to change mount options:
 if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then
 	sed -i "s/mount_removable=1/mount_removable=0/" /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
 fi
@@ -435,14 +508,31 @@ status-apt-cmd
 
 
 
-# SystemD mount file created below should be named same as its mountpoint as specified in "Where" directive below:
-cat <<EOF> /etc/systemd/system/media-pi.mount
+
+echo
+echo "$(tput setaf 5)******  Config USB Storage $(tput sgr 0)$(tput setaf 6)* Automount 1 *$(tput sgr 0)$(tput setaf 5):  ******$(tput sgr 0)"
+echo
+
+# Benefits of using SystemD automounts vs hard mounts:
+# https://www.theregister.co.uk/2016/08/22/systemd_adds_filesystem_mount_tool/
+
+if [ ! -d /media/automount1 ]; then
+	mkdir /media/automount1
+fi
+
+chmod 775 /media/automount1
+chown pi:pi /media/automount1
+
+# SystemD mount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount1.mount
 [Unit]
-Description=Create mount for USB storage for videos and images
+Description=Create automount1 mount for USB storage for videos and images
+Requires=local-fs.target
+After=local-fs.target
 
 [Mount]
 What=/dev/sda1
-Where=/media/pi
+Where=/media/automount1
 Type=exfat
 Options=defaults
 
@@ -451,50 +541,285 @@ WantedBy=multi-user.target
 
 EOF
 
+chmod 644 /etc/systemd/system/media-automount1.mount
 
-# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in "Where" directive below:
-cat <<EOF> /etc/systemd/system/media-pi.automount
+
+# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount1.automount
 [Unit]
-Description=Automount USB storage mount for videos and images
+Description=Automount USB storage mount for videos and images on /media/automount1
+Requires=local-fs.target
+After=local-fs.target
 
 [Automount]
-Where=/media/pi
+Where=/media/automount1
 DirectoryMode=0755
-TimeoutIdleSec=15
+TimeoutIdleSec=300
 
 [Install]
 WantedBy=multi-user.target
 
 EOF
 
+chmod 644 /etc/systemd/system/media-automount1.automount
+
+systemctl disable media-automount1.mount
+systemctl enable media-automount1.automount
 
 systemctl daemon-reload
-systemctl start media-pi.mount
+
+systemctl start media-automount1.automount
+
+echo
+echo 'Created media-automount1.automount'
+echo
 
 
-# After mounting USB Flash Drive we next test it for ExFAT formatting:
-if [ $(lsblk -f|grep sda1|awk '{print $2}') != 'exfat' ]; then
-	echo
-	echo "ERROR: ExFAT formatted USB flash drive REQUIRED to write video to"
-	echo "Format a USB Flash Drive for ExFAT and re-excute $0. Exiting script"
-	echo
-	exit
-else
-	echo
-	echo "ExFAT Formatted USB Flash Drive Found. Script will continue"
+
+
+echo
+echo "$(tput setaf 5)******  Config USB Storage $(tput sgr 0)$(tput setaf 3)* Automount 2 *$(tput sgr 0)$(tput setaf 5):  ******$(tput sgr 0)"
+echo
+
+
+if [ ! -d /media/automount2 ]; then
+	mkdir /media/automount2
+fi
+
+chmod 775 /media/automount2
+chown pi:pi /media/automount2
+
+# SystemD mount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount2.mount
+[Unit]
+Description=Create automount2 mount for USB storage for videos and images
+Requires=local-fs.target
+After=local-fs.target
+
+[Mount]
+What=/dev/sdb1
+Where=/media/automount2
+Type=exfat
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+chmod 644 /etc/systemd/system/media-automount2.mount
+
+
+# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount2.automount
+[Unit]
+Description=Automount USB storage mount for videos and images on /media/automount2
+Requires=local-fs.target
+After=local-fs.target
+
+[Automount]
+Where=/media/automount2
+DirectoryMode=0755
+TimeoutIdleSec=300
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+chmod 644 /etc/systemd/system/media-automount2.automount
+
+systemctl disable media-automount2.mount
+systemctl enable media-automount2.automount
+
+echo
+echo 'Created media-automount2.automount'
+echo
+
+
+
+
+echo
+echo "$(tput setaf 5)******  Config USB Storage $(tput sgr 0)$(tput setaf 1)* Automount 3 *$(tput sgr 0)$(tput setaf 5):  ******$(tput sgr 0)"
+echo
+
+
+if [ ! -d /media/automount3 ]; then
+	mkdir /media/automount3
+fi
+
+chmod 775 /media/automount3
+chown pi:pi /media/automount3
+
+# SystemD mount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount3.mount
+[Unit]
+Description=Create automount3 mount for USB storage for videos and images
+Requires=local-fs.target
+After=local-fs.target
+
+[Mount]
+What=/dev/sdc1
+Where=/media/automount3
+Type=exfat
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+chmod 644 /etc/systemd/system/media-automount3.mount
+
+
+# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount3.automount
+[Unit]
+Description=Automount USB storage mount for videos and images on /media/automount3
+Requires=local-fs.target
+After=local-fs.target
+
+[Automount]
+Where=/media/automount3
+DirectoryMode=0755
+TimeoutIdleSec=300
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+chmod 644 /etc/systemd/system/media-automount3.automount
+
+systemctl disable media-automount3.mount
+systemctl enable media-automount3.automount
+
+echo
+echo 'Created media-automount3.automount'
+echo
+
+
+
+
+echo
+echo "$(tput setaf 5)******  Config USB Storage $(tput sgr 0)$(tput setaf 4)* Automount 4 *$(tput sgr 0)$(tput setaf 5):  ******$(tput sgr 0)"
+echo
+
+
+if [ ! -d /media/automount4 ]; then
+	mkdir /media/automount4
+fi
+
+chmod 775 /media/automount4
+chown pi:pi /media/automount4
+
+# SystemD mount file created below should be named same as its mountpoint as specified in *Where* directive below:
+cat <<EOF> /etc/systemd/system/media-automount4.mount
+[Unit]
+Description=Create automount4 mount for USB storage for videos and images
+Requires=local-fs.target
+After=local-fs.target
+
+[Mount]
+What=/dev/sdd1
+Where=/media/automount4
+Type=exfat
+Options=defaults
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+chmod 644 /etc/systemd/system/media-automount4.mount
+
+
+# NOTE: SystemD automount file created below should be named same as its mountpoint as specified in "Where" directive below:
+cat <<EOF> /etc/systemd/system/media-automount4.automount
+[Unit]
+Description=Automount USB storage mount for videos and images on /media/automount4
+Requires=local-fs.target
+After=local-fs.target
+
+[Automount]
+Where=/media/automount4
+DirectoryMode=0755
+TimeoutIdleSec=300
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+chmod 644 /etc/systemd/system/media-automount4.automount
+
+systemctl disable media-automount4.mount
+systemctl enable media-automount4.automount
+
+systemctl daemon-reload
+
+echo
+echo 'Created media-automount4.automount'
+echo
+
+
+# Testing revealed where automounts were started where no block device was loaded in a USB port it was broke parts of script which followed.
+# So we only start automounts for additional (sda1 must load as the images and logs are stored on it) block devices if found:
+
+if [[ $(lsblk|grep sdb1) != '' ]]; then
+	systemctl start media-automount2.automount
 fi
 
 
-systemctl enable media-pi.mount
+if [[ $(lsblk|grep sdc1) != '' ]]; then
+	systemctl start media-automount3.automount
+fi
+
+
+if [[ $(lsblk|grep sdd1) != '' ]]; then
+	systemctl start media-automount4.automount
+fi
+
+
+
+
+echo
+echo "$(tput setaf 5)******  Check USB ExFAT Formatted Storage for Images Present:  ******$(tput sgr 0)"
+echo
+
+# Test a USB Flash Drive is present:
+if [[ $(ls /dev|grep sda1) != '' ]]; then
+	echo
+	echo 'Storage Found: Testing for ExFAT Formatting next'
+else
+	echo 'ERROR: No USB Flash Storage Found to Write Images to.'
+	echo 'Please insert an ExFAT formatted USB Flash Drive and re-execute this script'
+	echo 'Script exiting.'
+	exit
+fi
+
+
+# Test the USB Flash Drive formatted for ExFAT:
+if [ $(lsblk -f|grep sda1|awk '{print $2}') = 'exfat' ]; then
+	echo
+	echo 'Storage is formatted for ExFAT. Script will continue'
+	echo
+else
+	echo
+	echo 'ERROR: ExFAT formatted USB flash drive REQUIRED to write video to'
+	echo "Format a USB Flash Drive for ExFAT and re-excute $0. Exiting script"
+	echo
+	exit
+fi
 
 
 # Create a folder on the USB flash storage to write our persistent logs to.
 # We do this to avoid abusing the MicroSD card housing the OS with frequent writes
-if [ ! -d /media/pi/logs ]; then
-	mkdir /media/pi/logs
-	chmod 751 /media/pi/logs
+if [ ! -d /media/automount1/logs ]; then
+	mkdir /media/automount1/logs
+	chmod 751 /media/automount1/logs
 else
-	echo "Unable to create directory /media/pi/logs on USB Flash Storage"
+	echo 'Directory /media/automount1/logs already exists on USB Flash Storage'
 fi
 
 
@@ -523,7 +848,7 @@ echo
 echo "$(tput setaf 5)****** SET BOOT PARAMS:  ******$(tput sgr 0)"
 echo
 
-# raspian-config: How to interface from the CLI:
+# raspian-config: How to interface from CLI:
 # https://raspberrypi.stackexchange.com/questions/28907/how-could-one-automate-the-raspbian-raspi-config-setup
 
 # Clear any boot params added during a previous build and then add each back with most current value set:
@@ -537,25 +862,26 @@ echo 'disable_camera_led=1' >> /boot/config.txt
 echo "Determine if Pi is a Zero W or NOT to set GPU memory value appropriately:"
 
 if [ $(cat /proc/device-tree/model | awk '{ print $3 }') != 'Zero' ]; then
-	echo "NOT PI ZERO!"
-	echo "Setting GPU Memory to 128"
+	echo 'NOT PI ZERO!'
+	echo 'Setting GPU Memory to 128'
 	sed -i '/gpu_mem=128/d' /boot/config.txt
 	echo 'gpu_mem=128' >> /boot/config.txt
 else
-	echo "PI ZERO"
+	echo 'PI ZERO'
 #	echo "Setting GPU Memory to 512"
 #	sed -i '/gpu_mem=512/d' /boot/config.txt
 #	echo 'gpu_mem=512' >> /boot/config.txt
 fi
 
 echo
-
-echo "Camera enabled"
-echo "Camera LED light disabled"
+echo 'Camera ENABLED'
+echo
+echo 'Camera LED light DISABLED'
+echo
 
 sed -i '/disable_splash=1/d' /boot/config.txt
 echo 'disable_splash=1' >> /boot/config.txt
-echo "Disabled boot splash screen so we can see errors while host is rising up."
+echo 'Boot Splash Screen DISABLED'
 
 
 
@@ -570,15 +896,16 @@ bcm2835-v4l2
 
 EOF
 
-echo "File created to automatically load camera driver on boot:"
+echo 'File created to automatically load camera driver on boot:'
 echo "/etc/modules-load.d/bcm2835-v4l2.conf"
 
 # Rebuild Kernel modules dependencies map
 depmod -a
 
 # Load Camera Kernel Module
+# Will automatically load on reboot at end of script- modprobe command disabled
 #modprobe bcm2835-v4l2
-# Will automatically load on the reboot at the end of the script
+
 
 
 
@@ -586,8 +913,8 @@ echo
 echo "$(tput setaf 5)****** Configure Logging:  ******$(tput sgr 0)"
 echo
 
-echo "Default System log data is non-persistent. It exists im memory and is lost on every reboot"
-echo "Logging will be made persistent by writing it to disk in lieu of memory"
+echo 'Default System log data is non-persistent. It exists im memory and is lost on every reboot'
+echo 'Logging will be made persistent by writing it to disk in lieu of memory'
 
 cp -p /etc/systemd/journald.conf /etc/systemd/journald.conf.ORIGINAL
 
@@ -619,15 +946,68 @@ echo
 # Re-Read changes made to /etc/systemd/journald.conf
 systemctl restart systemd-journald
 
-echo "LOGGING NOTES:"
-echo "--------------"
-echo "1. Although SystemD logging has been changed to persistent by writing the logs to disk"
-echo "verbosity was also reduced to limit the writes to bare minimum to avoid hammering the MicroSD card."
+echo 'LOGGING NOTES:'
+echo '--------------'
+echo '1. Although SystemD logging has been changed to persistent by writing the logs to disk'
+echo 'verbosity was also reduced to limit writes to bare minimum to avoid hammering MicroSD card.'
 echo
-echo "2. Application log paths have been changed to /media/pi/logs on the USB storage to limit abuse to the MicroSD card."
-echo "Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card"
+echo '2. Application log paths have been changed to /media/automount1/logs on USB storage to limit abuse to MicroSD card.'
+echo 'Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card'
 echo
 echo "3. Changes in $(tput setaf 1)RED$(tput sgr 0) can be reverted in: /etc/systemd/journald.conf"
+
+
+
+
+
+echo
+echo "$(tput setaf 5)****** Create Graph of Dependent Relationships Between Services on Boot:  ******$(tput sgr 0)"
+echo
+
+
+echo 'To see a graph of dependent relationships on boot to troubleshoot broken scripts or services go to:'
+echo "     $(tput setaf 5)/media/automount1/logs/boot_service_order_dependencies_graph_Date.svg$(tput sgr 0)"
+echo
+
+cat <<'EOF'> /home/pi/scripts/boot_service_order_dependencies_graph.sh
+#!/bin/bash
+
+
+# When iteratively testing service dependency startup ordering we make changes to .service file *Unit* directives *After=* and *Wanted=* and reboot.
+# We only need to retain a few copies- here 1 hours worth- of these plots for comparative purposes until we determine the correct dependent ordering:
+find /media/automount1/logs/ -type f -mmin +60 -name '*.svg' -execdir rm -- '{}' \;
+
+# Create a Plot of dependent relationships between services on boot to aid in troubleshooting broken scripts and services
+systemd-analyze plot > /media/automount1/logs/boot_service_order_dependencies_graph_`date +%Y-%m-%d_%H-%M-%S`.svg
+
+EOF
+
+
+chmod 700 /home/pi/scripts/boot_service_order_dependencies_graph.sh
+chown pi:pi /home/pi/scripts/boot_service_order_dependencies_graph.sh
+
+
+cat <<'EOF'> /etc/systemd/system/boot_service_order_dependencies_graph.service
+[Unit]
+Description=Create a Plot of dependent relationships between services on boot to aid in troubleshooting broken scripts and services
+After=multi-user.target
+
+[Service]
+User=pi
+Group=pi
+Type=oneshot
+ExecStart=/home/pi/scripts/boot_service_order_dependencies_graph.sh
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+
+
+chmod 644 /etc/systemd/system/boot_service_order_dependencies_graph.service
+
+systemctl enable boot_service_order_dependencies_graph.service
+
 
 
 
@@ -644,7 +1024,7 @@ until apt-get -qqy update > /dev/null
 		echo
 	done
 
-echo "Package Index Updated"
+echo 'Package Index Updated'
 echo
 
 
@@ -652,11 +1032,11 @@ echo
 echo "$(tput setaf 5)****** PACKAGE INSTALLATION:  ******$(tput sgr 0)"
 echo
 
-echo "All the following packages could be installed in a single command but are done separately"
-echo "both to illustrate what is being installed and to make it easier to change packages by functionality"
+echo 'The following packages could be installed in a single command but are done separately both to'
+echo 'illustrate what is being installed and to make it easier to change packages by functionality'
 echo
-echo '"apt-get --install-recommends install packageName" could be used to install recommended pkgs but this is a blunt instrument that frequently installs tons of crap.'
-echo 'So only selective recommended packages (per "apt-cache show packageName") have been added to each "apt-get install" command where appropriate'
+echo '*apt-get --install-recommends install packageName* could be used to install recommended pkgs but this is a blunt instrument that frequently installs tons of crap.'
+echo 'So only selective recommended packages (per *apt-cache show packageName*) have been added to each *apt-get install* command where appropriate'
 echo
 # debconf-utils is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
 if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
@@ -685,7 +1065,7 @@ fi
 status-apt-cmd
 
 
-# Ensure git is installed: required to grab repos using * git clone *"
+# Ensure git is installed: required to grab repos using * git clone *
 if [[ $(dpkg -l | grep git) = '' ]]; then
 	until apt-get -qqy install git > /dev/null
 	do
@@ -697,8 +1077,8 @@ if [[ $(dpkg -l | grep git) = '' ]]; then
 fi
 
 
-# * motion * is the package used by camera to capture video evidence
-# Note: ffmpeg is not a dependency of the motion package but shown as a "recommends" so we will install it
+# * motion * is package used by camera to capture video evidence
+# Note: ffmpeg is not a dependency of the motion package but shown as a *recommends* so we will install it
 if [[ $(dpkg -l | grep motion) = '' ]]; then
 	until apt-get -qqy install motion ffmpeg > /dev/null
 	do
@@ -712,23 +1092,9 @@ fi
 status-apt-cmd
 
 
-# "msmtp" is used to relay motion detection email alerts:
+# * msmtp * is used to relay motion detection email alerts:
 if [[ $(dpkg -l | grep msmtp) = '' ]]; then
 	until apt-get -qqy install msmtp > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# Pi user sends scripted alerts with mutt
-if [[ $(dpkg -l | grep mutt) = '' ]]; then
-	until apt-get -qqy install mutt > /dev/null
 	do
 		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
@@ -784,14 +1150,21 @@ status-apt-cmd
 
 
 echo
-echo "Below packages not required for configuration as a Motion Detection Camera"
-echo "but included as they are useful tools to have on the sysatem:"
+echo 'Below packages not required for configuration as a Motion Detection Camera'
+echo 'but included as they are useful tools to have on the system:'
 echo
-echo "For info about any of the packages: $(tput setaf 1)sudo apt-cache show packagename$(tput sgr 0)"
+echo 'For info about a particular package: * sudo apt-cache show packagename *'
 echo
 
 
-# apt-file is a package searching tool.  Handy addition to any Debian-based system
+if [[ $(dpkg -l | grep mutt) = '' ]]; then
+	apt-get -qqy install mutt > /dev/null
+	apt update > /dev/null
+	status-apt-cmd
+fi
+
+
+# apt-file is a package searching tool.  Useful addition to any Debian-based system
 if [[ $(dpkg -l | grep apt-file) = '' ]]; then
 	apt-get -qqy install apt-file > /dev/null
 	apt update > /dev/null
@@ -800,7 +1173,7 @@ fi
 
 
 
-# netselect-apt analyzes available mirrors by running some tests and then sets fastest one for you
+# *netselect-apt* analyzes available mirrors by running some tests and then sets fastest one for you
 # Great tool but has firewall dependencies on UDP traceroute and ICMP it uses for testing latency so decided not to configure it during the Pi-Cam config
 # To MANUALLY configure netselect-apt:
 #      sudo netselect-apt --arch armhf --nonfree --outfile /etc/apt/sources.list
@@ -810,8 +1183,6 @@ if [[ $(dpkg -l | grep netselect-apt) = '' ]]; then
 	apt update > /dev/null
 	status-apt-cmd
 fi
-
-
 
 
 # *libimage-exiftool-perl* used to get metadata from videos and images from the CLI. Top-notch tool
@@ -906,7 +1277,7 @@ if [[ $(dpkg -l | grep bc) = '' ]]; then
 fi
 
 
-# "expect" is a tool for automating interactive processes in scripts by providing an answer to a question that would break unattended execution of a script
+# *expect* is a tool for automating interactive processes in scripts by providing an answer to a question that would break unattended execution of a script
 if [[ $(dpkg -l | grep expect) = '' ]]; then
 	apt-get -qqy install expect > /dev/null
 	status-apt-cmd
@@ -941,50 +1312,38 @@ if [[ $(systemctl list-unit-files|grep systemd-timesyncd.service|awk '{print $2}
         systemctl start systemd-timesyncd
 fi
 
-# Check if UDP 123 is open to allow the Pi to update its time and warn if not:
-if [[ $(nmap -sU -p 123 0.pool.ntp|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1) != 'open' ]]; then
-        echo
-        echo "$(tput setaf 5)WARNING: Port UDP 123 CLOSED:$(tput sgr 0) host has no external connectivity to NTP servers)"
-        echo
-fi
 
-
-# If file /etc/systemd/timesyncd.conf.ORIGINAL exists then use it to overwrite the edited config and make backup of it again:
-if [ -f /etc/systemd/timesyncd.conf.ORIGINAL ]; then
-        mv /etc/systemd/timesyncd.conf.ORIGINAL /etc/systemd/timesyncd.conf
-        cp -p /etc/systemd/timesyncd.conf /etc/systemd/timesyncd.conf.ORIGINAL
-else
-        cp -p /etc/systemd/timesyncd.conf /etc/systemd/timesyncd.conf.ORIGINAL
-fi
-
+# Backup default timesyncd.conf config file before we start modifying it
+cp -p /etc/systemd/timesyncd.conf /etc/systemd/timesyncd.conf.ORIGINAL
 
 sed -i "s/#NTP=/NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org/" /etc/systemd/timesyncd.conf
 sed -i "s/#FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org/FallbackNTP=0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org/" /etc/systemd/timesyncd.conf
 
-# Below (3) directives absent from Raspbian default timesyncd.conf config file as of  Raspbian v9.6 Stretch.
+# Below (3) directives absent from Raspbian default timesyncd.conf config file as of Raspbian v9.6 Stretch.
 # Check to see if they were written previously by script and if not whack them in:
 #
 if [[ $(grep "RootDistanceMaxSec" /etc/systemd/timesyncd.conf) = '' ]]; then
-        # "RootDistanceMaxSec": 5 seconds is default value
+        # *RootDistanceMaxSec*: 5 seconds is default value
         echo "RootDistanceMaxSec=5" >> /etc/systemd/timesyncd.conf
 fi
 
 if [[ $(grep "PollIntervalMinSec" /etc/systemd/timesyncd.conf) = '' ]]; then
-        # "PollIntervalMinSec": 32 seconds is default value NOTE: Cannot be less than 16 seconds
+        # *PollIntervalMinSec*: 32 seconds is default value NOTE: Cannot be less than 16 seconds
         echo "PollIntervalMinSec=32" >> /etc/systemd/timesyncd.conf
 fi
 
 if [[ $(grep "PollIntervalMaxSec" /etc/systemd/timesyncd.conf) = '' ]]; then
-        # "PollIntervalMaxSec": 2048 seconds is default value NOTE: Cannot be less than value set for "PollIntervalMinSec"
+        # *PollIntervalMaxSec*: 2048 seconds is default value NOTE: Cannot be less than value set for *PollIntervalMinSec*
         echo "PollIntervalMaxSec=2048" >> /etc/systemd/timesyncd.conf
 fi
 
 
-# Re-read config with the new changes:
+# Re-read config with our changes:
 systemctl daemon-reload
-
+echo 'Output of *timedatectl status* Follows:'
+echo
 timedatectl status
-
+echo
 
 
 
@@ -992,25 +1351,37 @@ echo
 echo "$(tput setaf 5)****** USER CONFIGURATION: ******$(tput sgr 0)"
 echo
 
+echo
+echo 'Show user pi * DEFAULT * group memberships:'
+echo '*groups pi* Output:'
+groups pi
+echo
 
-if [ ! -d /home/pi/scripts ]; then
-	mkdir /home/pi/scripts
-	chown pi:pi /home/pi/scripts
-	chmod 751 /home/pi/scripts
-fi
+
+echo
+echo 'Add supplementary group *motion* to user *pi* group memberships: *usermod -a -G motion pi*'
+usermod -a -G motion pi
+echo
+
+echo
+echo 'Show user pi * NEW * group memberships:'
+echo '*groups pi* Output:'
+groups pi
+echo
+echo
 
 
-echo 'Set user bash histories to unlimited length:'
+echo 'Set user bash histories to unlimited length'
 sed -i "s/HISTSIZE=1000/HISTSIZE=/" /home/pi/.bashrc
 sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
 echo
 
 
-echo "Changing default password *raspberry* for user *pi*"
+echo 'Changing default password *raspberry* for user *pi*'
 echo "pi:$PASSWDPI"|chpasswd
 
-# Set a password for user *root*
-echo "Set passwd for user *root*"
+echo
+echo 'Set passwd for user * root *'
 echo "root:$PASSWDROOT"|chpasswd
 
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
@@ -1034,7 +1405,7 @@ fi
 
 echo
 echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
-echo "Added Your Public Key to 'authorized_keys' file"
+echo "Added Your Public Key to * authorized_keys * file"
 echo
 
 cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
@@ -1065,14 +1436,14 @@ echo
 diff --color /etc/ssh/sshd_config /etc/ssh/sshd_config.ORIGINAL
 echo
 echo
-# No need for autologin now that we enabled Public Key Access so we disable it:
+# Disable autologin now that Public Key Access enabled:
 sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
 systemctl disable autologin@.service
 echo
 echo "Disabled autologin"
 echo
 
-echo "Change default editor from crap *nano* to a universal Unix standard *vi*"
+echo "Change default editor from crap * nano * to a universal Unix standard * vi *"
 echo "BEFORE Change:"
 update-alternatives --get-selections|grep editor
 echo
@@ -1087,7 +1458,7 @@ fi
 
 cp /usr/share/vim/vimrc /home/pi/.vimrc
 
-# Below sed expression stops vi from going to "visual" mode when one tries to copy text GRRRRR!
+# Below sed expression stops vi from going to * visual * mode when one tries to copy text
 sed -i 's|^"set mouse=a.*|set mouse-=a|' /home/pi/.vimrc
 sed -i 's|^"set mouse=a.*|set mouse-=a|' /etc/vim/vimrc
 
@@ -1110,7 +1481,6 @@ EOF
 
 chown pi:pi /home/pi/.muttrc
 chmod 600 /home/pi/.muttrc
-
 
 
 
@@ -1148,14 +1518,13 @@ sed -i "s/sysContact     Me <me@example.org>/sysContact     $SNMPSYSCONTACT/" /e
 systemctl stop snmpd.service
 
 # Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
-# "-A" => AUTHENTICATION password and "-X" => ENCRYPTION password
+# * -A * => AUTHENTICATION password and * -X * => ENCRYPTION password
 net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
 echo
 
-# Append a note after the ACCESS CONTROL header in snmpd.conf detailing where our v3 SNMP credentials live to avoid future confusion:
+# *APPEND* a note after the ACCESS CONTROL header in snmpd.conf detailing where our v3 SNMP credentials live to avoid future confusion:
 sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 Access Token Added by net-snmp-config to /var/lib/snmp/snmpd.conf by pi-cam-config.sh script' /etc/snmp/snmpd.conf
 sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 User Added by net-snmp-config to /usr/share/snmp/snmpd.conf by pi-cam-config.sh script' /etc/snmp/snmpd.conf
-
 
 
 systemctl enable snmpd.service
@@ -1163,8 +1532,8 @@ systemctl start snmpd.service
 
 echo
 
-echo "Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):"
-echo "---------------------------------------------------------------------------------------------"
+echo 'Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):'
+echo '---------------------------------------------------------------------------------------------'
 snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
 echo
 echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
@@ -1176,7 +1545,7 @@ echo
 echo
 echo "$(tput setaf 5)****** DROPBOX Storage Configuration:  ******$(tput sgr 0)"
 echo
-echo "https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md"
+echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md'
 echo
 
 # *Dropbox-Uploader* facilitates copying images from local USB Flash storage to cloud safeguarding evidence from theft or destruction of Pi-Cam
@@ -1198,10 +1567,10 @@ chown -R pi:pi /home/pi/Dropbox-Uploader
 cat <<EOF> /home/pi/scripts/Dropbox-Uploader.sh
 #!/bin/bash
 
-# Script searches /media/pi for jpg and mp4 files and pipes those it finds to xargs which
+# Script searches /media/automount1 for jpg and mp4 files and pipes those it finds to xargs which
 # first uploads them to dropbox and then deletes them ensuring storage does not fill to 100 percent
 
-find /media/pi -name '*.jpg' -print0 -o -name '*.mp4' -print0 | xargs -d '/' -0 -I % sh -c '/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload % . && rm %'
+find /media/automount1 -name '*.jpg' -print0 -o -name '*.mp4' -print0 | xargs -d '/' -0 -I % sh -c '/home/pi/Dropbox-Uploader/dropbox_uploader.sh upload % . && rm %'
 
 EOF
 
@@ -1227,6 +1596,8 @@ WantedBy=multi-user.target
 EOF
 
 
+chmod 644 /etc/systemd/system/Dropbox-Uploader.service
+
 
 cat <<EOF> /etc/systemd/system/Dropbox-Uploader.timer
 [Unit]
@@ -1242,6 +1613,9 @@ WantedBy=timers.target
 EOF
 
 
+chmod 644 /etc/systemd/system/Dropbox-Uploader.timer
+
+
 systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
@@ -1251,12 +1625,12 @@ systemctl enable Dropbox-Uploader.timer
 echo
 echo "$(tput setaf 5)****** Camera Software *MOTION* Configuration  ******$(tput sgr 0)"
 echo
-echo "Further Info: https://motion-project.github.io/motion_config.html"
+echo 'Further Info: https://motion-project.github.io/motion_config.html'
 echo
 
 # Configure *BASIC* Settings (just enough to get things generally working):
 
-# "on_event_start:" First sed expression configures the Motion Detection Alerts to include the IP address in the subject of the email
+# *on_event_start:* First sed expression configures the Motion Detection Alerts to include the IP address in the subject of the email
 # The second (commented) sed expression configures the Motion Detection Alerts to send the HOSTNAME in the Subject line of the email.
 sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 #sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
@@ -1267,7 +1641,7 @@ sed -i 's/; webcontrol_authentication username:password/webcontrol_authenticatio
 
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
-sed -i 's|logfile /var/log/motion/motion.log|logfile /media/pi/logs/motion.log|' /etc/motion/motion.conf
+sed -i 's|logfile /var/log/motion/motion.log|logfile /media/automount1/logs/motion.log|' /etc/motion/motion.conf
 sed -i "s/log_level 6/log_level $LOGLEVEL/" /etc/motion/motion.conf
 sed -i "s/rotate 0/rotate $ROTATE/" /etc/motion/motion.conf
 sed -i "s/width 320/width $WIDTH/" /etc/motion/motion.conf
@@ -1293,7 +1667,7 @@ sed -i "s/webcontrol_port 8080/webcontrol_port $WEBCONTROLPORT/" /etc/motion/mot
 
 
 
-echo "Configure Motion to run by daemon"
+echo 'Configure Motion to run by daemon'
 # Remark the path is different to the target of foregoing sed expressions
 sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
 
@@ -1317,7 +1691,7 @@ defaults
 auth           on
 tls            on
 tls_starttls   on
-logfile        /media/pi/logs/msmtp.log
+logfile        /media/automount1/logs/msmtp.log
 
 # For TLS support uncomment either tls_trustfile_file directive *OR* tls_fingerprint directive: NOT BOTH
 # Note: tls_trust_file wont work with self-signed certs: use the tls_fingerprint directive in lieu
@@ -1347,14 +1721,17 @@ account default : $SMTPRELAYFQDN
 EOF
 
 
-echo
-echo "MSMTP config file /etc/msmtprc created"
 
 echo
-echo "$(tput setaf 1)If port TCP25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file$(tput sgr 0)"
-echo "$(tput setaf 1)It will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server$(tput sgr 0)"
+echo 'MSMTP config file /etc/msmtprc created'
+
 echo
- 
+echo '*IF* port TCP/25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file'
+echo 'It will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server'
+echo
+echo 'If you do *NOT* receive alerts from a self-hosted SMTP mail relay check the * tls_fingerprint * directive for a fingerprint in /etc/msmtprc'
+echo
+
 
 
 
@@ -1362,33 +1739,35 @@ echo
 echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and Heat  ******$(tput sgr 0)"
 echo
 
-# Apple offers means to identify the IP of a device tethered to an iPhone HotSpot.
-# This systemd service emails camera IP address assigned by a HotSpot to email specified in variable "SNMPSYSCONTACT"
-# If you want to change the email address this notification (or any other system alert) is sent to edit "sysContact" in /etc/snmp/snmpd.conf directly.
+# Apple offers no means to identify the IP of a device tethered to an iPhone HotSpot.
+# This systemd service emails camera IP address assigned by a HotSpot to email specified in variable *SNMPSYSCONTACT*
+# If you want to change the email address this notification (or any other system alert) is sent to edit *sysContact* in /etc/snmp/snmpd.conf directly.
 # Note: email alerts will only work if a valid mail relay with correct credentials has been specified.
 
 
 cat <<'EOF'> /home/pi/scripts/email-camera-address.sh
 #!/bin/bash
 
-# Redirect output of "set -x" to a log to capture any potential errors as script executed as a SystemD Service
+# Redirect output of * set -x * to a log to capture any potential errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
-exec {varFD}>/media/pi/logs/script-email-camera-address.log
+exec {varFD}>/media/automount1/logs/script-email-camera-address.log
 BASH_XTRACEFD=$varFD
 
 set -x
 
+# A * sleep * has been inserted before variable declaration section to allow * CAMERAIPV4= * and * CAMERAIPV6= * to populate correctly AFTER networking has settled
+# The SystemD Service target * Requires=network-online.target * this script has a dependency on is met before the network has fully risen up.  Known bug:
+# https://github.com/coreos/bugs/issues/1966
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+sleep 10
 
-# The SystemD multi-user target allows script to execute before networking is finished which breaks it
-# A "sleep" has been inserted before variable declaration section to allow "CAMERAIPV4=" and "CAMERAIPV6=" to populate correctly AFTER networking has settled
-sleep 60
 
 SCRIPTLOCATION="$(readlink -f $0)"
 
-#CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
+#CAMERALOCATION: sed expression matches * sysLocation * all spaces after it and only prints everything AFTER the match: the human readable location
 CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit alert recipient in below variable. To change alert address edit value of "sysContact" directly in /etc/snmp/snmpd.conf
+# Do *NOT* edit alert recipient in below variable. To change alert address edit value of * sysContact * directly in /etc/snmp/snmpd.conf
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: they are self-populating and resolve to the ip address of this host
@@ -1412,7 +1791,8 @@ chown pi:pi /home/pi/scripts/email-camera-address.sh
 cat <<'EOF'> /etc/systemd/system/email-camera-address.service
 [Unit]
 Description=Email IP Address of Camera on Boot
-#Before=
+Requires=network-online.target
+After=motion.service
 
 [Service]
 User=pi
@@ -1426,6 +1806,8 @@ WantedBy=multi-user.target
 EOF
 
 
+chmod 644 /etc/systemd/system/email-camera-address.service
+
 systemctl enable email-camera-address.service
 
 
@@ -1434,20 +1816,26 @@ systemctl enable email-camera-address.service
 cat <<'EOF'> /home/pi/scripts/motion-detection-camera-address.sh
 #!/bin/bash
 
-# Redirect output of "set -x" to a log to capture any potential errors as script executed as a SystemD Service
+# Redirect output of * set -x * to a log to capture any potential errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
-exec {varFD}>/media/pi/logs/script-motion-detection-camera-address.log
+exec {varFD}>/media/automount1/logs/script-motion-detection-camera-address.log
 BASH_XTRACEFD=$varFD
 
 set -x
 
+# A * sleep * has been inserted before variable declaration section to allow * CAMERAIPV4= * and * CAMERAIPV6= * to populate correctly AFTER networking has settled
+# The SystemD Service target * Requires=network-online.target * this script has a dependency on is met before the network has fully risen up.  Known bug:
+# https://github.com/coreos/bugs/issues/1966
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+sleep 10
+
 
 SCRIPTLOCATION="$(readlink -f $0)"
 
-#CAMERALOCATION: sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
+#CAMERALOCATION: sed expression matches * sysLocation * all spaces after it and only prints everything AFTER the match: the human readable location
 CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit alert recipient in below variable. To change alert address edit value of "sysContact" directly in /etc/snmp/snmpd.conf
+# Do *NOT* edit alert recipient in below variable. To change alert address edit value of * sysContact * directly in /etc/snmp/snmpd.conf
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: they are self-populating and resolve to the ip address of this host
@@ -1466,7 +1854,9 @@ sed -i "/on_event_start/d" /etc/motion/motion.conf
 fi
 
 
-echo 'on_event_start echo '"\"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SYSCONTACT\""'' >> /etc/motion/motion.conf
+echo 'on_event_start echo '"\"Subject: Motion Detected $CAMERAIPV4\""' | msmtp '"\"$SYSCONTACT\""'' >> /etc/motion/motion.conf
+
+systemctl restart motion
 
 EOF
 
@@ -1480,11 +1870,12 @@ chown pi:pi /home/pi/scripts/motion-detection-camera-address.sh
 cat <<'EOF'> /etc/systemd/system/motion-detection-camera-address.service
 [Unit]
 Description=Update IP of Camera in motion.conf for notify email generated on motion detection events ensuring if DHCP IP changes it is automatically updated every boot
-#Before=
+Requires=network-online.target
+After=motion.service
 
 [Service]
-User=pi
-Group=pi
+User=root
+Group=root
 Type=oneshot
 ExecStart=/home/pi/scripts/motion-detection-camera-address.sh
 
@@ -1493,6 +1884,7 @@ WantedBy=multi-user.target
 
 EOF
 
+chmod 644 /etc/systemd/system/motion-detection-camera-address.service
 
 systemctl enable motion-detection-camera-address.service
 
@@ -1503,16 +1895,22 @@ cat <<'EOF'> /home/pi/scripts/heat-alert.sh
 #!/bin/bash
 
 
-# Redirect output of "set -x" to a log to capture any errors as script executed as a SystemD Service
+# Redirect output of * set -x * to a log to capture any errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
-exec {varFD}>/media/pi/logs/script-heat-alert.log
+exec {varFD}>/media/automount1/logs/script-heat-alert.log
 BASH_XTRACEFD=$varFD
 
 set -x
 
+# A * sleep * has been inserted before variable declaration section to allow * CAMERAIPV4= * and * CAMERAIPV6= * to populate correctly AFTER networking has settled
+# The SystemD Service target * Requires=network-online.target * this script has a dependency on is met before the network has fully risen up.  Known bug:
+# https://github.com/coreos/bugs/issues/1966
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+sleep 10
+
 
 # Edit values in variables below rather than editing script itself to avoid introducing a fault
-# NOTE1: Do NOT restart service after changing a threshhold value- script is fired-off anew every 5 minutes by the SystemD timer "heat-alert.timer".
+# NOTE1: Do NOT restart service after changing a threshhold value- script is fired-off anew every 5 minutes by the SystemD timer * heat-alert.timer *.
 # NOTE2: Temperature units are in CELCIUS
 # NOTE3: Baseline temperature of a cold Pi at boot is about 35C
 HEATTHRESHOLDWARN='60'
@@ -1521,11 +1919,11 @@ HEATTHRESHOLDSHUTDOWN='75'
 
 SCRIPTLOCATION="$(readlink -f $0)"
 
-#CAMERALOCATION: Do *NOT edit this variable directly: edit value of "sysLocation" in /etc/snmp/snmpd.conf which this variable pulls the value from
-# sed expression matches "sysLocation" all spaces after it and only prints everything AFTER the match: the human readable location
+#CAMERALOCATION: Do *NOT edit this variable directly: edit value of * sysLocation * in /etc/snmp/snmpd.conf which this variable pulls the value from
+# sed expression matches * sysLocation * all spaces after it and only prints everything AFTER the match: the human readable location
 CAMERALOCATION="$(sudo sed -n 's/sysLocation.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
-# Do *NOT* edit alert recipient in below variable. To change alert address edit value of "sysContact" directly in /etc/snmp/snmpd.conf
+# Do *NOT* edit alert recipient in below variable. To change alert address edit value of * sysContact * directly in /etc/snmp/snmpd.conf
 SYSCONTACT="$(sudo sed -n 's/sysContact.[[:space:]]*//p' /etc/snmp/snmpd.conf)"
 
 # Do *NOT* edit below variables: these are self-populating and resolve to the ip address of this host
@@ -1533,7 +1931,7 @@ CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
 
 
-# NOTE: A delay ("sleep 20") is inserted before shutdown where HEATTHRESHOLDSHUTDOWN tests TRUE to a) allow time to send the notification and
+# NOTE: A delay (* sleep 20 *) is inserted before shutdown where HEATTHRESHOLDSHUTDOWN tests TRUE to a) allow time to send the notification and
 # b) to give you time to edit "/home/pi/scripts/heat-alert.sh" to increase value if set too low causing Pi to just reboot in a loop
 
 if [[ $(/opt/vc/bin/vcgencmd measure_temp|cut -d '=' -f2|cut -d '.' -f1) -gt $HEATTHRESHOLDWARN ]]; then
@@ -1556,6 +1954,8 @@ chown pi:pi /home/pi/scripts/heat-alert.sh
 cat <<'EOF'> /etc/systemd/system/heat-alert.service
 [Unit]
 Description=Email Heat Alerts
+Requires=network-online.target
+After=motion.service
 
 [Service]
 User=pi
@@ -1568,6 +1968,8 @@ WantedBy=multi-user.target
 
 EOF
 
+
+chmod 644 /etc/systemd/system/heat-alert.service
 
 systemctl enable heat-alert.service
 
@@ -1587,6 +1989,7 @@ WantedBy=timers.target
 EOF
 
 
+chmod 644 /etc/systemd/system/heat-alert.timer
 
 systemctl enable heat-alert.timer
 systemctl list-timers --all
@@ -1604,175 +2007,301 @@ cat <<'EOF'> /home/pi/scripts/troubleshooting-helper.sh
 #!/bin/bash
 echo
 echo
-echo "The Pi-Cam configured by this script has several dependencies which can make isolating the cause of a fault more challenging."
-echo "To help you quickly drill-down potential causes of a fault I wrote this script which provides a structured troubleshooting approach."
-echo "Please note these tests/tools are not exhaustive but merely a starting point to provide some baseline info to analyze."
+echo 'To help you quickly drill-down potential causes of a fault I wrote this script which provides a structured troubleshooting approach.'
+echo 'Please note these tests/tools are not exhaustive but merely a starting point to provide some baseline info to analyze.'
 echo
 echo
-echo "########  HARDWARE ANALYSIS:  ########"
+
+
+echo '########  COMMON DEVELOPMENT ERRORS:  ########'
+
+echo
+echo 'If you broke the build hacking my script tweaking it a few tips to help you unbreak it:'
+echo
+echo 'As a *GENERAL* rule begin hunting for dev errors at the point just above where the script went haywire.'
+echo
+echo 'A few useful git commands to investigate development changes which caused a break:
+echo
+echo 'Show current UNCOMMITTED changes against last COMMITTED change to a named file:'
+echo '     git diff pi-cam-config.sh'
+echo
+echo 'Show last 2 logged COMMITTED changes:'
+echo '     git log -p -2'
+echo
+echo 'Some Common Dev Errors to Look For:'
+echo '     - Ommitted closing single or double quotes encasing expressions'
+echo '     - Ommitted *EOF* ending a Here-Doc or a closing *fi* on an *if* conditional expression'
+echo '     - Variables not prefaced with dollar signs or being encased in single quotes which stop their expansion'
+echo
+echo
+
+
+echo '########  CHANGE ANALYSIS:  ########'
+echo
+echo 'If a system previously running correctly is now in error- barring bugs or resourcing issues- likely had help getting broken'
+echo 'Too frequently the cause of a fault is poorly planned/tested changes.'
+echo
+echo 'Check /var/log/apt/history.log for system upgrades from package/library upgrade activity:'
+
+sudo tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
+
+echo
+echo
+echo 'Any recent transformative and/or non-persistent commands found in the last 15 entries in * pi * and/or * root * bash histories?'
+echo
+echo '* pi * user last 15 commands issued:'
+
+tail -15 /home/pi/.bash_history
+
+echo
+echo '* root * user last 15 commands issued:'
+
+if [ -f /root/.bash_history ]; then
+	sudo tail -15 /root/.bash_history
+fi
+
+echo
+echo 'Review last logins to see who has recently worked on host:'
+echo 'NOTE: Command * last * used in lieu of * lastlog * as it shows multiple logins by a single user'
+
+last
+
+echo
+echo
+
+
+echo '########  CHANGE ANALYSIS: Non-Persistent Changes  ########'
+
+echo
+echo 'Changes made to running processes in memory from the CLI and *NOT* via a configuration file read by an application on execution will be lost when host rebooted.'
+echo 'Check * uptime * and see if the fault can be correlated to a reboot:'
+echo
+
+uptime
+
+echo
+echo 'Also check to see if the affected application was restarted:'
+echo '     sudo systemctl applicationName.service'
+echo
+echo
+
+
+echo '########  CHANGE ANALYSIS: Fault Occurs at Predictable Times or Intervals:  ########'
+echo
+echo
+echo 'If fault occur at predictable times check jobs executing from SystemD Timers'
+echo 'and any scripts they call:'
+echo
+
+systemctl list-timers --all
+
+echo
+echo
+
+
+echo '########  HARDWARE ANALYSIS:  ########'
 echo
 echo 'Camera Temperature: compare temp below with 63-65C which (in my experience) is normal operating temperature (boot is 38C):'
-/opt/vc/bin/vcgencmd measure_temp
+
+sudo /opt/vc/bin/vcgencmd measure_temp
 
 echo
 echo
-echo 'Does the OS know about the camera? Output below should report "supported=1 detected=1"'
+echo 'Does the OS know about the camera: Output below should report * supported=1 detected=1 *'
+
 sudo /opt/vc/bin/vcgencmd get_camera
+
 echo
 echo
-echo 'Does "lsmod" Report a value of "1" for "v4l2" Camera Kernel Module?:'
+echo 'Does * lsmod * Report a value of * 1 * for * v4l2 * Camera Kernel Module:'
+
 sudo lsmod |grep v4l2
+
 echo
 echo
-echo 'Is device "video0" in reported below?:'
+echo 'Check device* * video0 * in reported below:'
+
 sudo ls -al /dev | grep video0
+
 echo
 echo
-echo 'Camera Details per "v4l2-ctl":'
+echo 'Camera Details per * v4l2-ctl *:'
+
 sudo /usr/bin/v4l2-ctl -V
+
 echo
 echo
 
 
 
+echo '########  STORAGE ANALYSIS:  ########'
+echo
+echo 'Is system at 100 pct disk use:'
+echo
 
-echo "########  STORAGE ANALYSIS:  ########"
-echo
-echo "Is system at 100 pct disk use?:"
-echo
 df -h
+
 echo
 echo
-echo 'Is USB flash storage mounting? The mount "/media/pi" should be reported below:'
+echo 'Is USB flash storage mounting: Mount * /media/automount1 * should be reported below:'
 echo
+
 sudo cat /proc/mounts | grep '/dev/sda1' | awk '{ print $2 }'
+
+echo
+echo
+echo 'Review Storage Devices as a tree with * lsblk * to see what is- or is NOT- mounting:'
+echo
+
+lsblk -o model,name,fstype,size,label,mountpoint
+
+echo
+echo 'Review feedback from /var/log/daemon.log to see if any automounting errors'
+echo
+echo 'tail -fn 100 /var/log/daemon.log'
 echo
 echo
 
 
+echo '########  PROCESS ANALYSIS:  ########'
+echo
+echo 'Check no processes hung at 100 percent:'
+echo
 
-echo "########  PROCESS ANALYSIS:  ########"
-echo
-echo "Any processes hung at 100 percent?"
-echo
 ps --sort=-pcpu | head -n 5
+
 echo
 echo
-echo "Check key processes are up and running without error"
+echo 'Check key processes are up and running without error:'
 echo
+
 sudo systemctl status motion
-echo
-sudo systemctl status msmtp
-echo
-echo "NOTE: If mail relay MSMTP is down neither Motion nor the system can email alerts"
-echo
-echo
-echo "Review last few messages sent in mail log:"
-echo 'Note: All mail sent is logged in "msmtp.log"'
-tail -6 /media/pi/logs/msmtp.log
-echo
-echo
 
 
 
-echo "########  LOG ANALYSIS:  ########"
+echo '########  LOG ANALYSIS:  ########'
 echo
-echo "Filter logs by priority (-p) to show ALL errors:"
+echo 'Filter logs by priority (-p) to show ALL errors:'
 echo
-sudo journalctl -p err
+
+journalctl -p err
+
 echo
-echo
-echo "Check application-specific logs for anything interesting:"
-echo "Motion Log:"
+echo 'Check application-specific logs for anything interesting:'
+echo 'Motion Log:'
+
 journalctl -u motion.service
+
 echo
-echo "MSMTP Log:"
-journalctl -u msmtp.service
+
+echo
+echo 'Review last 10 messages sent in mail log:'
+echo 'Note: All mail alerts sent are logged in the * msmtp.log *'
+
+tail -10 /media/automount1/logs/msmtp.log
+
 echo
 echo
 
 
+echo '########  NETWORKING ANALYSIS:  ########'
+echo
+echo 'Does host have a routable address? Check DHCP if not'
+echo
+echo 'IPv4 RFC 1918 Host Address:'
 
-echo "########  NETWORKING ANALYSIS:  ########"
+echo "$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
+
 echo
-echo 'Does host have a routable (non-local) address? Check DHCP if not'
+echo 'IPv6 Global Unicast Host Address:'
+
+echo "$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
+
 echo
-ip addr list|grep wlan0 | awk '{print$2}'| cut -d$'\n' -f2|cut -d '/' -f1
-ip -6 addr list|grep inet6|grep 'scope link'| awk '{ print $2 }'|cut -d '/' -f1
+
+echo
+echo 'PORT SCANNING: WARNING'
+echo
+
+echo 'Port Scanning is testing the accessibility of a port on a * REMOTE * network.'
+echo 'No need to port scan a connection between hosts inside your own firewall.'
+echo
+echo 'Legalities of Port Scanning: Scanning a single port to troubleshoot a connectivity issue'
+echo 'will not be seen as *network abuse* by rational people. HOWEVER: Organizations can have'
+echo 'automated detection processes in place to police their Acceptable Network Use policies'
+echo 'which prohibit port scanning. If running a port scan from your employers network seek'
+echo 'the Network Admins permission first.  Although not expressly codified as a crime in most'
+echo 'jurisdictions you could still fall afoul of a employers or ISPs Acceptable Network Use policies.'
+echo
+
+echo 'With that gentle warning about Port Scanning out of the way a few commands are offered to assist'
+echo 'you test the remote end of the connection for of a * SINGLE * port.'
+echo
+echo 'Interpreting Portscan Results:'
+echo
+echo '*OPEN* = CORRECT Connectivity'
+echo '*FILTERED* = BROKEN Connectivity'
+
+
+echo
+echo 'Check if UDP/123 is open to allow Pi to update its time:'
+echo 'Replace *some.ntp.server.com* with a valid ntp server address in following command and then execute it:'
+echo '     nmap -sU -p 123 some.ntp.server.com|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1'
+echo
+
+echo
+echo 'Check if TCP/25 is open to allow Pi to relay mail alerts:'
+echo 'Replace *some.mail.server.com* with a valid ntp server address in following command and then execute it:'
+echo '     nmap -sT -p 25 some.mail.server.com|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1'
 echo
 echo
-echo "Check DNS by pinging Google by DNS name:"
+
 echo
+echo 'Check DNS by pinging Google by DNS name:'
+echo
+
 ping -c2 www.google.com
+
 echo
 echo
-echo "Ping Google by IP address:"
+echo 'Ping Google by IP address:'
 echo
+
 ping -c2 8.8.8.8
+
 echo
-echo "If pinging by *DNS Name* fails but succeeds by IP then DNS is broken or UDP/53 is blocked"
-echo "If pinging by *IP* fails check your Internet connection and/or firewall"
+echo 'If pinging by *DNS Name* fails but succeeds by IP then DNS is broken or UDP/53 is blocked'
+echo 'If pinging by *IP* fails check your Internet connection and/or firewall'
 echo
 echo
-echo "Does your gateway look sensible in below routing table?:"
+echo 'Does your gateway look sensible in below routing table:?'
+
 route -n
+
 echo
 echo
-echo "Other tools you can use to troubleshoot network issues that I installed on your system during Pi-Cam config:"
+echo 'Other tools to troubleshoot network issues that I installed during pi-cam-config.sh execution:'
 echo
 echo 'mtr tcpdump and iptraf-ng'
 echo
 echo
 
 
-echo "########  CHANGE ANALYSIS:  ########"
+echo 'Although better to understand HOW something broke remember you have the option of just rebuilding the Pi-Cam by'
+echo 're-excuting the * pi-cam-config.sh * script.  If this resolves the error then fault was configuration-related.'
 echo
-echo 'If a system previously running correctly is now in error- barring bugs or resourcing issues- likely had help getting broken ;->'
-echo "Too frequently $(tput setaf 1)the cause of a fault is poorly planned/tested changes.$(tput sgr 0)"
-echo
-echo "Check Apt Log for system upgrades which might have changed package/library binaries and/or config files: "
-sudo tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
+echo 'If re-executing script does *NOT* resolve error and all values supplied in * variables * section correct then"
+echo 'refocus your investigations on things * IN FRONT OF * the Pi-Cam itself such as networking and firewalls.'
 echo
 echo
-echo 'Check "uptime" for recent system restart. Non-persistent changes (those made to running processes in memory) are lost on reboot:'
-echo
-uptime
-echo
-echo
-echo 'Any recent transformative and/or non-persistent commands found in the last 15 entries in "pi" and/or "root" bash histories?'
-echo
-echo '"pi" user last 15 commands issued:'
-sudo tail -15 /home/pi/.bash_history
-echo
-echo '"root" user last 15 commands issued:'
-if [-f /root/.bash_history]; then
-	sudo tail -15 /root/.bash_history
-fi
-echo
-echo
-echo "Review last logins to see who has recently worked on the system:"
-echo 'NOTE: Command "last" used in lieu of "lastlog" as it shows multiple logins by a single user'
-last
-echo
-echo
-echo "Does fault occur at predictable times? Check jobs executing from SystemD Timers:"
-echo
-sudo systemctl list-timers --all
-echo
-echo
+echo 'As a last resort if unable to successfully identify source of a fault there is always the Pi forums:'
 
-echo "Although it is better to understand HOW something broke remember you have the option of just rebuilding the Pi-Cam by"
-echo 're-excuting the "pi-cam-config.sh" script.  If this resolves the error then the fault was configuration-related.'
+echo '               https://raspberrypi.stackexchange.com/               '
+echo '               https://www.raspberrypi.org/forums/               '
+
+echo 'However you will never up your Linux game asking others to solve your problems. You have to earn your bones.'
 echo
-echo "If re-executing the script does $(tput setaf 1)*NOT*$(tput sgr 0) resolve error and all values supplied in "variables" section are correct and valid then"
-echo "refocus your investigations to things in front of the Pi-Cam like networking and firewalls."
-echo
-echo
-echo "As a last resort if unable to successfully identify the source of a fault there is always the Pi forums:"
-echo "$(tput setaf 4)               https://www.raspberrypi.org/forums/               $(tput sgr 0)"
-echo "However you will never up your Linux game asking others to solve your problems. You have to earn your bones."
-echo
-echo '     -Terrence Houlahan Linux & Network Engineer F1Linux.com"
+echo '     -Terrence Houlahan Linux & Network Engineer F1Linux.com'
 
 EOF
 
@@ -1780,7 +2309,8 @@ chmod 700 /home/pi/scripts/troubleshooting-helper.sh
 chown pi:pi /home/pi/scripts/troubleshooting-helper.sh
 
 
-echo 'Created /home/pi/scripts/troubleshooting-helper.sh'
+echo '/home/pi/scripts/troubleshooting-helper.sh'
+echo
 echo
 
 
@@ -1789,8 +2319,8 @@ echo "$(tput setaf 5)****** SET CPU AFFINITY:  ******$(tput sgr 0)"
 echo
 
 
-echo "The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core."
-echo "By restricting SYSTEM processes to living on CPUs 0-2 when we pin motion to core that leaves 3 uncontended for Motion to use"
+echo 'The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core.'
+echo 'By restricting SYSTEM processes to living on CPUs 0-2 when we pin motion to core that leaves 3 uncontended for Motion to use'
 echo
 
 cp -p /etc/systemd/system.conf /etc/systemd/system.conf.ORIGINAL
@@ -1807,12 +2337,12 @@ echo
 
 
 
-echo "Automate setting CPU Affinity for Motion on boot"
+echo 'Automate setting CPU Affinity for Motion on boot'
 
 cat <<'EOF'> /home/pi/scripts/set-cpu-affinity.sh
 #!/bin/bash
 
-# Note: the number following cp is the CPU/core number in this case three
+# Note: the number following cp is the CPU/core number in this case 3
 taskset -cp 3 $(pgrep motion|cut -d ' ' -f2)
 
 EOF
@@ -1826,6 +2356,7 @@ cat <<EOF> /etc/systemd/system/set-cpu-affinity.service
 [Unit]
 Description=Set CPU Affinity for the Motion process after it starts on boot
 Wants=motion.service
+After=motion.service
 
 [Service]
 User=root
@@ -1838,10 +2369,10 @@ WantedBy=multi-user.target
 
 EOF
 
+chmod 644 /etc/systemd/system/set-cpu-affinity.service
 
 systemctl enable set-cpu-affinity.service
 
-# Change ownership of all files created by this script FROM user "root" TO user "pi":
 chown -R pi:pi /home/pi
 
 
@@ -1850,38 +2381,38 @@ echo
 echo "$(tput setaf 5)****** /etc/motd CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
-echo "Configured Help Messages/Tips in /etc/motd to display on user login"
+echo 'Configured Help Messages/Tips in /etc/motd to display on user login'
 echo >> /etc/motd
 echo >> /etc/motd
-echo "###############################################################################################################" >> /etc/motd
+echo '###############################################################################################################' >> /etc/motd
 echo "##  $(tput setaf 4)If I saved you lots of time manually configuring buy me a beer either in person or PayPal:$(tput sgr 0) ##" >> /etc/motd
 echo "##                          $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                          ##" >> /etc/motd
-echo "###############################################################################################################" >> /etc/motd
+echo '###############################################################################################################' >> /etc/motd
 echo >> /etc/motd
 echo >> /etc/motd
-echo "Troubleshooting: Execute below script to gather data to investigate the fault:" >> /etc/motd
+echo 'Troubleshooting: Execute below script to gather data to investigate the fault:' >> /etc/motd
 echo 'cd /home/pi/scripts' >> /etc/motd
 echo './troubleshooting-helper.sh' >> /etc/motd
 echo >> /etc/motd
 echo 'Camera Feed Access: Append :8080 to IP of this host in a web browser to view camera stream' >> /etc/motd
 echo >> /etc/motd
-echo "stop/start/reload Motion daemon:" >> /etc/motd
+echo 'stop/start/reload Motion daemon:' >> /etc/motd
 echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo >> /etc/motd
-echo "Manually change *VIDEO* resolution using Video4Linux driver: tailor below example to your own use-case:" >> /etc/motd
+echo 'Manually change *VIDEO* resolution using Video4Linux driver: tailor below example to your own use-case:' >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
 echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
 echo >> /etc/motd
-echo "Obtain resolution and other data from an image file:" >> /etc/motd
+echo 'Obtain resolution and other data from an image file:' >> /etc/motd
 echo 'exiv2 /media/pi/imageName.jpg' >> /etc/motd
 echo >> /etc/motd
-echo "To see metadata for an image or video:" >> /etc/motd
+echo 'To see metadata for an image or video:' >> /etc/motd
 echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
 echo >> /etc/motd
 echo >> /etc/motd
-echo "To edit or delete these login messages:  vi /etc/motd" >> /etc/motd
+echo 'To edit or delete these login messages:  vi /etc/motd' >> /etc/motd
 echo >> /etc/motd
-echo "###############################################################################" >> /etc/motd
+echo '###############################################################################' >> /etc/motd
 echo >> /etc/motd
 echo >> /etc/motd
 
@@ -1889,14 +2420,18 @@ echo
 echo
 echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
-echo "By default Dropbox API used to upload images breaks scripted automation by requiring user input on first access."
+echo 'By default Dropbox API used to upload images breaks scripted automation by requiring user input on first access.'
 echo 'So we initiate an access then spit back the token supplied in variable DROPBOXACCESSTOKEN and finally acknowledge it is correct'
 echo
+
+touch /home/pi/test_`date +%Y-%m-%d_%H-%M-%S`.txt
+
 cd /home/pi/Dropbox-Uploader/
-su pi -c "printf '\n'|./dropbox_uploader.sh upload << 'INPUT'
+su pi -c "printf '\n'|./dropbox_uploader.sh upload /home/pi/test*.txt / << 'INPUT'
 $DROPBOXACCESSTOKEN
 y
 INPUT"
+rm /home/pi/test*.txt
 
 
 
@@ -1905,7 +2440,7 @@ echo
 echo
 echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA HOST ** $(tput sgr 0)"
 echo
-read -p "Press Enter to perform an upgrade and reboot after reviewing script feedback for errors or config detail of interest"
+read -p 'Press Enter to perform an upgrade and reboot after reviewing script feedback for errors or config detail of interest'
 echo
 
 # Change ownership of all files created by this script FROM user "root" TO user "pi":
@@ -1917,7 +2452,7 @@ echo "$(tput setaf 5)****** apt-get upgrade and dist-upgrade: ******$(tput sgr 0
 echo
 
 echo
-echo "Raspbian Version *PRE* Updates"
+echo 'Raspbian Version *PRE* Updates'
 lsb_release -a
 echo
 echo "Kernel: $(uname -r)"
@@ -1925,30 +2460,39 @@ echo
 
 
 
-echo "Remove any dependencies of uninstalled packages:"
+echo 'Remove any dependencies of uninstalled packages:'
 apt-get -qqy autoremove > /dev/null
 status-apt-cmd
 echo
 
-echo "Now execute the dist-upgrade"
+echo 'Now execute the dist-upgrade'
 apt-get -qqy dist-upgrade > /dev/null
 status-apt-cmd
 echo
 
 
 echo
-echo "Raspbian Version *POST* Updates"
+echo 'Raspbian Version *POST* Updates'
 lsb_release -a
 echo
 echo "Kernel: $(uname -r)"
 echo
+
+
+
+# Ensure autologin remains disabled after an upgrade:
+sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
+systemctl disable autologin@.service
+echo
+
+
 
 # How to answer "no" to an interactive TUI dialog box in a script for an unattended install:
 #	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
 # 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
 
 
-# * boolean false * is piped to debconf-set-selections to pre-seed the answer to interactive install question "Should kexec-tools handle reboots(sysvinit only)?"
+# * boolean false * is piped to debconf-set-selections to pre-seed the answer to interactive install question *Should kexec-tools handle reboots(sysvinit only)?*
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selections
 	apt-get -qq install kexec-tools > /dev/null
@@ -1958,25 +2502,21 @@ fi
 
 
 
-echo "Note address of your camera below to access it via web browser after reboot:"
+echo 'Note address of your camera below to access it via web browser after reboot:'
 echo "$(tput setaf 2) ** Camera IPv4 Address: "$CAMERAIPV4":8080 ** $(tput sgr 0)"
 
 if [[ $CAMERAIPV6 != '' ]]; then
 	echo "$(tput setaf 2) ** Camera IPv6 Address: "$CAMERAIPV6":8080 ** $(tput sgr 0)"
 fi
 
-echo
-echo "If you SSH into the camera its address will also be printed in the MOTD upon login"
-echo
 
-
-# Wipe F1Linux.com pi-cam-config files as clear text passwds live in here:
+# Wipe F1Linux.com pi-cam-config.sh files as clear text passwds live in that file:
 rm -rf /home/pi/pi-cam-config
 
-echo "Deleted the pi-cam-config repo directory which has clear-text passwords in it."
+echo 'Deleted the pi-cam-config repo directory which has clear-text passwords in it.'
 
 
-echo "System will reboot in 10 seconds"
+echo 'System will reboot in 10 seconds'
 sleep 10
 
 

@@ -1,8 +1,8 @@
 # Author:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20190123
-# Version 1.09
+# Date:    20190128
+# Version 1.15
 
 # "pi-cam-config.sh": Installs and configs Raspberry Pi as a Motion Detection Camera which sends images to Dropbox acct and sends alerts
 
@@ -50,12 +50,13 @@
 
 # 5. SCRIPT FEATURES:
 # - Automatically configures camera IP address in configuration files
-# - Camera emails you its address so you can find it when connected to a HotSpot
-# - Enables camera in Raspbian and disables its' red LED activity light
+# - Camera emails you its address so you do not have a local connection to the Pi
+# - Enables camera in Raspbian and disables the red LED activity light
 # - Sets Kernel driver for camera to automatically load on boot
 # - Installs and configures "Motion" video camera package
 # - Installs and configures "MSMTP" package for email alerts on motion detection
 # - Abstracts data from MicroSD card storage which hosts the OS to a USB flashdrive formatted for EXFAT
+# - Automounts ExFAT formatted USB Flash Drive storage on all 4 USB Ports and unmounts it after 5 minutes of inactivity
 # - Uploads camera evidence to a Dropbox account in the cloud
 # - Sets CPU Affinity run OS process on CPUs 0-2 and the application process exclusively on CPU 3 to ensure zero contention
 # - SNMP V3 configured
@@ -66,7 +67,8 @@
 # - Configures passwordless login by adding a Public Key YOU specify in a variable to "~/.ssh/authorized_keys" and configuring "/etc/ssh/sshd_config"
 # - Configures an ECDSA 521 bit SSH Keypair
 # - Disables boot splash screen so errors can be observed as host rises-up
-# - Troubleshooting script automates fault analysis (do a degree) using a structured approach
+# - Creates a graph showing the order SystemD services rise-up in to aid in troubleshooting
+# - Troubleshooting script automates fault analysis (to a degree) using a structured approach
 # Note: Users must configure firewall rules either on the router in front of the camera or the camer itself to prevent unauthorized access
 
 # 6. MINIMAL PI SETUP:
@@ -102,9 +104,6 @@
 #	a. Login to a Pi connected to the Internet:
 #		NOTE: If using SSH, connect as user "pi" with default passwd "raspberry"
 #			
-#	b. Insert USB Flash drive into any of Pi's USB ports
-#	NOTE: If Pi Zero W install script execution must either be via SSH or a local connection via a Bluetooth Keyboard.
-#		The Zero W only has one Micro USB socket and this is required for image storage. Ensure Bluetooth keyboard paired before executing script
 
 # As user "pi" - do not sudo to root- execute following commands:
 #	c. Download my Git repo:
