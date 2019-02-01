@@ -3,10 +3,10 @@
 # Author:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: houlahan@F1Linux.com
-# Date:    20190128
-# Version 1.15
+# Date:    20190201
+# Version 1.20
 
-# "pi-cam-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
+# "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+
 #   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
 
@@ -208,7 +208,7 @@ echo
 echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
 echo
 
-echo '*pi-cam-config.sh* Copyright (C) 2018 2019 Terrence Houlahan'
+echo '*open-ipcamera-config.sh* Copyright (C) 2018 2019 Terrence Houlahan'
 echo
 echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
@@ -408,7 +408,7 @@ fi
 systemctl daemon-reload
 
 
-# Delete scripts home-rolled scripts created by here-doc from previous runs of*"pi-cam-config.sh* that SystemD services were calling:
+# Delete scripts home-rolled scripts created by here-doc from previous runs of*"open-ipcamera-config.sh* that SystemD services were calling:
 
 if [ -d /home/pi/scripts ]; then
 	rm -r /home/pi/scripts
@@ -1523,8 +1523,8 @@ net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTP
 echo
 
 # *APPEND* a note after the ACCESS CONTROL header in snmpd.conf detailing where our v3 SNMP credentials live to avoid future confusion:
-sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 Access Token Added by net-snmp-config to /var/lib/snmp/snmpd.conf by pi-cam-config.sh script' /etc/snmp/snmpd.conf
-sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 User Added by net-snmp-config to /usr/share/snmp/snmpd.conf by pi-cam-config.sh script' /etc/snmp/snmpd.conf
+sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 Access Token Added by net-snmp-config to /var/lib/snmp/snmpd.conf by open-ipcamera-config.sh script' /etc/snmp/snmpd.conf
+sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 User Added by net-snmp-config to /usr/share/snmp/snmpd.conf by open-ipcamera-config.sh script' /etc/snmp/snmpd.conf
 
 
 systemctl enable snmpd.service
@@ -2006,10 +2006,8 @@ echo
 cat <<'EOF'> /home/pi/scripts/troubleshooting-helper.sh
 #!/bin/bash
 echo
-echo
 echo 'To help you quickly drill-down potential causes of a fault I wrote this script which provides a structured troubleshooting approach.'
 echo 'Please note these tests/tools are not exhaustive but merely a starting point to provide some baseline info to analyze.'
-echo
 echo
 
 
@@ -2020,10 +2018,10 @@ echo 'If you broke the build hacking my script tweaking it a few tips to help yo
 echo
 echo 'As a *GENERAL* rule begin hunting for dev errors at the point just above where the script went haywire.'
 echo
-echo 'A few useful git commands to investigate development changes which caused a break:
+echo 'A few useful git commands to investigate development changes which caused a break:'
 echo
 echo 'Show current UNCOMMITTED changes against last COMMITTED change to a named file:'
-echo '     git diff pi-cam-config.sh'
+echo '     git diff open-ipcamera-config.sh'
 echo
 echo 'Show last 2 logged COMMITTED changes:'
 echo '     git log -p -2'
@@ -2246,13 +2244,13 @@ echo '*FILTERED* = BROKEN Connectivity'
 echo
 echo 'Check if UDP/123 is open to allow Pi to update its time:'
 echo 'Replace *some.ntp.server.com* with a valid ntp server address in following command and then execute it:'
-echo '     nmap -sU -p 123 some.ntp.server.com|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1'
+echo "     nmap -sU -p 123 some.ntp.server.com|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1"
 echo
 
 echo
 echo 'Check if TCP/25 is open to allow Pi to relay mail alerts:'
 echo 'Replace *some.mail.server.com* with a valid ntp server address in following command and then execute it:'
-echo '     nmap -sT -p 25 some.mail.server.com|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1'
+echo "     nmap -sT -p 25 some.mail.server.com|awk 'FNR==8'|awk '{print $2}'|cut -d '|' -f1"
 echo
 echo
 
@@ -2280,7 +2278,7 @@ route -n
 
 echo
 echo
-echo 'Other tools to troubleshoot network issues that I installed during pi-cam-config.sh execution:'
+echo 'Other tools to troubleshoot network issues that I installed during open-ipcamera-config.sh execution:'
 echo
 echo 'mtr tcpdump and iptraf-ng'
 echo
@@ -2288,9 +2286,9 @@ echo
 
 
 echo 'Although better to understand HOW something broke remember you have the option of just rebuilding the Pi-Cam by'
-echo 're-excuting the * pi-cam-config.sh * script.  If this resolves the error then fault was configuration-related.'
+echo 're-excuting the * open-ipcamera-config.sh * script.  If this resolves the error then fault was configuration-related.'
 echo
-echo 'If re-executing script does *NOT* resolve error and all values supplied in * variables * section correct then"
+echo 'If re-executing script does *NOT* resolve error and all values supplied in * variables * section correct then'
 echo 'refocus your investigations on things * IN FRONT OF * the Pi-Cam itself such as networking and firewalls.'
 echo
 echo
@@ -2510,7 +2508,7 @@ if [[ $CAMERAIPV6 != '' ]]; then
 fi
 
 
-# Wipe F1Linux.com pi-cam-config.sh files as clear text passwds live in that file:
+# Wipe F1Linux.com open-ipcamera-config.sh files as clear text passwds live in that file:
 rm -rf /home/pi/pi-cam-config
 
 echo 'Deleted the pi-cam-config repo directory which has clear-text passwords in it.'
@@ -2523,7 +2521,7 @@ sleep 10
 systemctl reboot
 
 
-# "pi-cam-config.sh" is Copyright (C) 2018 2019 Terrence Houlahan
+# "open-ipcamera-config.sh" is Copyright (C) 2018 2019 Terrence Houlahan
 # License: GPL 3:
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
