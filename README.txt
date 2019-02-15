@@ -1,8 +1,8 @@
-# Author:  Terrence Houlahan
+# The open-ipcamera Project: www.open-ipcamera.net
+# Developer:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
-# Contact: houlahan@F1Linux.com
-# Date:    20190201
-# Version 1.20
+# Contact: terrence.houlahan@open-ipcamera.net
+# Version 1.40
 
 # "open-ipcamera-config.sh" installs & configs Raspberry Pi as a Motion Detection Camera,
 #  and upon a detection event uploads images to Dropbox and emails an alert
@@ -23,12 +23,10 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -86,7 +84,7 @@
 
 # 8. TROUBLESHOOTING:
 # Before posting issues in the "open-ipcamera" Github repo, please try to self-resolve issues first by:
-#	a. Executing the "/home/pi/scripts/troubleshooting-helper.sh" script and reviewing the output to identify a fault
+#	a. Executing the "troubleshooting-helper.sh" script in the pi user scripts directory and reviewing the output to identify a fault
 #	b. Read the "open-ipcamera" Wiki
 #	c. Check that you haven't inadvertently deleted one- or both- of the single quotes encasing variables in "open-ipcamera-config.sh"
 #		If so, just re-execute the script again to rebuild everything and it should resolve the problem
