@@ -27,6 +27,14 @@ source "${BASH_SOURCE%/*}/functions.sh"
 cat <<'EOF'> $PATHSCRIPTS/motion-detection-camera-address.sh
 #!/bin/bash
 
+# The open-ipcamera Project: www.open-ipcamera.net
+# Developer:  Terrence Houlahan Linux Engineer F1Linux.com
+# https://www.linkedin.com/in/terrencehoulahan/
+# Contact: terrence.houlahan@open-ipcamera.net
+# Copyright (C) 2018 2019 Terrence Houlahan
+# License: GPL 3
+
+
 # Redirect output of * set -x * to a log to capture any potential errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log
 exec {varFD}>/media/automount1/logs/script-motion-detection-camera-address.log

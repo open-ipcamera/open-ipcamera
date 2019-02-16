@@ -104,3 +104,10 @@ systemctl enable snmpd.service
 systemctl start snmpd.service
 
 echo
+
+echo 'Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):'
+echo '---------------------------------------------------------------------------------------------'
+snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
+echo
+echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
+echo

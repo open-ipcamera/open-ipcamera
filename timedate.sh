@@ -34,6 +34,11 @@ source "${BASH_SOURCE%/*}/functions.sh"
 #	   /run/dhcpcd/ntp.conf/wlan0.dhcp
 
 
+echo
+echo "$(tput setaf 6)TIMESYNCD Config: Ensure Pi-Cam Records Evidence with Accurate Time$(tput sgr 0)"
+echo
+
+
 # Restore configuration to a predictable known state if a backup exists:
 if [ -f /etc/systemd/timesyncd.conf.ORIGINAL ]; then
 	mv /etc/systemd/timesyncd.conf.ORIGINAL /etc/systemd/timesyncd.conf
@@ -76,3 +81,11 @@ fi
 
 # Re-read config with the changes:
 systemctl daemon-reload
+
+
+echo 'Output of *timedatectl status* Follows:'
+echo
+timedatectl status
+echo
+
+echo 'Validate above time against a your computers clock to ensure it approximates the current time in your geographic locality'

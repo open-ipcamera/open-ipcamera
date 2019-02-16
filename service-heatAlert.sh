@@ -30,7 +30,9 @@ cat <<'EOF'> $PATHSCRIPTS/heat-alert.sh
 # The open-ipcamera Project: www.open-ipcamera.net
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
-# Contact: houlahan@F1Linux.com
+# Contact: terrence.houlahan@open-ipcamera.net
+# Copyright (C) 2018 2019 Terrence Houlahan
+# License: GPL 3
 
 
 # Redirect output of * set -x * to a log to capture any errors as script executed as a SystemD Service

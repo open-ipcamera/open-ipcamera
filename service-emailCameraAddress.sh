@@ -24,8 +24,24 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
+
+# Apple offers no means to identify the IP of a device tethered to an iPhone HotSpot.
+# This systemd service emails camera IP address assigned by a HotSpot to email specified in variable *SNMPSYSCONTACT*
+# If you want to change the email address this notification (or any other system alert) is sent to edit *sysContact* in /etc/snmp/snmpd.conf directly.
+
+# NOTE: email alerts will only work if a valid mail relay with correct credentials has been configured in open-ipcamera variables.sh file when installing it
+
+
 cat <<'EOF'> $PATHSCRIPTS/email-camera-address.sh
 #!/bin/bash
+
+# The open-ipcamera Project: www.open-ipcamera.net
+# Developer:  Terrence Houlahan Linux Engineer F1Linux.com
+# https://www.linkedin.com/in/terrencehoulahan/
+# Contact: terrence.houlahan@open-ipcamera.net
+# Copyright (C) 2018 2019 Terrence Houlahan
+# License: GPL 3
+
 
 # Redirect output of * set -x * to a log to capture any potential errors as script executed as a SystemD Service
 # varFD is an arbitrary variable name and used here to assign the next unused File Descriptor to redirect output to the log

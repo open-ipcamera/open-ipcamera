@@ -47,6 +47,10 @@ systemctl restart systemd-hostnamed&
 wait $!
 
 
+echo
+echo "Hostname NEW: $(hostname)"
+
+
 # hostnamectl does NOT update the hosts own entry in /etc/hosts so must do separately:
 sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
 sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts

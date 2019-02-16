@@ -58,6 +58,14 @@ echo 'Automate setting CPU Affinity for Motion on boot'
 cat <<'EOF'> $PATHSCRIPTS/set-cpu-affinity.sh
 #!/bin/bash
 
+# The open-ipcamera Project: www.open-ipcamera.net
+# Developer:  Terrence Houlahan Linux Engineer F1Linux.com
+# https://www.linkedin.com/in/terrencehoulahan/
+# Contact: terrence.houlahan@open-ipcamera.net
+# Copyright (C) 2018 2019 Terrence Houlahan
+# License: GPL 3
+
+
 # Note: the number following cp is the CPU/core number in this case 3
 taskset -cp 3 $(pgrep motion|cut -d ' ' -f2)
 

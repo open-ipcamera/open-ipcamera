@@ -24,7 +24,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-### Create Directories for home-rolled stuff to live in:
+### Create Directories for home-rolled scripts to live in:
 
 echo
 echo "$(tput setaf 5)****** Create open-ipcamera Scripts Directory:  ******$(tput sgr 0)"
@@ -35,39 +35,38 @@ if [ ! -d $PATHSCRIPTS ]; then
 	chown pi:pi $PATHSCRIPTS
 	chmod 751 $PATHSCRIPTS
 	echo "Created $PATHSCRIPTS Directory"
-fi
-
-
-echo
-echo "$(tput setaf 5)****** Remove Packages:  ******$(tput sgr 0)"
-echo
-
-# Package * usbmount * will interfere with SystemD Auto-mounts which we will use for the USB Flash Drive where video and images are written locally to.
-# We check to see if it is present and if test evalutes *true* we get rid of it
-if [[ ! $(dpkg -l | grep usbmount) = '' ]]; then
-	apt-get -qqy purge usbmount > /dev/null
-	status-apt-cmd
-fi
-
-
-
-# Test for presence of Libre Office "Writer" package and if true (not an empty value) wipe it and all the other crap that comes with it:
-if [[ ! $(dpkg -l | grep libreoffice-writer) = '' ]]; then
-	echo "Libre Office found."
-	echo "Can take over a minute to remove it. Script might appear to hang"
-	apt-get -qqy purge libreoffice* > /dev/null
-	echo
-	echo "Libre Office wiped from system"
-	echo
-else
-	echo
-	echo "Libre Office not found on system"
 	echo
 fi
 
 
+
 echo
-echo "$(tput setaf 5)****** Re-Sync Package Index:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******PACKAGES: Remove conflicting packages or bloatware from default Raspbian image$(tput sgr 0)"
+echo
+
+# usbmount: interferes with SystemD auto-mounts which we will use for the USB Flash Drive where video and images are written locally to
+# libreoffice: it is just crap and not required on a device being used as a video camera
+
+
+readarray arrayPackagesListPURGE < $PATHINSTALLDIR/packages-list-purge.txt
+
+for i in ${arrayPackagesListPURGE[@]}; do
+if [[ ! $(dpkg -l | grep "^ii $i[[:space:]]") = '' ]]; then
+	apt-get -qqy purge $i > /dev/null
+fi
+done
+
+
+echo "Packages PURGED:"
+echo
+echo $PACKAGESPURGED | tee -a $PATHLOGINSTALL/packages-purged.log
+echo
+
+
+
+
+echo
+echo "$(tput setaf 5)****** PACKAGES: Re-Sync Index:  ******$(tput sgr 0)"
 echo
 
 until apt-get -qqy update > /dev/null
@@ -86,365 +85,112 @@ echo
 echo "$(tput setaf 5)****** Install Packages:  ******$(tput sgr 0)"
 echo
 
+# For info about a particular package to learn more about what it actually does:
+#	sudo apt-cache show packagename
 
-echo 'Packages could be installed in a single command but are done separately both to'
-echo 'illustrate what is being installed and to make it easier to change packages by functionality'
-echo
-echo '*apt-get --install-recommends install packageName* could be used to install recommended pkgs but this is a blunt instrument that frequently installs tons of crap.'
-echo 'So only selective recommended packages (per *apt-cache show packageName*) have been added to each *apt-get install* command where appropriate'
-echo
-# debconf-utils is useful for killing pesky TUI dialog boxes that break unattended package installations by requiring user input during scripted package installs:
-if [[ $(dpkg -l | grep debconf-utils) = '' ]]; then
-	until apt-get -qqy install debconf-utils > /dev/null
+#######  PACKAGES: REQUIRED  #######
+
+# debconf-utils: provides debconf-set-selections used to kill TUI dialog boxes that break scripted package installs which demand user input
+#	To see all the other utilities debconf-utils provides:
+#		dpkg-query -L debconf-utils
+# git: required to clone the open-ipcamera repo from GitHub and upgrade an installed open-ipcamera installation
+# bc: required for comparative testing of equality in conditional expressions
+# snmpd: Monitoring
+# motion: package used by camera to capture video evidence
+# ffmpeg: not a dependency of motion per se but shown as a *recommends* so we install it
+# nmap: troubleshooting tool to connectivity issues related to closed ports
+# dirmngr GPG network certificate management service
+# gnupg: encrypting data and creating digital signatures. Used to encrypt variables.sh file which contains passwords
+# gnupg-agent: used to request and cache password for keychain access
+# diffutils: Enhanced diff toolset for analyzing change
+# msmtp: used to relay motion detection email alerts
+# expect: tool for automating interactive processes in scripts by providing an answer to a question that would break unattended execution of a script
+# parallel: tool for executing jobs in parallel
+
+
+#######  PACKAGES: OPTIONAL  #######
+# These are packages not required for Motion Detection Camera configuration but included as useful tools to maintain/troubleshoot the system
+
+# libimage-exiftool-perl: used to query/modify metadata from videos and images from CLI: http://owl.phy.queensu.ca/~phil/exiftool/
+# exiv2: Another tool for obtaining and changing media metadata but limited support for video files- wont handle mp4:  http://www.exiv2.org/
+# screen: Creates a shell session that can remain active after an SSH session ends that can be reconnected to on future SSH sessions.
+# mtr: Think of it as traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert"
+# tcpdump: packet sniffer useful for investigating connectivity issues and analyzing traffic
+# iptraf-ng: Used to investigate bandwidth issues
+# vokoscreen: Screen recorder. Can be run minimized so screenrecorder itself not visible in video. "recordmydesktop" generates videos with a reddish cast which has been unresolved prob for YEASRS.
+# VLC: Can be used both to play videos and also as a screenrecorder for creating HowTos for your projects
+# dstat: Diagnostic tool for performance issues relating to memory storage and CPU.  Better alternqative to netstat and iostat:  http://dag.wiee.rs/home-made/dstat/
+# ipcalc: Used to perform IPv4 calculations and results are used in scripts
+# ipv6calc: another IP calculations tool useful for extracting and manipulating addressing info in scripted tests
+# apt-file: package searching tool but oddly not installed by default
+
+# netselect-apt: analyzes available mirrors by running some tests and then sets fastest one for you
+# 	Great tool but has firewall dependencies on UDP traceroute and ICMP it uses for testing latency so I decided not to configure it during open-ipcamera installation
+# 	To MANUALLY configure:
+#      	sudo netselect-apt --arch armhf --nonfree --outfile /etc/apt/sources.list
+# 	Then edit "sources.list" file and change "stable" TO "stretch" (or whatever the current Raspbian release is)
+
+
+readarray arrayPackagesListRequired < $PATHINSTALLDIR/packages-list-required.txt
+
+for i in ${arrayPackagesListRequired[@]}; do
+if [[ $(dpkg -l | grep "^ii $i[[:space:]]") = '' ]]; then
+	until apt-get -qqy install $i > /dev/null
 	do
 		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo
 	done
 fi
+done
 
-status-apt-cmd
 
 
-# Grab the Kernel headers
-if [[ $(dpkg -l | grep raspberrypi-kernel-headers) = '' ]]; then
-	until apt-get -qqy install raspberrypi-kernel-headers > /dev/null
+readarray arrayPackagesListOptional < $PATHINSTALLDIR/packages-list-optional.txt
+
+for i in ${arrayPackagesListOptional[@]}; do
+if [[ $(dpkg -l | grep "^ii $i[[:space:]]") = '' ]]; then
+	until apt-get -qqy install $i > /dev/null
 	do
 		status-apt-cmd
 		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
 		echo
-		sleep 2
 	done
 fi
+done
 
-status-apt-cmd
 
-
-# Ensure git installed: required to grab repos using * git clone *
-if [[ $(dpkg -l | grep git) = '' ]]; then
-	until apt-get -qqy install git > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-
-# bc required for comparative testing of equality in conditional expressions
-if [[ $(dpkg -l | grep bc) = '' ]]; then
-	until apt-get -qqy install bc > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-if [[ $(dpkg -l | grep exfat-fuse) = '' ]]; then
-	until apt-get -qqy install exfat-fuse > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		status-apt-cmd
-		echo
-	done
-fi
-
-status-apt-cmd
-
-
-# * motion * is package used by camera to capture video evidence
-# Note: ffmpeg is not a dependency of the motion package but shown as a *recommends* so we will install it
-if [[ $(dpkg -l | grep motion) = '' ]]; then
-	until apt-get -qqy install motion ffmpeg > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# * msmtp * is used to relay motion detection email alerts:
-if [[ $(dpkg -l | grep msmtp) = '' ]]; then
-	until apt-get -qqy install msmtp > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# SNMP monitoring will be configured:
-if [[ $(dpkg -l | grep snmpd) = '' ]]; then
-	until apt-get -qqy install snmp snmpd snmp-mibs-downloader libsnmp-dev > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-if [[ $(dpkg -l | grep -w '\Wvim\W') = '' ]]; then
-	until apt-get -qqy install vim > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# nmap used to test ports during install to alert user of potential connectivity issues
-if [[ $(dpkg -l | grep nmap) = '' ]]; then
-	until apt-get -qqy install nmap > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# gnupg for encrypting data and creating digital signatures. Used to encrypt the variables.sh file which contains passwords
-if [[ $(dpkg -l | grep gnupg) = '' ]]; then
-	until apt-get -qqy install gnupg > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# dirmngr is the GPG network certificate management service
-if [[ $(dpkg -l | grep dirmngr) = '' ]]; then
-	until apt-get -qqy install dirmngr > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# gnupg-agent used to request and cach password for keychain access
-if [[ $(dpkg -l | grep gnupg-agent) = '' ]]; then
-	until apt-get -qqy install gnupg-agent > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# Enhanced diff toolset for analyzing change.
-if [[ $(dpkg -l | grep diffutils) = '' ]]; then
-	until apt-get -qqy install diffutils > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# *expect* is a tool for automating interactive processes in scripts by providing an answer to a question that would break unattended execution of a script
-if [[ $(dpkg -l | grep expect) = '' ]]; then
-	until apt-get -qqy install expect > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-# *parallel* tool for executing jobs in parallel
-if [[ $(dpkg -l | grep parallel) = '' ]]; then
-	until apt-get -qqy install parallel > /dev/null
-	do
-		status-apt-cmd
-		echo "$(tput setaf 3)CTRL +C to exit if failing endlessly$(tput sgr 0)"
-		echo
-		sleep 2
-	done
-fi
-
-status-apt-cmd
-
-
-
-
-
-echo
-echo 'Below packages not required for configuration as a Motion Detection Camera'
-echo 'but included as they are useful tools to have on the system:'
-echo
-echo 'For info about a particular package: * sudo apt-cache show packagename *'
-echo
-
-
-if [[ $(dpkg -l | grep mutt) = '' ]]; then
-	apt-get -qqy install mutt > /dev/null
-	apt update > /dev/null
-	status-apt-cmd
-fi
-
-
-# apt-file is a package searching tool.  Useful addition to any Debian-based system
-if [[ $(dpkg -l | grep apt-file) = '' ]]; then
-	apt-get -qqy install apt-file > /dev/null
-	apt update > /dev/null
-	status-apt-cmd
-fi
-
-
-# *netselect-apt* analyzes available mirrors by running some tests and then sets fastest one for you
-# Great tool but has firewall dependencies on UDP traceroute and ICMP it uses for testing latency so decided not to configure it during the Pi-Cam config
-# To MANUALLY configure netselect-apt:
-#      sudo netselect-apt --arch armhf --nonfree --outfile /etc/apt/sources.list
-# Then edit the "sources.list" file and change "stable" TO "stretch" (or whatever the current Raspbian flavour of the day is)
-if [[ $(dpkg -l | grep netselect-apt) = '' ]]; then
-	apt-get -qqy install netselect-apt > /dev/null
-	apt update > /dev/null
-	status-apt-cmd
-fi
-
-
-# *libimage-exiftool-perl* used to get metadata from videos and images from the CLI. Top-notch tool
-# http://owl.phy.queensu.ca/~phil/exiftool/
-if [[ $(dpkg -l | grep libimage-exiftool-perl) = '' ]]; then
-	apt-get -qqy install libimage-exiftool-perl > /dev/null
-	status-apt-cmd
-fi
-
-
-# *exiv2* is another tool for obtaining and changing media metadata but has limited support for video files- wont handle mp4- compared to *libimage-exiftool-perl*
-# http://www.exiv2.org/
-if [[ $(dpkg -l | grep exiv2) = '' ]]; then
-	apt-get -qqy install exiv2 > /dev/null
-	status-apt-cmd
-fi
-
-
-if [[ $(dpkg -l | grep mailutils) = '' ]]; then
-	apt-get -qqy install mailutils > /dev/null
-	status-apt-cmd
-fi
-
-
-# "screen" creates a shell session that can remain active after an SSH session ends that can be reconnected to on future SSH sessions.
-# If you have a flaky Internet connection or need to start a long running process  screen" is your friend
-if [[ $(dpkg -l | grep screen) = '' ]]; then
-	apt-get -qqy install screen > /dev/null
-	status-apt-cmd
-fi
-
-
-# mtr is like traceroute on steroids.  All network engineers I know use this in preference to "traceroute" or "tracert":
-if [[ $(dpkg -l | grep mtr) = '' ]]; then
-	apt-get -qqy install mtr > /dev/null
-	status-apt-cmd
-fi
-
-# tcpdump is a packet sniffer you can use to investigate connectivity issues and analyze traffic:
-if [[ $(dpkg -l | grep tcpdump) = '' ]]; then
-	apt-get -qqy install tcpdump > /dev/null
-	status-apt-cmd
-fi
-
-# iptraf-ng can be used to investigate bandwidth issues if you are puking too many chunky images over a thin connection:
-if [[ $(dpkg -l | grep iptraf-ng) = '' ]]; then
-	apt-get -qqy install iptraf-ng > /dev/null
-	status-apt-cmd
-fi
-
-
-# "vokoscreen" is a great screen recorder that can be minimized so it is not visible in video
-# "recordmydesktop" generates videos with a reddish cast - for at least the past couple of years- so I use "vokoscreen" and "vlc" will be installed instead
-if [[ $(dpkg -l | grep vokoscreen) = '' ]]; then
-	apt-get -qqy install vokoscreen libx264-148 > /dev/null
-	status-apt-cmd
-fi
-
-
-# VLC can be used to both play video and also to record your desktop for HowTo videos of your Linux projects:
-if [[ $(dpkg -l | grep vlc) = '' ]]; then
-	apt-get -qqy install vlc vlc-plugin-access-extra browser-plugin-vlc > /dev/null
-	status-apt-cmd
-fi
-
-
-# dstat is an diagnostic tool to gain insight into performance issues regarding memory storage and CPU
-if [[ $(dpkg -l | grep dstat) = '' ]]; then
-	apt-get -qqy install dstat > /dev/null
-	status-apt-cmd
-fi
-
-
-# ipcalc useful for perform IPv4 calculations and processing the results in scripts
-if [[ $(dpkg -l | grep ipcalc) = '' ]]; then
-	apt-get -qqy install ipcalc > /dev/null
-	status-apt-cmd
-fi
-
-
-# ipv6calc another IP calculations tool useful for extracting and manipulating addressing info in scripted tests
-if [[ $(dpkg -l | grep ipv6calc) = '' ]]; then
-	apt-get -qqy install ipv6calc > /dev/null
-	status-apt-cmd
-fi
-
-
-
+########  Below Packages Require Unique Installation due to TUI Dialogs Which Can Break Scripted Installs:
 
 # How to answer "no" to an interactive TUI dialog box in a script for an non-interactive installs:
 #	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
 # 	http://www.microhowto.info/howto/perform_an_unattended_installation_of_a_debian_package.html
 
 # * boolean false * is piped to debconf-set-selections to pre-seed the answer to interactive install question *Should kexec-tools handle reboots(sysvinit only)?*
+
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selections
 	apt-get -qq install kexec-tools > /dev/null
 	status-apt-cmd
 	echo
 fi
+
+
+
+echo "$(tput setaf 2)SUCCESSFUL$(tput sgr 0) Package Installations:"
+echo
+echo $PACKAGESINSTALLED | tee -a $PATHLOGINSTALL/packages-installed.log
+echo
+
+echo
+echo "$(tput setaf 1)UNsuccessful$(tput sgr 0) Package Installations:"
+echo
+echo "$(diff --new-line-format="" --unchanged-line-format="" $PATHINSTALLDIR/packages-list-required.txt $PATHLOGINSTALL/packages-installed.log)"|tee -a $PATHLOGINSTALL/packages-installed-FAILURES.log
+echo 
+
+
+
+# Update apt-file DB with new packages installed so they can be searched with this utility:
+apt-file update
+
+
