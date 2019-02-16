@@ -62,3 +62,14 @@ password    $GMAILPASSWD
 account default : $SMTPRELAYFQDN
 
 EOF
+
+
+echo
+echo 'MSMTP config file /etc/msmtprc created'
+
+echo
+echo '*IF* port TCP/25 blocked then the TLS Fingerprint of your self-hosted SMTP relay will not be computed and supplied to the *tls_fingerprint* directive in msmtprc config file'
+echo 'It will consequently not be treated as TRUSTED by MSMTP which will not relay alerts to your self-hosted SMTP server'
+echo
+echo 'If you do *NOT* receive alerts from a self-hosted SMTP mail relay check the * tls_fingerprint * directive for a fingerprint in /etc/msmtprc'
+echo

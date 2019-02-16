@@ -24,15 +24,10 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-# Restore configuration to a predictable known state if a backup exists:
-if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf.ORIGINAL ]; then
-	mv /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf.ORIGINAL /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf
-fi
+echo "To stop frequent writes from trashing MicroSD card where Pi OS lives"
+echo "directories with frequent write activity will be mounted on USB storage"
+echo
 
-# Make a backup of the default config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf.ORIGINAL ]; then
-	cp -p /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf.ORIGINAL
-fi
 
 # Disable automounting by default Filemanager * pcmanfm * if present: it steps on our SystemD automount which offers greater flexibility to change mount options:
 if [ -f /home/pi/.config/pcmanfm/LXDE-pi/pcmanfm.conf ]; then

@@ -43,6 +43,14 @@ chown -R pi:pi /home/pi/Dropbox-Uploader
 cat <<EOF> $PATHSCRIPTS/Dropbox-Uploader.sh
 #!/bin/bash
 
+# The open-ipcamera Project: www.open-ipcamera.net
+# Developer:  Terrence Houlahan Linux Engineer F1Linux.com
+# https://www.linkedin.com/in/terrencehoulahan/
+# Contact: terrence.houlahan@open-ipcamera.net
+# Copyright (C) 2018 2019 Terrence Houlahan
+# License: GPL 3
+
+
 # Script searches /media/automount1 for jpg and mp4 files and pipes those it finds to xargs which
 # first uploads them to dropbox and then deletes them ensuring storage does not fill to 100 percent
 
@@ -95,3 +103,7 @@ chmod 644 /etc/systemd/system/Dropbox-Uploader.timer
 systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
+
+
+echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md'
+echo

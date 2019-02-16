@@ -1,0 +1,15 @@
+mutt
+apt-file
+netselect-apt
+libimage-exiftool-perl
+exiv2
+mailutils
+screen
+mtr
+tcpdump
+iptraf-ng
+vokoscreen
+vlc
+dstat
+ipcalc
+ipv6calc

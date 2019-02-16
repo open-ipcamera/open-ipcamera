@@ -25,6 +25,10 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
+# By default Dropbox API used to upload images breaks scripted automation by requiring user input on first access.
+# So we initiate an access then spit back the token supplied in variable DROPBOXACCESSTOKEN and finally acknowledge it is correct
+
+
 # Test file has date+time format name to ensure upload does not conflict with a previous test file or token initialization will fail:
 touch /home/pi/test_`date +%Y-%m-%d_%H-%M-%S`.txt
 

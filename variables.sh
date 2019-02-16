@@ -26,7 +26,7 @@
 # NOTE: YOUR GPG SECRET KEY WILL *NOT* BE STORED ON THE PI- it stays on your own computer.
 # For a GPG Encryption Boot-Camp to understand what to plug into below GPG variables visit my YouTube Channel "www.YouTube.com/user/LinuxEngineer"
 GPGKEYIDPUBLICYOURS='YourGPGkeyIDhere'
-GPGKEYIDPUBLICYOURSEMAIL='terrence.houlahan@open-ipcamera.net'
+GPGKEYIDPUBLICYOURSEMAIL='emailAddressAssociatedWithGPGkeyIDHere'
 # Project Developer (Terrence Houlahan) Public key provided to offer users option of sending encrypted bug reports
 # terrence.houlahan@open-ipcamera.net Key Fingerprint: 704F CD25 56C4 0AF8 F2FB  D8E2 E5A1 DE67 F98F A66F
 GPGPUBKEYIDDEVELOPERTERRENCE='E5A1DE67F98FA66F'
@@ -108,6 +108,8 @@ STREAMAUTHMETHOD='0'
 WEBCONTROLLOCALHOST='off'
 ############## open-ipcamera INSTALL VARIABLES: ##############
 #*#*#*#*#*#*#*# DO NOT EDIT BELOW VARIABLES: #*#*#*#*#*#*#*#
+PACKAGESINSTALLED=$(cat /var/log/apt/history.log|grep "Commandline"|grep "install"|awk '{print $5}'|uniq)
+PACKAGESPURGED=$(cat /var/log/apt/history.log|grep "Commandline"|grep "purge"|awk '{print $4}'|uniq)
 # Following variables self-resolve host IPv4/6v addresses so they can be automatically inserted in config files to avoid manual configuration
 # * CAMERAIPV4 * Prints first non-local IPv4 address. If connected both wired and wirelessly the IP of eth0 will take precedence based on implied logic cable was connected for some reason
 CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
