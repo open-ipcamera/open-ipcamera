@@ -76,16 +76,6 @@ echo "$(tput setaf 6)     - Terrence Houlahan Linux Engineer and open-ipcamera P
 echo
 
 
-# First job is to create the logging directory so we can track our installation as it progresses
-
-if [ ! -d $PATHLOGINSTALL]; then
-	mkdir -p $PATHLOGINSTALL
-	chown pi:pi $PATHLOGINSTALL
-	chmod 751 $PATHLOGINSTALL
-	echo "Created $PATHLOGINSTALL Directory"
-	echo
-fi
-
 
 
 echo
@@ -109,12 +99,36 @@ fi
 echo "Install open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 
+
+
+echo
+echo "$(tput setaf 5)****** Create open-ipcamera Directories:  ******$(tput sgr 0)"
+echo
+
+if [ ! -d $PATHLOGINSTALL ]; then
+	mkdir -p $PATHLOGINSTALL
+	chown pi:pi $PATHLOGINSTALL
+	chmod 751 $PATHLOGINSTALL
+	echo "Created $PATHLOGINSTALL Directory"
+	echo
+fi
+
+
+
+if [ ! -d $PATHSCRIPTS ]; then
+	mkdir -p $PATHSCRIPTS
+	chown pi:pi $PATHSCRIPTS
+	chmod 751 $PATHSCRIPTS
+	echo "Created $PATHSCRIPTS Directory"
+	echo
+fi
+
+
+
 echo
 echo "$(tput setaf 5)****** Create *version.txt* File Required to Update open-ipcamera: ******$(tput sgr 0)"
 echo
 
-
-### version.txt
 
 # Delete *version.txt* file so it can be replaced with the updated version reflecting this install:
 if [ -f $PATHSCRIPTS/version.txt ]; then
@@ -124,7 +138,7 @@ fi
 
 # Create *version.txt* echoing the version number just installed into it:
 echo "# *****   THIS FILE HAS PERMS SET TO 'IMMUTABLE'   *****#" >> $PATHSCRIPTS/version.txt
-echo "# ** USED BY 'OPEN-IPCAMERA' TO CREATE UPGRADE PATCHES **#" >> $PATHSCRIPTS/version.txt
+echo "# ** USED BY 'OPEN-IPCAMERA' TO UPGRADE **#" >> $PATHSCRIPTS/version.txt
 echo '' >> $PATHSCRIPTS/version.txt
 echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
 

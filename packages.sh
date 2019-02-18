@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60
+# Version 1.60.1
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -22,24 +22,6 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
-
-
-echo
-echo "Script may appear to hang.  Just takes a few minutes to install all the packages"
-echo
-
-echo
-echo "$(tput setaf 5)****** Create open-ipcamera Directories:  ******$(tput sgr 0)"
-echo
-
-
-if [ ! -d $PATHSCRIPTS ]; then
-	mkdir -p $PATHSCRIPTS
-	chown pi:pi $PATHSCRIPTS
-	chmod 751 $PATHSCRIPTS
-	echo "Created $PATHSCRIPTS Directory"
-	echo
-fi
 
 
 
@@ -132,6 +114,11 @@ echo
 # 	To MANUALLY configure:
 #      	sudo netselect-apt --arch armhf --nonfree --outfile /etc/apt/sources.list
 # 	Then edit "sources.list" file and change "stable" TO "stretch" (or whatever the current Raspbian release is)
+
+
+echo
+echo "Script may appear to hang.  Just takes a few minutes to install all the packages"
+echo
 
 
 readarray arrayPackagesListRequired < $PATHINSTALLDIR/packages-list-required.txt
