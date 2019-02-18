@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -34,7 +34,7 @@ defaults
 auth           on
 tls            on
 tls_starttls   on
-logfile        $PATHLOGINSTALL/msmtp.log
+logfile        $PATHLOGSAPPS/msmtp.log
 
 # For TLS support uncomment either tls_trustfile_file directive *OR* tls_fingerprint directive: NOT BOTH
 # Note: tls_trust_file wont work with self-signed certs: use the tls_fingerprint directive in lieu

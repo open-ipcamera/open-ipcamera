@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,11 +24,14 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-### Create Directories for home-rolled scripts to live in:
+echo
+echo "Script may appear to hang.  Just takes a few minutes to install all the packages"
+echo
 
 echo
-echo "$(tput setaf 5)****** Create open-ipcamera Scripts Directory:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** Create open-ipcamera Directories:  ******$(tput sgr 0)"
 echo
+
 
 if [ ! -d $PATHSCRIPTS ]; then
 	mkdir -p $PATHSCRIPTS
@@ -41,7 +44,7 @@ fi
 
 
 echo
-echo "$(tput setaf 5)******PACKAGES: Remove conflicting packages or bloatware from default Raspbian image$(tput sgr 0)"
+echo "$(tput setaf 5)******  PACKAGES: Remove conflicting packages or bloatware from default Raspbian image  ******$(tput sgr 0)"
 echo
 
 # usbmount: interferes with SystemD auto-mounts which we will use for the USB Flash Drive where video and images are written locally to
@@ -160,7 +163,7 @@ fi
 done
 
 
-########  Below Packages Require Unique Installation due to TUI Dialogs Which Can Break Scripted Installs:
+########  Below Packages Require Unique Installation due to TUI Dialogs Which Can Break Scripted Installs:  ########
 
 # How to answer "no" to an interactive TUI dialog box in a script for an non-interactive installs:
 #	https://unix.stackexchange.com/questions/106552/apt-get-install-without-debconf-prompt
@@ -191,6 +194,4 @@ echo
 
 
 # Update apt-file DB with new packages installed so they can be searched with this utility:
-apt-file update
-
-
+apt-file update > /dev/null

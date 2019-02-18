@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -35,9 +35,9 @@ echo
 echo '########  COMMON DEVELOPMENT ERRORS:  ########'
 
 echo
-echo 'If you broke the build hacking my script tweaking it a few tips to help you unbreak it:'
+echo 'If you broke the build hacking open-ipcamera scripts here are a few tips to help you unbreak it:'
 echo
-echo 'As a *GENERAL* rule begin hunting for dev errors at the point just above where the script went haywire.'
+echo 'As a *GENERAL* rule begin hunting for dev errors at the point just above where the script puked its first error'
 echo
 echo 'A few useful git commands to investigate development changes which caused a break:'
 echo
@@ -329,5 +329,4 @@ chown pi:pi $PATHSCRIPTS/troubleshooting-helper.sh
 
 
 echo "Created $PATHSCRIPTS/troubleshooting-helper.sh"
-echo
 echo

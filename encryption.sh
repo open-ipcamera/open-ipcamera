@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,6 +24,6 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-# Download the Developer Pub Key used to sign releases and to send encrypted bug reports
+# Download the Developer Pub Key used to sign releases and to send encrypted bug reports into the keychain
 # Terrence Houlahan open-ipcamera key fingerprint: 55F0 6FEA FD60 BBB5 38BA  D470 C526 69EF BAF4 A660
 gpg --keyserver hkp://keys.gnupg.net:80 --recv $GPGPUBKEYIDDEVELOPERTERRENCE

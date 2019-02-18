@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -103,11 +103,4 @@ sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 User Added by net-snmp-config to /u
 systemctl enable snmpd.service
 systemctl start snmpd.service
 
-echo
-
-echo 'Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):'
-echo '---------------------------------------------------------------------------------------------'
-snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
-echo
-echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
 echo

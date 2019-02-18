@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -81,15 +81,6 @@ echo "Added Your Public Key to * authorized_keys * file"
 echo
 
 
-# Restore configuration to a predictable known state if a backup exists:
-if [ -f /etc/lightdm/lightdm.conf.ORIGINAL]; then
-	mv /etc/lightdm/lightdm.conf.ORIGINAL /etc/lightdm/lightdm.conf
-fi
-
-# Make a backup of the default config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /etc/lightdm/lightdm.conf.ORIGINAL ]; then
-	cp -p /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.ORIGINAL
-fi
 
 # Disable autologin now that Public Key Access enabled:
 sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
@@ -111,7 +102,7 @@ if [ -f /home/pi/.selected_editor ]; then
 	sed -i 's|SELECTED_EDITOR="/bin/nano"|SELECTED_EDITOR="/usr/bin/vim"|' /home/pi/.selected_editor
 fi
 
-# The cp below serves to restore /home/pi/.vimrc to the default state before the sed makes the appends
+# The cp below restores /home/pi/.vimrc to default state before sed makes the appends
 cp /usr/share/vim/vimrc /home/pi/.vimrc
 echo "Created /home/pi/.vimrc"
 

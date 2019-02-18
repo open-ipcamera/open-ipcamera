@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -339,11 +339,13 @@ else
 fi
 
 
+# NOTE:  This is the EARLIEST this directory can be created- needs to live on the mount we created for it.
+#	Do not move the creation of this directory from the end of this file nor specify it before storqge.sh has been called by open-ipcamera-config.sh
 # Create a folder on USB flash storage to write our persistent logs to.
 # This is to avoid abusing MicroSD card housing the OS with frequent writes
-if [ ! -d $PATHLOGINSTALL ]; then
-	mkdir -p $PATHLOGINSTALL
-	chmod 751 $PATHLOGINSTALL
+if [ ! -d $PATHLOGSAPPS ]; then
+	mkdir -p $PATHLOGSAPPS
+	chmod 751 $PATHLOGSAPPS
 else
-	echo 'Directory $PATHLOGINSTALL already exists on USB Flash Storage'
+	echo "Directory $PATHLOGSAPPS already exists on USB Flash Storage"
 fi

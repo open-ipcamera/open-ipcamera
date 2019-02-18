@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -49,17 +49,6 @@ lsb_release -a
 echo
 echo "Kernel: $(uname -r)"
 echo
-
-
-# Restore configuration to a predictable known state if a backup exists:
-if [ -f /etc/lightdm/lightdm.conf.ORIGINAL]; then
-	mv /etc/lightdm/lightdm.conf.ORIGINAL /etc/lightdm/lightdm.conf
-fi
-
-# Make a backup of the default config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /etc/lightdm/lightdm.conf.ORIGINAL ]; then
-	cp -p /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.ORIGINAL
-fi
 
 
 # Ensure autologin remains disabled after an upgrade:

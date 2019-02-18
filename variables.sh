@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+
 #   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
@@ -25,11 +25,13 @@
 # However steps can be taken to harden Pi from attacks from attacks by REMOTE users on a network- ie the Internet.
 # NOTE: YOUR GPG SECRET KEY WILL *NOT* BE STORED ON THE PI- it stays on your own computer.
 # For a GPG Encryption Boot-Camp to understand what to plug into below GPG variables visit my YouTube Channel "www.YouTube.com/user/LinuxEngineer"
+# WARNING: If you are NOT supplying your own GPG Key ID in below variable do NOT change default value of *YourGPGkeyIDhere*
 GPGKEYIDPUBLICYOURS='YourGPGkeyIDhere'
 GPGKEYIDPUBLICYOURSEMAIL='emailAddressAssociatedWithGPGkeyIDHere'
 # Project Developer (Terrence Houlahan) Public key provided to offer users option of sending encrypted bug reports
 # terrence.houlahan@open-ipcamera.net Key Fingerprint: 704F CD25 56C4 0AF8 F2FB  D8E2 E5A1 DE67 F98F A66F
 GPGPUBKEYIDDEVELOPERTERRENCE='E5A1DE67F98FA66F'
+GPGPUBKEYDEVELOPERTERRENCE='PubKey_terrence.houlahan_at_open-ipcamera.net_KeyID_FE5A1DE67F98FA66F.asc'
 # ** WARNING ** REPLACE MY PUBLIC KEY BELOW WITH YOUR OWN: I cannot get into your Pi if its behind a NATed firewall but good IT Sec practice to not grant strangers PubKey access to your hosts 
 MYPUBKEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/4ujZFHJrXgAracA7eva06dz6XIz75tKei8UPZ0/TMCb8z01TD7OvkhPGMA1nqXv8/ST7OqG22C2Cldknx+1dw5Oz8FNekHEJVmuzVGT2HYvcmqr4QrbloaVfx2KyxdChfr9fMyE1fmxRlxh1ZDIZoD/WrdGlHZvWaMYuyCyqFnLdxEF/ZVGbh1l1iYRV9Et1FhtvIUyeRb5ObfJq09x+OlwnPdS21xJpDKezDKY1y7aQEF+D/EhGk/UzA91axpVVM9ToakupbDk+AFtmrwIO7PELxHsN1TtA91e2dKOps3SmcVDluDoUYjO33ozNGDoLj08I0FJMNOClyFxMmjUGssA4YIdiYIx3+uae3Bjnu4qpwyREPxxiWZwt20vzO6pvyxqhjcU49gmAgp1pOgBXkkkpu/CHiDFGAJW06nk1QgK9NwkNKL2Tbqy30HY4K/px1OkgaDyvXIRvz72HRR+WZIfGHMW8RLa7ceoUU4dXObqgUie0FGAU23b2m2HTjYSyj2wAAFp5ONkp9F6V2yeeW1hyRvEwQnX7ov95NzIMvtvYvn5SIX7GVIy+/8TlLpChMCgBJ4DV13SVWwa5E42HnKILoDKTZ3AG0ILMRQsJdv49b8ulwTmvtEmHZVRt7mEVF8ZpVns68IH3zYWIDJioSoKWpj7JZGNUUPo79PS+wQ== terrence@Terrence-MBP.local'
 ############## Linux OS VARIABLES:  ##############
@@ -118,11 +120,13 @@ CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64
 # The current version is extracted from the header in this install script
 VERSIONLATEST="$(grep -m1 '# Version' $0|awk '{print $3}'| cut -d 'v' -f2)"
 # To check the version of a previously installed version we go outside the repo path to a script installed by HereDoc:
-VERSIONINSTALLED="$(grep -m1 '# Version' /home/pi/scripts/open-ipcamera/version.txt|awk '{print $3}'| cut -d 'v' -f2)"
-PATHSCRIPTS='/home/pi/scripts/open-ipcamera'
+VERSIONINSTALLED="$(grep -m1 '# Version' /home/pi/open-ipcamera/scripts/version.txt|awk '{print $3}'| cut -d 'v' -f2)"
+PATHSCRIPTS='/home/pi/open-ipcamera/scripts'
+# Only logging relate to installing/upgrading of open-ipcamera will live here. No subsequent logging writes here to provide a starting point for analyzing change from a clean build
+PATHLOGINSTALL='/home/pi/open-ipcamera/logs'
 PATHINSTALLDIR='/home/pi/open-ipcamera'
-# App logs are pointed to USB storage to reduce writes to MicroSD card. SystemD JournalD logs cannot be redirected however and are written to /var on card
-PATHLOGINSTALL='/media/automount1/logs'
+# Service logs are pointed to USB storage to reduce writes to MicroSD card. SystemD JournalD logs cannot be redirected however and are written to /var on card
+PATHLOGSAPPS='/media/automount1/logs'
 # This script is designed to run *mostly* unattended. Package installation requiring user input is therefore undesirable
 # We set a non-persistent (will not survive reboot) preference for duration of our script:
 export DEBIAN_FRONTEND=noninteractive
