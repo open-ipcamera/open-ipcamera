@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -88,4 +88,5 @@ echo
 timedatectl status
 echo
 
-echo 'Validate above time against a your computers clock to ensure it approximates the current time in your geographic locality'
+echo 'Validate above time against your computer clock to ensure it approximates current time in your geography'
+echo

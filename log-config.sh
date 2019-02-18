@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -26,7 +26,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 
 echo 'Default System log data is non-persistent. It exists im memory and is lost on every reboot'
 echo 'Logging will be made persistent by writing it to disk in lieu of memory'
-
+echo
 
 # Restore configuration to a predictable known state if a backup exists:
 if [ -f /etc/systemd/journald.conf.ORIGINAL ]; then
@@ -76,7 +76,7 @@ echo '--------------'
 echo '1. Although SystemD logging has been changed to persistent by writing the logs to disk'
 echo 'verbosity was also reduced to limit writes to bare minimum to avoid hammering MicroSD card.'
 echo
-echo "2. Application log paths have been changed to $PATHLOGINSTALL on USB storage to limit abuse to MicroSD card."
+echo "2. Application log paths have been changed to $PATHLOGSAPPS on USB storage to limit abuse to MicroSD card."
 echo 'Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card'
 echo
 echo "3. Changes in $(tput setaf 1)RED$(tput sgr 0) can be reverted in: /etc/systemd/journald.conf"

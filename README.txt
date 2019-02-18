@@ -2,7 +2,7 @@
 # Developer:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 # "open-ipcamera-config.sh" installs & configs Raspberry Pi as a Motion Detection Camera,
 #  and upon a detection event uploads images to Dropbox and emails an alert
@@ -77,10 +77,15 @@
 #	d. Connect Pi to Internet (requires DHCP to be enabled on your network) either Wired or Wirelessly:
 #		1. WIRED: Plug a cable from a switch
 #		2. WiFi: Click the little WiFi symbol at top RIGHT of your screen and choose a network and set a password to join it
-#	e. Watch the detailed "open-ipcamera" video instructions provided at:
-#		www.YouTube.com/user/LinuxEngineer
-#	f. Configure firewall rules after script execution to restrict access to your open-ipcamera.
-#		Every network is different and I cannot automate this for you without risk of breaking other things.
+#	e. variables.sh: Populate the variables with your data:
+#			cd /home/pi/open-ipcamera
+#			nano variables.sh
+#	f. open-ipcamera-config.sh:  This is the main install script which read the variables file and calls all the other scripts in the directory
+#	   Execute it as below:
+#			sudo ./open-ipcamera-config.sh
+#	Detailed "open-ipcamera" video instructions can be viewed at:
+#			www.YouTube.com/user/LinuxEngineer
+#	g. And do not forget to Configure firewall rules after the script completes to restrict access to your open-ipcamera
 
 # 8. TROUBLESHOOTING:
 # Before posting issues in the "open-ipcamera" Github repo, please try to self-resolve issues first by:

@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -48,7 +48,7 @@ sed -i 's/; webcontrol_authentication username:password/webcontrol_authenticatio
 
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
-sed -i "s|logfile /var/log/motion/motion.log|logfile $PATHLOGINSTALL/motion.log|" /etc/motion/motion.conf
+sed -i "s|logfile /var/log/motion/motion.log|logfile $PATHLOGSAPPS/motion.log|" /etc/motion/motion.conf
 sed -i "s/log_level 6/log_level $LOGLEVEL/" /etc/motion/motion.conf
 sed -i "s/rotate 0/rotate $ROTATE/" /etc/motion/motion.conf
 sed -i "s/width 320/width $WIDTH/" /etc/motion/motion.conf
@@ -79,3 +79,7 @@ sed -i "s/start_motion_daemon=no/start_motion_daemon=yes/" /etc/default/motion
 
 echo "Set motion to start on boot"
 systemctl enable motion.service
+
+echo
+echo 'Further Info: https://motion-project.github.io/motion_config.html'
+echo

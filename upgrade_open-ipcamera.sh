@@ -4,7 +4,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -34,7 +34,7 @@ CAMERAIPV4=''
 # STEP 2:
 # Copy this script *FROM* your Pi *TO* the computer where your secret key resides:
 #
-#     scp://\$CAMERAIPV4:/home/pi/scripts/open-ipcamera/update_open-ipcamera.sh .
+#     scp://\$CAMERAIPV4:/home/pi/open-ipcamera/scripts/update_open-ipcamera.sh .
 
 # Step 3:
 # Execute this update script *ON HOST WITH YOUR GPG SECRET KEY*:
@@ -43,7 +43,7 @@ CAMERAIPV4=''
 
 ########## DO NOT EDIT BELOW THIS LINE ##########
 
-PATHSCRIPTS='/home/pi/scripts/open-ipcamera'
+PATHSCRIPTS='/home/pi/open-ipcamera/scripts'
 PATHINSTALLDIR='/home/pi/open-ipcamera'
 PATHOPENIPCAMERAREPO='https://github.com/f1linux/'
 
@@ -80,7 +80,7 @@ else
 	# Create variable to show users which new variables in variables.sh they need to provide values for prior to executing the upgrade script:
 	VARIABLESEMPTY=\$(ssh pi@\$CAMERAIPV4 "cat \$PATHINSTALLDIR/variables.sh|grep -o ".*='' ")
 
-	# Next test if changes to variables.sh in the upgrade version included any new variables being added which as yet undefined. If true notify user to complete them and exit upgrade script:
+	# Next test if changes to variables.sh in the upgrade version included any new variables being added which as yet undefined. If TRUE notify user to complete them and exit upgrade script:
 	if [ "\$VARIABLESEMPTY" != '' ]; then echo "Provide values for empty variables in variables.sh" && echo && echo "\$VARIABLESEMPTY" && echo && echo "Re-execute upgrade script after completed && exit ; fi
 
 

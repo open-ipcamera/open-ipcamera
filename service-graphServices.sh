@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -38,10 +38,10 @@ tee "$PATHSCRIPTS/boot_service_order_dependencies_graph.sh" > /dev/null <<EOF
 
 # When iteratively testing service dependency startup ordering we make changes to the .service unit file *Unit* directives After= and Wanted= and reboot.
 # We only need to retain a few copies- 1 hours worth- of these plots for comparative purposes until we determine the correct dependent ordering:
-find $PATHLOGINSTALL/ -type f -mmin +60 -name '*.svg' -execdir rm -- '{}' \;
+find $PATHLOGSAPPS/ -type f -mmin +60 -name '*.svg' -execdir rm -- '{}' \;
 
 # Create a Plot of dependent relationships between services on boot to aid in troubleshooting broken scripts and services
-systemd-analyze plot > $PATHLOGINSTALL/boot_service_order_dependencies_graph_`date +%Y-%m-%d_%H-%M-%S`.svg
+systemd-analyze plot > $PATHLOGSAPPS/boot_service_order_dependencies_graph_`date +%Y-%m-%d_%H-%M-%S`.svg
 
 EOF
 
@@ -73,5 +73,5 @@ systemctl enable boot_service_order_dependencies_graph.service
 
 
 echo 'To view a graph of dependent relationships on boot to troubleshoot broken scripts or services go to:'
-echo "     $(tput setaf 6)$PATHLOGINSTALL/boot_service_order_dependencies_graph_Date.svg$(tput sgr 0)"
+echo "     $(tput setaf 6)$PATHLOGSAPPS/boot_service_order_dependencies_graph_Date.svg$(tput sgr 0)"
 echo

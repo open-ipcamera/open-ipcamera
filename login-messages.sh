@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.40
+# Version 1.60
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -49,13 +49,6 @@ echo >> /etc/motd
 echo 'Manually change *VIDEO* resolution using Video4Linux driver: tailor below example to your own use-case:' >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
 echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
-echo >> /etc/motd
-echo 'Obtain resolution and other data from an image file:' >> /etc/motd
-echo 'exiv2 /media/pi/imageName.jpg' >> /etc/motd
-echo >> /etc/motd
-echo 'To see metadata for an image or video:' >> /etc/motd
-echo 'exiftool /media/pi/videoName.mp4' >> /etc/motd
-echo >> /etc/motd
 echo >> /etc/motd
 echo 'To edit or delete these login messages:  vi /etc/motd' >> /etc/motd
 echo >> /etc/motd

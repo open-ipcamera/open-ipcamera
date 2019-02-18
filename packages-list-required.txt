@@ -15,6 +15,5 @@ gnupg
 gnupg-agent
 dirmngr
 diffutils
-expect
 parallel
-
+expect
