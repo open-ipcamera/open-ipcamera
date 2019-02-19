@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -44,7 +44,7 @@ done
 
 echo "Packages PURGED:"
 echo
-echo $PACKAGESPURGED | tee -a $PATHLOGINSTALL/packages-purged.log
+echo $PACKAGESPURGED  >> $PATHLOGINSTALL/packages-purged-v$VERSIONLATEST.log
 echo
 
 
@@ -117,7 +117,7 @@ echo
 
 
 echo
-echo "Script may appear to hang.  Just takes a few minutes to install all the packages"
+echo "Script may appear to hang.  Just takes a several minutes to install all the packages"
 echo
 
 
@@ -161,13 +161,17 @@ done
 if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 	echo kexec-tools kexec-tools/load_exec boolean false | debconf-set-selections
 	apt-get -qq install kexec-tools > /dev/null
-	status-apt-cmd
-	echo
 fi
 
 
-echo "$PACKAGESINSTALLED" >> $PATHLOGINSTALL/packages-installed.log
+echo $PACKAGESINSTALLED >> $PATHLOGINSTALL/packages-installed-v$VERSIONLATEST.log
 
+
+
+echo
+echo "$(tput setaf 5)****** Verify All Packages Installed Successfully:  ******$(tput sgr 0)"
+echo
+echo "Expected result of lists returned below is to be empty: if not investigate failed package installs"
 
 
 

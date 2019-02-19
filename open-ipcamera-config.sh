@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -85,7 +85,7 @@ echo
 # Determine if a FULL INSTALL or UPGRADE is required by testing for presence of the file variables.sh.asc:
 if [ ! -f $PATHSCRIPTS/version.txt ]; then
 	echo
-	echo "No previous install of open-ipcamera found. Performing full install of open-ipcamera"
+	echo "No previous install of open-ipcamera found. Performing full installation"
 	echo
 else
 	echo
@@ -154,9 +154,23 @@ echo
 echo
 echo "$(tput setaf 5)****** PACKAGE MANAGEMENT:  ******$(tput sgr 0)"
 echo
+echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
+echo
 
-./packages.sh&
+time ./packages.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
+
+
+
+
+echo
+echo "$(tput setaf 5)****** GPG: Import Developer Key  ******$(tput sgr 0)"
+echo
+
+./encryption.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+
+
 
 
 echo
@@ -257,7 +271,7 @@ echo 'Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0
 echo '---------------------------------------------------------------------------------------------'
 snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
 echo
-echo "Expected result of the snmpget should be: * $SNMPLOCATION *"
+echo "Expected result of snmpget should be: * $SNMPLOCATION *"
 echo
 
 
@@ -298,13 +312,21 @@ echo
 ./service-emailCameraAddress.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
 
-
-./service-emailMotionDetectionCameraAddress.sh 2>> $PATHLOGINSTALL/install.log&
+./service-emailMotionDetectionCameraAddress.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
-
 
 ./service-heatAlert.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
+
+
+
+
+echo
+echo "$(tput setaf 5)****** open-ipcamera Services: Show Services Created Executing on Timers  ******$(tput sgr 0)"
+echo
+
+systemctl list-timers --all
+
 
 
 
@@ -385,7 +407,8 @@ echo 'Deleted * open-ipcamera * Repo Directory'
 echo
 
 # Change ownership of all files created by this script FROM user *root* TO user *pi*:
-chown -R pi:pi /home/pi
+# Redirection of stdout to /dev/null is to quiet "operation not permitted error on version.txt which is set to immutable and so no error
+chown -R pi:pi /home/pi 2> /dev/null
 
 
 
@@ -401,9 +424,14 @@ echo
 echo
 echo "$(tput setaf 5)****** apt-get upgrade and dist-upgrade: ******$(tput sgr 0)"
 echo
+echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
+echo
 
-./os-upgrade.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+time ./os-upgrade.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
+
+
+
 
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo "Install open-ipcamera v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log

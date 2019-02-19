@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -80,3 +80,4 @@ echo "2. Application log paths have been changed to $PATHLOGSAPPS on USB storage
 echo 'Was not possible to change path of /etc/systemd/journald.conf so JournalD still writes to MicroSD card'
 echo
 echo "3. Changes in $(tput setaf 1)RED$(tput sgr 0) can be reverted in: /etc/systemd/journald.conf"
+echo
