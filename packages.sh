@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.1
+# Version 1.60.2
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -36,7 +36,7 @@ echo
 readarray arrayPackagesListPURGE < $PATHINSTALLDIR/packages-list-purge.txt
 
 for i in ${arrayPackagesListPURGE[@]}; do
-if [[ ! $(dpkg -l | grep "^ii $i[[:space:]]") = '' ]]; then
+if [[ ! $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
 	apt-get -qqy purge $i > /dev/null
 fi
 done
@@ -124,7 +124,7 @@ echo
 readarray arrayPackagesListRequired < $PATHINSTALLDIR/packages-list-required.txt
 
 for i in ${arrayPackagesListRequired[@]}; do
-if [[ $(dpkg -l | grep "^ii $i[[:space:]]") = '' ]]; then
+if [[ $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
 	until apt-get -qqy install $i > /dev/null
 	do
 		status-apt-cmd
@@ -139,7 +139,7 @@ done
 readarray arrayPackagesListOptional < $PATHINSTALLDIR/packages-list-optional.txt
 
 for i in ${arrayPackagesListOptional[@]}; do
-if [[ $(dpkg -l | grep "^ii $i[[:space:]]") = '' ]]; then
+if [[ $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
 	until apt-get -qqy install $i > /dev/null
 	do
 		status-apt-cmd
@@ -166,16 +166,42 @@ if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 fi
 
 
+echo "$PACKAGESINSTALLED" >> $PATHLOGINSTALL/packages-installed.log
 
-echo "$(tput setaf 2)SUCCESSFUL$(tput sgr 0) Package Installations:"
-echo
-echo $PACKAGESINSTALLED | tee -a $PATHLOGINSTALL/packages-installed.log
-echo
+
+
 
 echo
-echo "$(tput setaf 1)UNsuccessful$(tput sgr 0) Package Installations:"
+echo "$(tput setaf 1)FAILED$(tput sgr 0) Package Installs: REQUIRED Packages"
 echo
-echo "$(diff --new-line-format="" --unchanged-line-format="" $PATHINSTALLDIR/packages-list-required.txt $PATHLOGINSTALL/packages-installed.log)"|tee -a $PATHLOGINSTALL/packages-installed-FAILURES.log
+
+# /var/log/apt/history.log only shows successful operations which changed the package database- it does NOT show FAILURES
+# After installing packages we loop through an array using same lists used to install but now we echo package name if NOT found by dpkg
+
+readarray arrayPackagesListFailedInstallRequired < $PATHINSTALLDIR/packages-list-required.txt
+
+for i in ${arrayPackagesListFailedInstallRequired[@]}; do
+if [[ $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
+	echo "$(tput setaf 1)$i$(tput sgr 0)"
+fi
+done
+
+
+
+echo
+echo "$(tput setaf 1)FAILED$(tput sgr 0) Package Installs: OPTIONAL Packages"
+echo
+
+
+readarray arrayPackagesListFailedInstallOptional < $PATHINSTALLDIR/packages-list-optional.txt
+
+for i in ${arrayPackagesListFailedInstallOptional[@]}; do
+if [[ $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
+	echo "$(tput setaf 1)$i$(tput sgr 0)"
+fi
+done
+
+
 echo 
 
 

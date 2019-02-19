@@ -4,7 +4,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.1
+# Version 1.60.2
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -34,7 +34,7 @@ CAMERAIPV4=''
 # STEP 2:
 # Copy this script *FROM* your Pi *TO* the computer where your secret key resides:
 #
-#     scp://\$CAMERAIPV4:/home/pi/open-ipcamera/scripts/update_open-ipcamera.sh .
+#     scp://\$CAMERAIPV4:/home/pi/open-ipcamera-scripts/update_open-ipcamera.sh .
 
 # Step 3:
 # Execute this update script *ON HOST WITH YOUR GPG SECRET KEY*:
@@ -43,7 +43,7 @@ CAMERAIPV4=''
 
 ########## DO NOT EDIT BELOW THIS LINE ##########
 
-PATHSCRIPTS='/home/pi/open-ipcamera/scripts'
+PATHSCRIPTS='/home/pi/open-ipcamera-scripts'
 PATHINSTALLDIR='/home/pi/open-ipcamera'
 PATHOPENIPCAMERAREPO='https://github.com/f1linux/'
 
