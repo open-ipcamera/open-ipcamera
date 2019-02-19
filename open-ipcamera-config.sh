@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60
+# Version 1.60.2
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -96,10 +96,6 @@ else
 fi
 
 
-echo "Install open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
-echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
-
-
 
 echo
 echo "$(tput setaf 5)****** Create open-ipcamera Directories:  ******$(tput sgr 0)"
@@ -109,7 +105,7 @@ if [ ! -d $PATHLOGINSTALL ]; then
 	mkdir -p $PATHLOGINSTALL
 	chown pi:pi $PATHLOGINSTALL
 	chmod 751 $PATHLOGINSTALL
-	echo "Created $PATHLOGINSTALL Directory"
+	echo "Created Directory $PATHLOGINSTALL"
 	echo
 fi
 
@@ -119,9 +115,14 @@ if [ ! -d $PATHSCRIPTS ]; then
 	mkdir -p $PATHSCRIPTS
 	chown pi:pi $PATHSCRIPTS
 	chmod 751 $PATHSCRIPTS
-	echo "Created $PATHSCRIPTS Directory"
+	echo "Created Directory $PATHSCRIPTS"
 	echo
 fi
+
+
+
+echo "Install open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 
 
 

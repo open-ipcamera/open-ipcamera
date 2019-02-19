@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.1
+# Version 1.60.2
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -41,5 +41,5 @@ if [[ "$GPGKEYIDPUBLICYOURS" != '' || 'YourGPGkeyIDhere' ]]; then
 	gpg --batch --yes --trust-model always -r $GPGKEYIDPUBLICYOURSEMAIL -a -e $PATHSCRIPTS/variables.sh
 	# Delete *UNENCRYPTED* variables.sh file:
 	rm $PATHSCRIPTS/variables.sh
-	echo ""
+	echo ''
 fi

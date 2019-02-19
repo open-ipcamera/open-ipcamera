@@ -6,6 +6,7 @@ exfat-fuse
 motion
 ffmpeg
 msmtp
+snmp
 snmpd
 snmp-mibs-downloader
 libsnmp-dev
