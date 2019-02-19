@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -35,8 +35,8 @@ if [ ! -f /etc/systemd/system.conf.ORIGINAL ]; then
 fi
 
 
-echo 'The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core.'
-echo 'By restricting SYSTEM processes to living on CPUs 0-2 when we pin motion to core that leaves 3 uncontended for Motion to use'
+echo "$(tput setaf 6)The Pi 3B+ has a 4-core CPU. Motion in this install is single threaded. We will pin the process to a dedicated core.$(tput sgr 0)"
+echo "$(tput setaf 6)By restricting SYSTEM processes to executing on CPUs 0-2 when we pin Motion to core 3 its use will be uncontended by other processes$(tput sgr 0)"
 echo
 
 cp -p /etc/systemd/system.conf /etc/systemd/system.conf.ORIGINAL
@@ -52,8 +52,6 @@ diff --color /etc/systemd/system.conf /etc/systemd/system.conf.ORIGINAL
 echo
 
 
-
-echo 'Automate setting CPU Affinity for Motion on boot'
 
 cat <<'EOF'> $PATHSCRIPTS/set-cpu-affinity.sh
 #!/bin/bash
@@ -98,3 +96,6 @@ chmod 644 /etc/systemd/system/set-cpu-affinity.service
 systemctl enable set-cpu-affinity.service
 
 chown -R pi:pi /home/pi
+
+
+echo " $(tput setaf 6)CPU Affinity for Motion has been made persistent by executing as a service on boot$(tput sgr 0)"

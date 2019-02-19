@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -110,7 +110,7 @@ if [ -f /etc/vim/vimrc.ORIGINAL ]; then
 	mv /etc/vim/vimrc.ORIGINAL /etc/vim/vimrc
 fi
 
-if [ ! -f /etc/vim/vimrc.ORIGINAL ]
+if [ ! -f /etc/vim/vimrc.ORIGINAL ]; then
 	cp -p /etc/vim/vimrc /etc/vim/vimrc.ORIGINAL
 fi
 

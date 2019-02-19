@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -55,12 +55,6 @@ if [ -f /usr/share/snmp/snmpd.conf.ORIGINAL ]; then
 fi
 
 
-# Make a backup of the default /usr/share/snmp/snmpd.conf config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /usr/share/snmp/snmpd.conf.ORIGINAL ]; then
-	cp -p /usr/share/snmp/snmpd.conf /usr/share/snmp/snmpd.conf.ORIGINAL
-fi
-
-
 
 # *DISABLE* local-only connections to SNMP daemon
 sed -i "s/agentAddress  udp:127.0.0.1:161/#agentAddress  udp:127.0.0.1:161/" /etc/snmp/snmpd.conf
@@ -104,3 +98,8 @@ systemctl enable snmpd.service
 systemctl start snmpd.service
 
 echo
+
+# Make a backup of default /usr/share/snmp/snmpd.conf config file- once taken all subsequent tests will fail so backup not overwritten
+if [ ! -f /usr/share/snmp/snmpd.conf.ORIGINAL ]; then
+	cp -p /usr/share/snmp/snmpd.conf /usr/share/snmp/snmpd.conf.ORIGINAL
+fi

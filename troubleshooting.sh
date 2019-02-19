@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -329,4 +329,6 @@ chown pi:pi $PATHSCRIPTS/troubleshooting-helper.sh
 
 
 echo "Created $PATHSCRIPTS/troubleshooting-helper.sh"
+echo
+echo "$(tput setaf 6)This script provides a structured approach to troubleshooting any issues with your open-ipcamera installation$(tput sgr 0)"
 echo

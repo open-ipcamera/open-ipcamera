@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.2
+# Version 1.60.3
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -35,9 +35,9 @@ chmod 700 $PATHSCRIPTS/variables.sh
 sed -i "s/^# Version [0-9].[0-9][0-9]/# Version $VERSIONLATEST/" $PATHSCRIPTS/variables.sh
 
 
-# Below expression will ONLY encrypt your variables.sh file if it is NOT either empty or using the default value *YourGPGkeyIDhere*
+# Below expression will ONLY encrypt your variables.sh file if it is NOT either empty or using the default value *YourGPGkeyIDhere* AND you provide an email address
 # The * trust-model always * switch looks dodgy but we are encrypting with our own PUBLIC key which we trust implicitly.
-if [[ "$GPGKEYIDPUBLICYOURS" != '' || 'YourGPGkeyIDhere' ]]; then
+if [[ "$GPGKEYIDPUBLICYOURS" != '' || 'YourGPGkeyIDhere' ]] && [[ "$GPGKEYIDPUBLICYOURSEMAIL" != 'emailAddressAssociatedWithGPGkeyIDHere' ]]; then
 	gpg --batch --yes --trust-model always -r $GPGKEYIDPUBLICYOURSEMAIL -a -e $PATHSCRIPTS/variables.sh
 	# Delete *UNENCRYPTED* variables.sh file:
 	rm $PATHSCRIPTS/variables.sh
