@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.3
+# Version 1.60.4
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -72,7 +72,7 @@ echo "		$(tput setaf 2) https://gitlab.marlam.de/marlam/msmtp$(tput sgr 0)"
 echo
 echo "And kudos to DROPBOX for providing an Enterprise-class API we used for shifting images from USB storage to cloud"
 echo
-echo "$(tput setaf 6)     - Terrence Houlahan Linux Engineer and open-ipcamera Project Founder ( houlahan@F1Linux.com )$(tput sgr 0)"
+echo "$(tput setaf 6)     - Terrence Houlahan Linux Engineer and open-ipcamera Project Founder terrence.houlahan@open-ipcamera.net$(tput sgr 0)"
 echo
 
 
@@ -87,9 +87,13 @@ if [ ! -f $PATHSCRIPTS/version.txt ]; then
 	echo
 	echo "No previous install of open-ipcamera found. Performing full installation"
 	echo
+elif ( echo -n "$VERSIONINSTALLED" > "$VERSIONREPO" | bc ); then
+	echo "No upgrade required: Latest version of open-ipcamera $VERSIONINSTALLED installed"
+	echo
+	exit
 else
 	echo
-	echo "Previous open-ipcamera install found. Perform * UPGRADE * from current version to latest"
+	echo "Newer version of open-ipcamera available: Upgrade FROM current version TO latest"
 	echo
 	echo "Download bash shell script $PATHSCRIPTS/upgrade_open-ipcamera.sh from this Pi to your Mac or Linux host and execute it from there"
 	exit
@@ -137,10 +141,7 @@ if [ -f $PATHSCRIPTS/version.txt ]; then
 	rm $PATHSCRIPTS/version.txt
 fi
 
-# Create *version.txt* echoing the version number just installed into it:
-echo "# *****   THIS FILE HAS PERMS SET TO 'IMMUTABLE'   *****#" >> $PATHSCRIPTS/version.txt
-echo "# ** USED BY 'OPEN-IPCAMERA' TO UPGRADE **#" >> $PATHSCRIPTS/version.txt
-echo '' >> $PATHSCRIPTS/version.txt
+# Create *version.txt* echoing version number just installed into it:
 echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
 
 # Set perms on *version.txt* to immutable so it cannot be deleted- inadvertently or intentionally
@@ -164,12 +165,12 @@ wait $!
 
 
 echo
-echo "$(tput setaf 5)****** GPG: Import Developer Key  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** GPG: Import open-ipcamera Developers Public Key  ******$(tput sgr 0)"
 echo
 
-./encryption.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+./encryption.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
-
+echo
 
 
 
@@ -374,9 +375,9 @@ echo
 echo "$(tput setaf 5)****** Backup and Encrypt *variables.sh* File: ******$(tput sgr 0)"
 echo
 
-./backup_variables.sh_file.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+./backup_variables.sh_file.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
-
+echo
 
 
 echo
@@ -407,7 +408,7 @@ echo 'Deleted * open-ipcamera * Repo Directory'
 echo
 
 # Change ownership of all files created by this script FROM user *root* TO user *pi*:
-# Redirection of stdout to /dev/null is to quiet "operation not permitted error on version.txt which is set to immutable and so no error
+# Redirect stderr to /dev/null to quiet "operation not permitted" error when recursively chown-ing /home/pi/: version.txt is set to immutable and not a true error
 chown -R pi:pi /home/pi 2> /dev/null
 
 
