@@ -4,7 +4,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.4
+# Version 01.60.05
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -48,7 +48,7 @@ PATHINSTALLDIR='/home/pi/open-ipcamera'
 PATHOPENIPCAMERAREPO='https://github.com/f1linux/'
 
 # Get LATEST tag for open-ipcamera from GitHub:
-VERSIONREPO=\$(curl -s 'https://github.com/f1linux/open-ipcamera/tags/'|grep -o "\$Version v[0-9].[0-9][0-9].[0-9][0-9]"|sort -r|head -n1|cut -d 'v' -f2)
+VERSIONREPO=\$(curl -s 'https://github.com/f1linux/open-ipcamera/tags/'|grep -o "\$Version v[0-9][0-9].[0-9][0-9].[0-9][0-9]"|sort -r|head -n1|cut -d 'v' -f2)
 # Get version installed on Pi being upgraded:
 VERSIONINSTALLED=\$(ssh pi@\$CAMERAIPV4 "cat \$PATHSCRIPTS/version.txt")
 
