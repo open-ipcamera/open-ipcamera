@@ -4,7 +4,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.60.05
+# Version 01.61.01
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -53,8 +53,10 @@ VERSIONREPO=\$(curl -s 'https://github.com/f1linux/open-ipcamera/tags/'|grep -o 
 VERSIONINSTALLED=\$(ssh pi@\$CAMERAIPV4 "cat \$PATHSCRIPTS/version.txt")
 
 
-# Test local version number against most current tagged version on Github version and upgrade if the later of the two is greater:
-if ( echo -n "\$VERSIONINSTALLED" > "\$VERSIONREPO" | bc ); then
+
+# Test local version number against most current tagged version on Github version and upgrade if the later of the two is greater.
+# open-ipcamera uses semantic versioning to describe release points for tagging. Since they are double-dotted math calcs cannot be used for comparing release versions:
+if [[ "\$(echo \$VERSIONINSTALLED|tr -d '.')" -le "\$(echo \$VERSIONREPO|tr -d '.')" ]]; then
 
 	echo "No upgrade required: Latest version of open-ipcamera \$VERSIONINSTALLED installed"
 	exit

@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.60.05
+# Version 01.61.01
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -87,7 +87,8 @@ if [ ! -f $PATHSCRIPTS/version.txt ]; then
 	echo
 	echo "No previous install of open-ipcamera found. Performing full installation"
 	echo
-elif ( echo -n "$VERSIONINSTALLED" > "$VERSIONREPO" | bc ); then
+# open-ipcamera uses semantic versioning to describe release points for tagging. Since they are double-dotted math calcs cannot be used for comparing release versions:
+elif [[ "$(echo $VERSIONINSTALLED|tr -d '.')" -le "$(echo $VERSIONREPO|tr -d '.')" ]]; then
 	echo "No upgrade required: Latest version of open-ipcamera $VERSIONINSTALLED installed"
 	echo
 	exit
