@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.3
+# Version 1.60.4
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+
 #   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
@@ -117,10 +117,13 @@ PACKAGESPURGED=$(cat /var/log/apt/history.log|grep "Commandline"|grep "purge"|aw
 CAMERAIPV4="$(ip addr list|grep inet|grep -oE '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|awk 'FNR==2')"
 # * CAMERAIPV6 * Looks for and prints an IPv6 Global Unicast Address if such an interface is configured
 CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64'|cut -d '/' -f1)"
-# The current version is extracted from the header in this install script
+# VERSIONLATEST variable used to determine the latest version actually downloaded to system and available to use as a patching end-point
 VERSIONLATEST="$(grep -m1 '# Version' $0|awk '{print $3}'| cut -d 'v' -f2)"
+# VERSIONREPO variable used to determine most current version on REPO- this used to determine whether or not to commence an upgrade
+VERSIONREPO=$(curl -s 'https://github.com/f1linux/open-ipcamera/tags/'|grep -o "\$Version v[0-9].[0-9][0-9].[0-9][0-9]"|sort -r|head -n1|cut -d 'v' -f2)
 # To check the version of a previously installed version we go outside the repo path to a script installed by HereDoc:
-VERSIONINSTALLED="$(grep -m1 '# Version' /home/pi/open-ipcamera-scripts/version.txt|awk '{print $3}'| cut -d 'v' -f2)"
+VERSIONINSTALLED="$(cat /home/pi/open-ipcamera-scripts/version.txt)"
+PATHOPENIPCAMERAREPO='https://github.com/f1linux/'
 PATHSCRIPTS='/home/pi/open-ipcamera-scripts'
 # Only logging relate to installing/upgrading of open-ipcamera will live here. No subsequent logging writes here to provide a starting point for analyzing change from a clean build
 PATHLOGINSTALL='/home/pi/open-ipcamera-logs'

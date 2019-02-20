@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.3
+# Version 1.60.4
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -31,7 +31,7 @@ fi
 
 # Make a backup of the default config file- once taken all subsequent tests will fail so backup not overwritten
 if [ ! -f /etc/motion/motion.conf.ORIGINAL ]; then
-	cp-p /etc/motion/motion.conf /etc/motion/motion.conf.ORIGINAL
+	cp -p /etc/motion/motion.conf /etc/motion/motion.conf.ORIGINAL
 fi
 
 

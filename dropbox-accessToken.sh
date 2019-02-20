@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 1.60.3
+# Version 1.60.4
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -29,7 +29,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # So we initiate an access then spit back the token supplied in variable DROPBOXACCESSTOKEN and finally acknowledge it is correct
 
 
-echo "If a Dropbox access token was added in variables.sh- $(tput setaf 3)IT SHOULD HAVE BEEN$(tput sgr 0 - final sentence in final line of message below should read:"
+echo "If a Dropbox access token was added in variables.sh- $(tput setaf 3)IT SHOULD HAVE BEEN$(tput sgr 0) - final sentence in final line of message below should read:"
 echo "$(tput setaf 6)The configuration has been saved$(tput sgr 0)"
 echo "If $(tput setaf 1)NOT$(tput sgr 0) create a Dropbox Access Token then specify it in variables.sh and re-execute this script"
 echo
