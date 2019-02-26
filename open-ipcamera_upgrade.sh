@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.00
+# Version 01.65.01
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -33,13 +33,16 @@ if [[ "$(echo $VERSIONINSTALLED|tr -d '.')" -le "$(echo $VERSIONREPO|tr -d '.')"
 	exit
 else
 	echo
-	echo "Newer version of open-ipcamera available:"
+	echo "Newer version of open-ipcamera downloaded:"
+	echo
+	cd /home/pi/
+	git clone https://github.com/f1linux/open-ipcamera.git
+	cd $PATHINSTALLDIR
 	echo
 	git tag -l -n20 $(git describe)
 	echo
-	read -p "Press ENTER to UPGRADE current open-ipcamera installation or kill this bash shell to exit it"
+	read -p "Press ENTER to UPGRADE current open-ipcamera installation or CTRL C to exit it"
 	echo
-	git clone https://bitbucket.com/f1linux/open-ipcamera.git
 	# Rename PRODUCTION version of variables.sh file to preclude it from overwriting LATEST version of variables.sh just downloaded:
 	mv $PATHSCRIPTS/variables.sh $PATHSCRIPTS/variables.sh.PRODUCTION
 	cp $PATHSCRIPTS/variables.sh.PRODUCTION $PATHLOGINSTALL/	
@@ -50,5 +53,5 @@ else
 	# Create variable to show new variables- not comments- in variables.sh require values prior to upgrading open-ipcamera:
 	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")	
 	# Execute the upgrade if variables.sh in LATEST release do NOT include unpopulated- not empty- variables. Else show empty variables notify user to complete them and exit:
-	if [ "$VARIABLESEMPTY" != '' ]; then cd $PATHLOGINSTALL;./open-ipcamera-config.sh; else echo "Provide values for empty variables in variables.sh" && echo && echo "$VARIABLESEMPTY" && echo && echo "Re-execute upgrade script after completed && exit; fi	
+	if [ "$VARIABLESEMPTY" != '' ]; then cd $PATHLOGINSTALL;./open-ipcamera-config.sh; else echo "Provide values for empty variables in variables.sh" && echo && echo "$VARIABLESEMPTY" && echo && echo "Re-execute upgrade script after completed" && exit; fi
 fi

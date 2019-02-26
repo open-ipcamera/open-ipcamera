@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.00
+# Version 01.65.01
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -111,7 +111,7 @@ echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo
 echo "$(tput setaf 5)****** PACKAGE MANAGEMENT:  ******$(tput sgr 0)"
 echo
-echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
+echo "Elapsed Time for Package Management will be printed after this section completes:"
 echo
 
 time ./packages.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&

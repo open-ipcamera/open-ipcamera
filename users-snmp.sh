@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/variables-secure.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.00
+# Version 01.65.01
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -42,7 +42,7 @@ source "${BASH_SOURCE%/*}/variables-secure.sh"
 
 
 # Test if an SNMP v3 ro user has been created and if not create one:
-if [[ $(grep "rouser" /usr/share/snmp/snmpd.conf|awk '{print $2}') != '' ]]; then
+if [ ! -f /usr/share/snmp/snmpd.conf ]; then
 
 
 # Backup any existing config:
