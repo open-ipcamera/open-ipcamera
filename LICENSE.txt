@@ -1,8 +1,8 @@
 # open-ipcamera Project Files: Install and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
-# Contact: houlahan@F1Linux.com
-# Version 01.61.01
+# Contact: terrence.houlahan@open-ipcamera.net
+# Version 01.65.00
 
 
 GNU GENERAL PUBLIC LICENSE

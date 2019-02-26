@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -34,12 +34,10 @@ echo
 
 echo 'Remove any dependencies of uninstalled packages:'
 apt-get -qqy autoremove > /dev/null
-status-apt-cmd
 echo
 
 echo 'Now execute the dist-upgrade'
 apt-get -qqy dist-upgrade > /dev/null
-status-apt-cmd
 echo
 
 

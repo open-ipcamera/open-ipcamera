@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -43,7 +43,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 #########################################
 
 echo
-echo "$(tput setaf 5)****** LICENSE:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  LICENSE:  ******$(tput sgr 0)"
 echo
 
 echo '*open-ipcamera-config.sh* and all related scripts in this repository are Copyright (C) 2018 2019 Terrence Houlahan'
@@ -79,31 +79,7 @@ echo
 
 
 echo
-echo "$(tput setaf 5)****** Determine if FULL INSTALL or UPGRADE:  ******$(tput sgr 0)"
-echo
-
-# Determine if a FULL INSTALL or UPGRADE is required by testing for presence of the file variables.sh.asc:
-if [ ! -f $PATHSCRIPTS/version.txt ]; then
-	echo
-	echo "No previous install of open-ipcamera found. Performing full installation"
-	echo
-# open-ipcamera uses semantic versioning to describe release points for tagging. Since they are double-dotted math calcs cannot be used for comparing release versions:
-elif [[ "$(echo $VERSIONINSTALLED|tr -d '.')" -le "$(echo $VERSIONREPO|tr -d '.')" ]]; then
-	echo "No upgrade required: Latest version of open-ipcamera $VERSIONINSTALLED installed"
-	echo
-	exit
-else
-	echo
-	echo "Newer version of open-ipcamera available: Upgrade FROM current version TO latest"
-	echo
-	echo "Download bash shell script $PATHSCRIPTS/upgrade_open-ipcamera.sh from this Pi to your Mac or Linux host and execute it from there"
-	exit
-fi
-
-
-
-echo
-echo "$(tput setaf 5)****** Create open-ipcamera Directories:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  Create open-ipcamera Directories:  ******$(tput sgr 0)"
 echo
 
 if [ ! -d $PATHLOGINSTALL ]; then
@@ -130,27 +106,6 @@ echo "Install open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" 
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 
 
-
-echo
-echo "$(tput setaf 5)****** Create *version.txt* File Required to Update open-ipcamera: ******$(tput sgr 0)"
-echo
-
-
-# Delete *version.txt* file so it can be replaced with the updated version reflecting this install:
-if [ -f $PATHSCRIPTS/version.txt ]; then
-	chattr -i $PATHSCRIPTS/version.txt
-	rm $PATHSCRIPTS/version.txt
-fi
-
-# Create *version.txt* echoing version number just installed into it:
-echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
-
-# Set perms on *version.txt* to immutable so it cannot be deleted- inadvertently or intentionally
-chown pi:pi $PATHSCRIPTS/version.txt
-chattr +i $PATHSCRIPTS/version.txt
-
-echo "Created $PATHSCRIPTS/version.txt"
-echo
 
 
 echo
@@ -215,16 +170,6 @@ wait $!
 
 
 echo
-echo "$(tput setaf 5)****** USER CONFIGURATION: ******$(tput sgr 0)"
-echo
-
-./user-pi.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-
-
-
-
-echo
 echo "$(tput setaf 5)****** SET BOOT PARAMS:  ******$(tput sgr 0)"
 echo
 
@@ -263,22 +208,6 @@ wait $!
 
 
 echo
-echo "$(tput setaf 5)****** SNMP CONFIGURATION:  ******$(tput sgr 0)"
-echo
-
-./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-
-echo 'Validate SNMPv3 config is correct by executing an snmpget of sysLocation.0 (camera location):'
-echo '---------------------------------------------------------------------------------------------'
-snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
-echo
-echo "Expected result of snmpget should be: * $SNMPLOCATION *"
-echo
-
-
-
-echo
 echo "$(tput setaf 5)****** DROPBOX CONFIGURATION  ******$(tput sgr 0)"
 echo
 
@@ -292,6 +221,9 @@ echo "$(tput setaf 5)****** Camera Software *MOTION* Configuration  ******$(tput
 echo
 
 ./service-motion.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+
+./users-motion.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
 
 
@@ -370,24 +302,52 @@ echo
 wait $!
 
 
+echo
+echo
+echo "$(tput setaf 5)****** CONFIGURE USERS:  ******$(tput sgr 0)"
+echo
+
+
+./users-linux.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+
+
 
 
 echo
-echo "$(tput setaf 5)****** Backup and Encrypt *variables.sh* File: ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** SNMP CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
-./backup_variables.sh_file.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+
+./users-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+
+echo
+echo "$(tput setaf 5)****** VALIDATE SNMP CONFIG:  ******$(tput sgr 0)"
+echo
+
+echo 'Execute an snmpget of sysLocation.0 (camera location):'
+echo '------------------------------------------------------'
+snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
+echo
+echo "Expected result of snmpget should be: * $SNMPLOCATION *"
+echo
+
+
+
+
+
+echo
+echo "$(tput setaf 5)****** Backup and Encrypt *variables-secure.sh* File: ******$(tput sgr 0)"
+echo
+
+./variables-secure.sh_backup.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
 echo
 
 
-echo
-echo "$(tput setaf 5)****** CREATE *upgrade_open-ipcamera.sh* SCRIPT: ******$(tput sgr 0)"
-echo
-
-# NOTE: This section only *CREATES* the upgrade script- it does nothing upgrade anything
-./upgrade_open-ipcamera.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
 
 
@@ -395,22 +355,38 @@ echo
 echo "$(tput setaf 5)****** DELETE Repo: open-ipcamera ******$(tput sgr 0)"
 echo
 
-# Copy open-ipcamera Developer GPG Pub Key to the open-ipcamera scripts directory
-if [ ! -f $PATHSCRIPTS/$GPGPUBKEYDEVELOPERTERRENCE ]; then
-	cp ./$GPGPUBKEYDEVELOPERTERRENCE $PATHSCRIPTS/
-	chown pi:pi $PATHSCRIPTS/$GPGPUBKEYDEVELOPERTERRENCE
+# After open-ipcamera is configured the following script deletes the install directory containing the scripts:
+./open-ipcamera_delete.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+echo
+
+
+
+
+echo
+echo "$(tput setaf 5)******  POST-INSTALL OPERATIONS:  ******$(tput sgr 0)"
+echo
+
+
+
+# Delete *version.txt* file so it can be replaced with an updated version reflecting this installs version number:
+if [ -f $PATHSCRIPTS/version.txt ]; then
+	chattr -i $PATHSCRIPTS/version.txt
+	rm $PATHSCRIPTS/version.txt
 fi
 
-# Delete open-ipcamera repo files:
-rm -rf $PATHINSTALLDIR
+# Create *version.txt* echoing version number just installed into it:
+echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
 
-echo
-echo 'Deleted * open-ipcamera * Repo Directory'
-echo
 
 # Change ownership of all files created by this script FROM user *root* TO user *pi*:
 # Redirect stderr to /dev/null to quiet "operation not permitted" error when recursively chown-ing /home/pi/: version.txt is set to immutable and not a true error
 chown -R pi:pi /home/pi 2> /dev/null
+
+# Set perms on *version.txt* to immutable so it cannot be deleted- inadvertently or intentionally
+chown pi:pi $PATHSCRIPTS/version.txt
+chattr +i $PATHSCRIPTS/version.txt
+
 
 
 
@@ -419,7 +395,7 @@ echo
 echo
 echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA ** $(tput sgr 0)"
 echo
-read -p 'Press * Enter * to execute an upgrade and reboot the Pi after reviewing open-ipcamera install script feedback'
+read -p 'Press * Enter * to execute an Raspbian OS upgrade and reboot Pi after reviewing open-ipcamera install script feedback'
 echo
 
 
