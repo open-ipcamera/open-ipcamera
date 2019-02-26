@@ -1,5 +1,6 @@
 mutt
 apt-file
+locate
 netselect-apt
 libimage-exiftool-perl
 exiv2
@@ -11,5 +12,5 @@ iptraf-ng
 dstat
 ipcalc
 ipv6calc
-vlc
 vokoscreen
+vlc

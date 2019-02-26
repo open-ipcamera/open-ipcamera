@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source "${BASH_SOURCE%/*}/variables-secure.sh"
 source "${BASH_SOURCE%/*}/variables.sh"
 source "${BASH_SOURCE%/*}/functions.sh"
 
@@ -7,7 +8,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -22,6 +23,38 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
+
+
+
+# NOTE 1: This script is ONLY executed on FIRST install of open-ipcamera.
+# User management will thereafter be an end-user task- as is true in most upgrade processes
+# NOTE 2: In addition to configuring pi user account this script also sets root user password
+
+
+
+####  To *MANUALLY* Execute This Script (independently of a full re-install):  ####
+# If want to restore the user config to a known state- without doing a full install- its an option to execute this script independently
+# 1. Provide your passwords and your pub key for the below 3 variables.
+# 2. Un-comment the 3 variables then save file and execute it
+
+#PASSWDPI='ChangeMe1234'
+#PASSWDROOT='ChangeMe1234'
+#MYPUBKEY=''
+
+
+# Test if authorized_keys EMPTY or non-existent to determine if this script run previously and if not do user config:
+if [ ! -s /home/pi/.ssh/authorized_keys ];then
+
+
+echo
+echo 'Set passwd for user * root *'
+echo "root:$PASSWDROOT"|chpasswd
+
+
+
+echo 'Changing default password *raspberry* for user *pi*'
+echo "pi:$PASSWDPI"|chpasswd
+
 
 
 echo
@@ -47,13 +80,6 @@ sed -i "s/HISTSIZE=1000/HISTSIZE=/" /home/pi/.bashrc
 sed -i "s/HISTFILESIZE=2000/HISTFILESIZE=/" /home/pi/.bashrc
 echo
 
-
-echo 'Changing default password *raspberry* for user *pi*'
-echo "pi:$PASSWDPI"|chpasswd
-
-echo
-echo 'Set passwd for user * root *'
-echo "root:$PASSWDROOT"|chpasswd
 
 
 # Only create the SSH keys and furniture if an .ssh folder does not already exist for user pi:
@@ -137,3 +163,10 @@ EOF
 
 chown pi:pi /home/pi/.muttrc
 chmod 600 /home/pi/.muttrc
+
+# variables-secure.sh is deleted at the end of the full install and will not therefore be available during subsequent upgrades. We disable it:
+sed -i 's|^source \"\${BASH_SOURCE\%\/\*\}\/variables-secure\.sh\"|\#source \"\$\{BASH_SOURCE\%\/\*\}\/variables-secure\.sh\"|' $0
+
+
+
+fi

@@ -24,33 +24,28 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-# Restore /etc/hosts configuration to a predictable known state if a backup exists:
-if [ -f /etc/hosts.ORIGINAL ]; then
-	mv /etc/hosts.ORIGINAL /etc/hosts
-fi
 
-# Make a backup of the default config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /etc/hosts.ORIGINAL ]; then
-	cp -p /etc/hosts /etc/hosts.ORIGINAL
+# Copy unique data FROM INSTALL directory TO SCRIPTS dir to ensure remains persistent for upgrades:
+if [ ! -f $PATHSCRIPTS/variables.sh ]; then
+	cp -p $PATHINSTALLDIR/variables.sh $PATHSCRIPTS/
 fi
 
 
-hostnamectl set-hostname raspberrypi
-systemctl restart systemd-hostnamed&
-wait $!
+if [ ! -f $PATHSCRIPTS/upgrade_open-ipcamera.sh ]; then
+	cp -p $PATHINSTALLDIR/upgrade_open-ipcamera.sh $PATHSCRIPTS/
+fi
 
 
-echo "Hostname CURRENT: $(hostname)"
+if [ ! -f $PATHSCRIPTS/$GPGPUBKEYDEVELOPERTERRENCE ]; then
+	cp  $PATHINSTALLDIR/$GPGPUBKEYDEVELOPERTERRENCE $PATHSCRIPTS/
+	chown pi:pi $PATHSCRIPTS/$GPGPUBKEYDEVELOPERTERRENCE
+fi
 
-hostnamectl set-hostname $OURHOSTNAME.$OURDOMAIN
-systemctl restart systemd-hostnamed&
-wait $!
 
+
+# Delete open-ipcamera repo files:
+rm -rf $PATHINSTALLDIR
 
 echo
-echo "Hostname NEW: $(hostname)"
-
-
-# hostnamectl does NOT update the hosts own entry in /etc/hosts so must do separately:
-sed -i "s/127\.0\.1\.1.*/127\.0\.0\.1      $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
-sed -i "s/::1.*/::1     $OURHOSTNAME $OURHOSTNAME.$OURDOMAIN/" /etc/hosts
+echo 'Deleted * open-ipcamera * Repo Directory'
+echo

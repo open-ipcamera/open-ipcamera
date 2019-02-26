@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,11 +24,10 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-
-# Restore snmpd.conf configuration to a predictable known state if a backup exists:
-if [ -f /etc/snmp/snmpd.conf.ORIGINAL ]; then
-	mv /etc/snmp/snmpd.conf.ORIGINAL /etc/snmp/snmpd.conf
+if [ "$(systemctl is-active snmpd.service)" = "active" ]; then
+	systemctl stop snmpd.service
 fi
+
 
 
 # Make a backup of the default snmpd.conf config file- once taken all subsequent tests will fail so backup not overwritten
@@ -37,23 +36,11 @@ if [ ! -f /etc/snmp/snmpd.conf.ORIGINAL ]; then
 fi
 
 
-# Restore snmp.conf configuration to a predictable known state if a backup exists:
-if [ -f /etc/snmp/snmp.conf.ORIGINAL ]; then
-	mv /etc/snmp/snmp.conf.ORIGINAL /etc/snmp/snmpd.conf
-fi
-
 
 # Make a backup of the default snmp.conf config file- once taken all subsequent tests will fail so backup not overwritten
 if [ ! -f /etc/snmp/snmp.conf.ORIGINAL ]; then
 	cp -p /etc/snmp/snmp.conf /etc/snmp/snmpd.conf.ORIGINAL
 fi
-
-
-# Restore /usr/share/snmp/snmpd.conf configuration to a predictable known state if a backup exists:
-if [ -f /usr/share/snmp/snmpd.conf.ORIGINAL ]; then
-	mv /usr/share/snmp/snmpd.conf.ORIGINAL /usr/share/snmp/snmpd.conf
-fi
-
 
 
 # *DISABLE* local-only connections to SNMP daemon
@@ -81,25 +68,6 @@ sed -i "s/sysLocation    Sitting on the Dock of the Bay/sysLocation    $SNMPLOCA
 # email alerts will pull the contact email address via SNMP from the variable "SNMPSYSCONTACT"
 sed -i "s/sysContact     Me <me@example.org>/sysContact     $SNMPSYSCONTACT/" /etc/snmp/snmpd.conf
 
-# Stop SNMP daemon to create a Read-Only user:
-systemctl stop snmpd.service
-
-# Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
-# * -A * => AUTHENTICATION password and * -X * => ENCRYPTION password
-net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
-echo
-
-# *APPEND* a note after the ACCESS CONTROL header in snmpd.conf detailing where our v3 SNMP credentials live to avoid future confusion:
-sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 Access Token Added by net-snmp-config to /var/lib/snmp/snmpd.conf by open-ipcamera-config.sh script' /etc/snmp/snmpd.conf
-sed -i '/#  ACCESS CONTROL/a # NOTE: SNMP v3 User Added by net-snmp-config to /usr/share/snmp/snmpd.conf by open-ipcamera-config.sh script' /etc/snmp/snmpd.conf
-
 
 systemctl enable snmpd.service
 systemctl start snmpd.service
-
-echo
-
-# Make a backup of default /usr/share/snmp/snmpd.conf config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /usr/share/snmp/snmpd.conf.ORIGINAL ]; then
-	cp -p /usr/share/snmp/snmpd.conf /usr/share/snmp/snmpd.conf.ORIGINAL
-fi

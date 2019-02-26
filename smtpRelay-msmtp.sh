@@ -1,13 +1,13 @@
 #!/bin/bash
 
+source "${BASH_SOURCE%/*}/variables-secure.sh"
 source "${BASH_SOURCE%/*}/variables.sh"
-source "${BASH_SOURCE%/*}/functions.sh"
 
 # The open-ipcamera Project: www.open-ipcamera.net
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -27,6 +27,26 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # References:
 # http://msmtp.sourceforge.net/doc/msmtp.html
 # https://wiki.archlinux.org/index.php/Msmtp
+
+
+# NOTE 1: This script ONLY executed on FIRST install of open-ipcamera to CREATE /etc/msmtp config. Upgrades will only MODIFY the file created here  
+
+
+####  To *MANUALLY* Execute This Script (independently of a full install):  ####
+# If need change your mail relay settings its an option to execute this script independently and avoid a full re-install
+# 1. Supply the required values for the 5 variables below
+# 2. Un-comment these variables then save file and execute it
+
+#SASLUSER='yourSASLuserName'
+#SASLPASSWD='yourSASLpasswdGoesHere'
+#GMAILADDRESS='yourAcctName@gmail.com'
+#GMAILPASSWD='YourGmailPasswdHere'
+#SMTPRELAYFQDN='mail.your-SMTP-relay-goes-here.co.uk'
+
+
+
+if [ ! -f /etc/msmtprc ]; then
+
 
 # MSMTP does not provide a default config file so we create one below:
 cat <<EOF> /etc/msmtprc
@@ -73,3 +93,14 @@ echo 'It will consequently not be treated as TRUSTED by MSMTP which will not rel
 echo
 echo "$(tput setaf 3)If you do *NOT* receive alerts from a self-hosted SMTP mail relay check the * tls_fingerprint * directive for a fingerprint in /etc/msmtprc$(tput sgr 0)"
 echo
+
+
+
+# variables-secure.sh is deleted at the end of the full install and will not therefore be available during subsequent upgrades. We disable it:
+sed -i 's|^source \"\${BASH_SOURCE\%\/\*\}\/variables-secure\.sh\"|\#source \"\$\{BASH_SOURCE\%\/\*\}\/variables-secure\.sh\"|' $0
+
+
+cp -p /etc/msmtprc /etc/msmtprc.BAK_`date +%Y-%m-%d_%H-%M-%S`
+	
+
+fi

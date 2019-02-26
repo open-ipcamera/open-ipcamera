@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -31,26 +31,31 @@ truncate -s 0 /etc/motd
 echo 'Configured Help Messages/Tips in /etc/motd to display on user login'
 echo >> /etc/motd
 echo >> /etc/motd
-echo '###############################################################################################################' >> /etc/motd
-echo "##  $(tput setaf 4)If I saved you lots of time manually configuring buy me a beer either in person or PayPal:$(tput sgr 0) ##" >> /etc/motd
-echo "##                          $(tput setaf 4)paypal.me/TerrenceHoulahan $(tput sgr 0)                          ##" >> /etc/motd
-echo '###############################################################################################################' >> /etc/motd
+echo '#################################################################################################################' >> /etc/motd
+echo "##  If I saved you lots of lengthy manual configuration feel free to buy me a beer either in person or PayPal: ##" >> /etc/motd
+echo "##                                          paypal.me/TerrenceHoulahan                                         ##" >> /etc/motd
+echo '#################################################################################################################' >> /etc/motd
 echo >> /etc/motd
+echo >> /etc/motd
+echo "To UPGRADE your open-ipcamera installation:" >> /etc/motd
+echo "     cd /home/pi/open-ipcamera-scripts/" >> /etc/motd
+echo "     ./open-ipcamera_upgrade.sh" >> /etc/motd
 echo >> /etc/motd
 echo 'Troubleshooting: Execute below script to gather data to investigate the fault:' >> /etc/motd
-echo "cd $PATHSCRIPTS" >> /etc/motd
-echo './troubleshooting-helper.sh' >> /etc/motd
+echo "     cd $PATHSCRIPTS" >> /etc/motd
+echo '     ./troubleshooting-helper.sh' >> /etc/motd
 echo >> /etc/motd
 echo 'Camera Feed Access: Append :8080 to IP of this host in a web browser to view camera stream' >> /etc/motd
 echo >> /etc/motd
 echo 'stop/start/reload Motion daemon:' >> /etc/motd
-echo 'sudo systemctl [stop|start|reload] motion' >> /etc/motd
+echo '     sudo systemctl [stop|start|reload] motion' >> /etc/motd
 echo >> /etc/motd
 echo 'Manually change *VIDEO* resolution using Video4Linux driver: tailor below example to your own use-case:' >> /etc/motd
 echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
 echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
 echo >> /etc/motd
-echo 'To edit or delete these login messages:  vi /etc/motd' >> /etc/motd
+echo 'To edit or delete these login messages:vi /etc/motd' >> /etc/motd
+echo '     vi /etc/motd' >> /etc/motd
 echo >> /etc/motd
 echo '###############################################################################' >> /etc/motd
 echo >> /etc/motd

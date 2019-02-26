@@ -1,12 +1,13 @@
 #!/bin/bash
 
+source "${BASH_SOURCE%/*}/variables-secure.sh"
 source "${BASH_SOURCE%/*}/variables.sh"
 source "${BASH_SOURCE%/*}/functions.sh"
 
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.61.01
+# Version 01.65.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -35,16 +36,15 @@ if [ ! -f /etc/motion/motion.conf.ORIGINAL ]; then
 fi
 
 
-# Configure *MINIMAL* Settings: Lots of tweaking possible according to your particular use-case
+
+# Configure *MINIMAL* Settings: Lots of tweaking possible for any use-case
 
 # *on_event_start:* First sed expression configures the Motion Detection Alerts to include the IP address in the subject of the email
-# The second (commented) sed expression configures the Motion Detection Alerts to send the HOSTNAME in the Subject line of the email.
+# The second- commented-out - sed expression configures Motion Detection Alerts to send the HOSTNAME in Subject line of email
 sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 #sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 
-# Below 2 sed expressions inject the auth credentials for camera by expanding variables so they have a special construction to stop special characters in complex passwords being interpreted
-sed -i 's/; stream_authentication username:password/stream_authentication '"$USER:$PASSWD"'/' /etc/motion/motion.conf
-sed -i 's/; webcontrol_authentication username:password/webcontrol_authentication '"$USER:$PASSWD"'/' /etc/motion/motion.conf
+
 
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
 sed -i "s/daemon off/daemon on/" /etc/motion/motion.conf
