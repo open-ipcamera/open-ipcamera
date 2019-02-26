@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.00
+# Version 01.65.01
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -39,7 +39,7 @@ fi
 
 # Make a backup of the default snmp.conf config file- once taken all subsequent tests will fail so backup not overwritten
 if [ ! -f /etc/snmp/snmp.conf.ORIGINAL ]; then
-	cp -p /etc/snmp/snmp.conf /etc/snmp/snmpd.conf.ORIGINAL
+	cp -p /etc/snmp/snmp.conf /etc/snmp/snmp.conf.ORIGINAL
 fi
 
 

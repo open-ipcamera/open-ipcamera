@@ -12,5 +12,5 @@ iptraf-ng
 dstat
 ipcalc
 ipv6calc
-vokoscreen
 vlc
+vokoscreen

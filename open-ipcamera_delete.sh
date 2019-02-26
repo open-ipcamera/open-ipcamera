@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.00
+# Version 01.65.01
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -32,7 +32,7 @@ fi
 
 
 if [ ! -f $PATHSCRIPTS/upgrade_open-ipcamera.sh ]; then
-	cp -p $PATHINSTALLDIR/upgrade_open-ipcamera.sh $PATHSCRIPTS/
+	cp -p $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/
 fi
 
 

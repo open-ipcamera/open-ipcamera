@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.00
+# Version 01.65.01
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -117,7 +117,7 @@ echo
 
 
 echo
-echo "Script may appear to hang.  Just takes a several minutes to install all the packages"
+echo "Script may appear to hang.  Just takes several minutes to install the Required and Optional packages"
 echo
 
 
