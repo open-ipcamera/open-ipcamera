@@ -1,12 +1,13 @@
 #!/bin/bash
 
+source "${BASH_SOURCE%/*}/variables.sh"
 source "${BASH_SOURCE%/*}/variables-secure.sh"
 
 # The open-ipcamera Project: www.open-ipcamera.net
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -41,20 +42,13 @@ source "${BASH_SOURCE%/*}/variables-secure.sh"
 #SNMPV3ROUSER='pi'
 
 
-# Test if an SNMP v3 ro user has been created and if not create one:
-if [ ! -f /usr/share/snmp/snmpd.conf ]; then
-
-
-# Backup any existing config:
-cp -p /usr/share/snmp/snmpd.conf /usr/share/snmp/snmpd.conf.BAK_`date +%Y-%m-%d_%H-%M-%S`
-
 
 # Stop SNMP daemon to create a Read-Only user:
 systemctl stop snmpd.service
 
 # Only an SNMP v3 Read-Only user will be created to gain visibility into pi hardware:
 # * -A * => AUTHENTICATION password and * -X * => ENCRYPTION password
-net-snmp-config --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
+$(command -v net-snmp-config) --create-snmpv3-user -ro -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -a SHA -x AES $SNMPV3ROUSER
 echo
 
 # *APPEND* a note after the ACCESS CONTROL header in snmpd.conf detailing where our v3 SNMP credentials live to avoid future confusion:
@@ -79,11 +73,7 @@ echo
 
 echo 'Execute an snmpget of sysLocation.0 (camera location):'
 echo '------------------------------------------------------'
-snmpget -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
+$(commmand -v snmpget) -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
 echo
 echo "Expected result of snmpget should be: * $SNMPLOCATION *"
 echo
-
-
-
-fi

@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -31,7 +31,10 @@ source "${BASH_SOURCE%/*}/functions.sh"
 
 ######  INSTALL INSTRUCTIONS: ######
 
-# WARNING:  Edit *variables.sh* with your unique data info before executing this script
+# WARNING:  Before executing this script please Edit:
+#	  variables.sh*
+#	  variables-secure.sh
+#  with your unique data info before executing this script
 
 # README.txt file distributed with this script has instructions on how to install open-ipcamera
 
@@ -100,9 +103,13 @@ if [ ! -d $PATHSCRIPTS ]; then
 	echo
 fi
 
-
-
-echo "Install open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+# Set markers in *INSTALL* logs
+echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo "$0 open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo 'Only events related to open-ipcamera write here.' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo "Applications log to: $PATHLOGSAPPS" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 
 
@@ -111,7 +118,7 @@ echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo
 echo "$(tput setaf 5)****** PACKAGE MANAGEMENT:  ******$(tput sgr 0)"
 echo
-echo "Elapsed Time for Package Management will be printed after this section completes:"
+echo 'Elapsed Time for Package Management will be printed after this section completes:'
 echo
 
 time ./packages.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
@@ -136,6 +143,20 @@ echo
 
 ./storage.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
+
+
+
+
+# Set markers in *APPLICATION* logs
+# NOTE: This happens AFTER storage because the logging path does not exist until the USB storage has been configured
+echo '####################################################################################################################' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo "$0 v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo 'Only events related to open-ipcamera write here.' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo "Install-related operations log to: $PATHLOGINSTALL" >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+
 
 
 
@@ -295,11 +316,17 @@ wait $!
 
 echo
 echo
-echo "$(tput setaf 5)****** CONFIRM DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** SET DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
 
-./dropbox-accessToken.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
+
+
+# Test if a Dropbox Access Token has previously saved and if not only then execute the script:
+if [ ! -f /home/pi/.dropbox_uploader ]; then
+	./dropbox-accessToken.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
+
 
 
 echo
@@ -308,9 +335,11 @@ echo "$(tput setaf 5)****** CONFIGURE USERS:  ******$(tput sgr 0)"
 echo
 
 
-./users-linux.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-
+# Test if the script configuring Linux users run previously by the presence of the authorized_keys file:
+if [ ! -s /home/pi/.ssh/authorized_keys ]; then
+	./users-linux.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -321,9 +350,12 @@ echo
 ./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
 
-./users-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
+# Test if an SNMP v3 ro user has been created by the presence of /usr/share/snmp/snmpd.conf and if not execute the script:
+if [ ! -f /usr/share/snmp/snmpd.conf ]; then
+	./users-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -335,6 +367,18 @@ echo
 ./variables-secure.sh_backup.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
 echo
+
+
+
+
+echo
+echo "$(tput setaf 5)****** apt-get upgrade and dist-upgrade: ******$(tput sgr 0)"
+echo
+echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
+echo
+
+time ./os-upgrade.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
 
 
 
@@ -369,7 +413,7 @@ echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
 
 
 # Change ownership of all files created by this script FROM user *root* TO user *pi*:
-# Redirect stderr to /dev/null to quiet "operation not permitted" error when recursively chown-ing /home/pi/: version.txt is set to immutable and not a true error
+# Redirect stderr to /dev/null to quiet "operation not permitted" error when recursively chown-ing /home/pi/: version.txt is set to immutable and not a valid error
 chown -R pi:pi /home/pi 2> /dev/null
 
 # Set perms on *version.txt* to immutable so it cannot be deleted- inadvertently or intentionally
@@ -388,21 +432,26 @@ read -p 'Press * Enter * to execute an Raspbian OS upgrade and reboot Pi after r
 echo
 
 
-echo
-echo "$(tput setaf 5)****** apt-get upgrade and dist-upgrade: ******$(tput sgr 0)"
-echo
-echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
-echo
-
-time ./os-upgrade.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-
-
 
 
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
-echo "Install open-ipcamera v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo "$0 v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 
+
+
+echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo "$0 v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+
+
+
+
+echo
 echo 'System will reboot in 10 seconds'
 sleep 10
 

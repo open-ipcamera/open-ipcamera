@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -23,6 +23,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 ### update_open-ipcamera.sh
+
 
 
 # If you can execute this script then its implied you have open-ipcamera: Only need to test if INSTALLED version number is LESS THAN or EQUAL TO latest version available on GitHub:
@@ -43,6 +44,14 @@ else
 	echo
 	read -p "Press ENTER to UPGRADE current open-ipcamera installation or CTRL C to exit it"
 	echo
+	# Set markers in *UPGRADE* logs
+	echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo "$0 open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo 'Only events related to open-ipcamera write here.' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo "Applications log to: $PATHLOGSAPPS" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	# Rename PRODUCTION version of variables.sh file to preclude it from overwriting LATEST version of variables.sh just downloaded:
 	mv $PATHSCRIPTS/variables.sh $PATHSCRIPTS/variables.sh.PRODUCTION
 	cp $PATHSCRIPTS/variables.sh.PRODUCTION $PATHLOGINSTALL/	
@@ -54,4 +63,9 @@ else
 	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")	
 	# Execute the upgrade if variables.sh in LATEST release do NOT include unpopulated- not empty- variables. Else show empty variables notify user to complete them and exit:
 	if [ "$VARIABLESEMPTY" != '' ]; then cd $PATHLOGINSTALL;./open-ipcamera-config.sh; else echo "Provide values for empty variables in variables.sh" && echo && echo "$VARIABLESEMPTY" && echo && echo "Re-execute upgrade script after completed" && exit; fi
+	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo "$0 v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo '####################################################################################################################' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 fi

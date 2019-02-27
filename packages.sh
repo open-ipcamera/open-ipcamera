@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -42,16 +42,10 @@ fi
 done
 
 
-echo "Packages PURGED:"
-echo
-echo $PACKAGESPURGED  >> $PATHLOGINSTALL/packages-purged-v$VERSIONLATEST.log
-echo
-
-
 
 
 echo
-echo "$(tput setaf 5)****** PACKAGES: Re-Sync Index:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  PACKAGES: Re-Sync Index:  ******$(tput sgr 0)"
 echo
 
 until apt-get -qqy update > /dev/null
@@ -67,7 +61,7 @@ echo
 
 
 echo
-echo "$(tput setaf 5)****** Install Packages:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  Install Packages:  ******$(tput sgr 0)"
 echo
 
 # For info about a particular package to learn more about what it actually does:
@@ -164,12 +158,9 @@ if [[ $(dpkg -l | grep kexec-tools) = '' ]]; then
 fi
 
 
-echo $PACKAGESINSTALLED >> $PATHLOGINSTALL/packages-installed-v$VERSIONLATEST.log
-
-
 
 echo
-echo "$(tput setaf 5)****** Verify All Packages Installed Successfully:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  Verify All Packages Installed Successfully:  ******$(tput sgr 0)"
 echo
 echo "Expected result of lists returned below is to be empty: if not investigate failed package installs"
 
@@ -211,6 +202,11 @@ echo
 
 
 # Update apt-file DB with new packages installed so they can be searched with this utility:
-apt-file update > /dev/null
+$(command -v apt-file) update > /dev/null
 
-updatedb  > /dev/null
+# Populate the *locate* db:
+$(command -v updatedb)  > /dev/null
+
+
+echo "$PACKAGESINSTALLED" >> $PATHLOGINSTALL/packages-installed-v$VERSIONLATEST.log
+echo "$PACKAGESPURGED"  >> $PATHLOGINSTALL/packages-purged-v$VERSIONLATEST.log

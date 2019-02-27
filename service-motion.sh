@@ -1,13 +1,12 @@
 #!/bin/bash
 
-source "${BASH_SOURCE%/*}/variables-secure.sh"
 source "${BASH_SOURCE%/*}/variables.sh"
 source "${BASH_SOURCE%/*}/functions.sh"
 
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -43,7 +42,6 @@ fi
 # The second- commented-out - sed expression configures Motion Detection Alerts to send the HOSTNAME in Subject line of email
 sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $CAMERAIPV4\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
 #sed -i "s/; on_event_start value/on_event_start echo \"Subject: Motion Detected $(hostname)\" | msmtp \"$SNMPSYSCONTACT\"/" /etc/motion/motion.conf | grep on_event_start
-
 
 
 sed -i "s/ipv6_enabled off/ipv6_enabled $IPV6ENABLED/" /etc/motion/motion.conf
