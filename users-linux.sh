@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -39,26 +39,23 @@ source "${BASH_SOURCE%/*}/functions.sh"
 
 #PASSWDPI='ChangeMe1234'
 #PASSWDROOT='ChangeMe1234'
+# To copy your SSH Public Key to clipboard and paste it BETWEEN single quotes in below variable:
+# 	Mac Users: 	tr -d '\n' < ~/.ssh/id_rsa.pub | pbcopy
+# 	Linux Users:	cat ~/.ssh/id_rsa.pub   (copy screen output and paste)
 #MYPUBKEY=''
 
 
-# Test if authorized_keys EMPTY or non-existent to determine if this script run previously and if not do user config:
-if [ ! -s /home/pi/.ssh/authorized_keys ];then
-
-
 echo
-echo 'Set passwd for user * root *'
+echo 'Set passwd for user *root*'
 echo "root:$PASSWDROOT"|chpasswd
-
 
 
 echo 'Changing default password *raspberry* for user *pi*'
 echo "pi:$PASSWDPI"|chpasswd
 
 
-
 echo
-echo 'Show user pi * DEFAULT * group memberships:'
+echo 'Show user pi *DEFAULT* group memberships:'
 echo '*groups pi* Output:'
 groups pi
 echo
@@ -98,12 +95,12 @@ if [ ! -d /home/pi/.ssh ]; then
 	chmod 644 /home/pi/.ssh/id_ecdsa.pub
 	chown -R pi:pi /home/pi/
 
-	echo "ECDSA 521 bit keypair created for user *pi*"
+	echo 'ECDSA 521 bit keypair created for user *pi*'
 fi
 
 echo
 echo "$MYPUBKEY" >> /home/pi/.ssh/authorized_keys
-echo "Added Your Public Key to * authorized_keys * file"
+echo 'Added Your Public Key to * authorized_keys * file'
 echo
 
 
@@ -112,16 +109,16 @@ echo
 sed -i "s/autologin-user=pi/#autologin-user=pi/" /etc/lightdm/lightdm.conf
 systemctl disable autologin@.service
 echo
-echo "Disabled autologin"
+echo 'Disabled autologin'
 echo
 
-echo "Change default editor from * nano * to a universal Unix standard * vi *"
-echo "BEFORE Change:"
+echo 'Change default editor from * nano * to a universal Unix standard * vi *'
+echo 'BEFORE Change:'
 update-alternatives --get-selections|grep editor
 echo
 update-alternatives --set editor /usr/bin/vim.basic
 echo
-echo "AFTER Change:"
+echo 'AFTER Change:'
 update-alternatives --get-selections|grep editor
 
 if [ -f /home/pi/.selected_editor ]; then
@@ -130,15 +127,8 @@ fi
 
 # The cp below restores /home/pi/.vimrc to default state before sed makes the appends
 cp /usr/share/vim/vimrc /home/pi/.vimrc
-echo "Created /home/pi/.vimrc"
+echo 'Created /home/pi/.vimrc'
 
-if [ -f /etc/vim/vimrc.ORIGINAL ]; then
-	mv /etc/vim/vimrc.ORIGINAL /etc/vim/vimrc
-fi
-
-if [ ! -f /etc/vim/vimrc.ORIGINAL ]; then
-	cp -p /etc/vim/vimrc /etc/vim/vimrc.ORIGINAL
-fi
 
 
 # Below sed expression stops vi from going to * visual * mode when one tries to copy text
@@ -164,9 +154,5 @@ EOF
 chown pi:pi /home/pi/.muttrc
 chmod 600 /home/pi/.muttrc
 
-# variables-secure.sh is deleted at the end of the full install and will not therefore be available during subsequent upgrades. We disable it:
+# variables-secure.sh is deleted at the end of full install and will therefore not be available during subsequent upgrades. We disable it:
 sed -i 's|^source \"\${BASH_SOURCE\%\/\*\}\/variables-secure\.sh\"|\#source \"\$\{BASH_SOURCE\%\/\*\}\/variables-secure\.sh\"|' $0
-
-
-
-fi

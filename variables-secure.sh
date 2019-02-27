@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+
 #   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
@@ -29,7 +29,7 @@ DROPBOXACCESSTOKEN='ReplaceThisStringWithYourAccessToken'
 PASSWDPI='ChangeMe1234'
 PASSWDROOT='ChangeMe1234'
 # Below variable *mypubkey* configures *REMOTE* passwordLESS SSH access:
-# Copy your SSH Public Key to clipboard and paste it BETWEEN single quotes in below variable:
+# To copy your SSH Public Key to clipboard and paste it BETWEEN single quotes in below variable:
 # 	Mac Users: 	tr -d '\n' < ~/.ssh/id_rsa.pub | pbcopy
 # 	Linux Users:	cat ~/.ssh/id_rsa.pub   (copy screen output and paste)
 MYPUBKEY=''

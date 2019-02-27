@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.02
+# Version 01.65.03
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -33,7 +33,7 @@ echo >> /etc/motd
 echo >> /etc/motd
 echo '#################################################################################################################' >> /etc/motd
 echo "##  If I saved you lots of lengthy manual configuration feel free to buy me a beer either in person or PayPal: ##" >> /etc/motd
-echo "##                                          paypal.me/TerrenceHoulahan                                         ##" >> /etc/motd
+echo "##                                      https://paypal.me/TerrenceHoulahan                                     ##" >> /etc/motd
 echo '#################################################################################################################' >> /etc/motd
 echo >> /etc/motd
 echo >> /etc/motd
