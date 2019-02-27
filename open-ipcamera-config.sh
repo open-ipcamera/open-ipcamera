@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.03
+# Version 01.65.04
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
@@ -428,7 +428,7 @@ echo
 echo
 echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA ** $(tput sgr 0)"
 echo
-read -p 'Press * Enter * to execute an Raspbian OS upgrade and reboot Pi after reviewing open-ipcamera install script feedback'
+read -p 'Press * Enter * to reboot Pi after reviewing open-ipcamera install script feedback'
 echo
 
 
@@ -445,7 +445,7 @@ echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo "$0 v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
-echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo '####################################################################################################################' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 
 

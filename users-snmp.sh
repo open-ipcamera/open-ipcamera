@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/variables-secure.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.03
+# Version 01.65.04
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -73,7 +73,7 @@ echo
 
 echo 'Execute an snmpget of sysLocation.0 (camera location):'
 echo '------------------------------------------------------'
-$(commmand -v snmpget) -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
+$(command -v snmpget) -v3 -a SHA -x AES -A $SNMPV3AUTHPASSWD -X $SNMPV3ENCRYPTPASSWD -l authNoPriv -u $(tail -1 /usr/share/snmp/snmpd.conf|cut -d ' ' -f 2) $CAMERAIPV4 sysLocation.0
 echo
 echo "Expected result of snmpget should be: * $SNMPLOCATION *"
 echo
