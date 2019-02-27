@@ -2,7 +2,7 @@
 # Developer:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.03
+# Version 01.65.04
 
 # "open-ipcamera-config.sh" installs & configs Raspberry Pi as a Motion Detection Camera,
 #  and upon a detection event uploads images to Dropbox and emails an alert
