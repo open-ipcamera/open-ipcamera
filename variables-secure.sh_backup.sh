@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.06
+# Version 01.66.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -32,7 +32,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 
 # Below expression will ONLY encrypt variables-secure.sh if NOT either empty or using default value *YourGPGkeyIDhere* AND you provide an email address:
 # The * trust-model always * switch looks dodgy but we are encrypting with our own PUBLIC key which we trust implicitly.
-if [[ "$GPGKEYIDPUBLICYOURS" != '' || 'YourGPGkeyIDhere' ]] && [[ "$GPGKEYIDPUBLICYOURSEMAIL" != 'emailAddressAssociatedWithGPGkeyIDHere' ]]; then
+if [[ "$(echo $GPGKEYIDPUBLICYOURS)" != 'YourGPGkeyIDhere' ]] && [[ "$(echo $GPGKEYIDPUBLICYOURS)" != '' ]] && [[ "$(echo $GPGKEYIDPUBLICYOURSEMAIL)" != 'emailAddressAssociatedWithGPGkeyIDHere' ]]; then
 	cp $PATHINSTALLDIR/variables-secure.sh $PATHSCRIPTS/
 	chown pi:pi $PATHSCRIPTS/variables-secure.sh
 	chmod 700 $PATHSCRIPTS/variables-secure.sh	

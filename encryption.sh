@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.06
+# Version 01.66.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,6 +24,40 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-# Download the Developer Pub Key used to sign releases and to send encrypted bug reports into the keychain
+# Download Developer Public Key used to sign releases and to send encrypted bug reports into pi user GPG keyring:
 # Terrence Houlahan open-ipcamera key fingerprint: 55F0 6FEA FD60 BBB5 38BA  D470 C526 69EF BAF4 A660
-gpg --keyserver hkp://keys.gnupg.net:80 --recv $GPGPUBKEYIDDEVELOPERTERRENCE
+
+# The gnupg keyserver can be flaky so we have to engineer reliability to keep trying to download the requested KeyID:
+
+while [[ "$(gpg --list-keys $GPGPUBKEYIDDEVELOPERTERRENCE|grep -o 'pub')" != 'pub' ]]
+do
+        echo
+        echo "Downloading Developer Terrence Houlahan GPG Public Key used to sign open-ipcamera tagged Git Releases"
+        gpg --keyserver hkp://keys.gnupg.net:80 --recv $GPGPUBKEYIDDEVELOPERTERRENCE
+        echo
+        echo "Script will retry every 5 seconds until Key successfully downloaded"
+        echo
+        echo "If failing continuously exit script and check port TCP/80 open for GPG keyserver connectivity"
+        sleep 5
+done
+
+
+# Download the USERs GPG Public Key to use for encrypting their sensitive data:
+# Check for a value in variable GPGKEYIDPUBLICYOURS is neither empty or the default value:  If not attempt to download the user Public Key
+if [[ "$(echo $GPGKEYIDPUBLICYOURS)" != 'YourGPGkeyIDhere' ]] && [[ "$(echo $GPGKEYIDPUBLICYOURS)" != '' ]]; then
+
+while [[ "$(gpg --list-keys $GPGKEYIDPUBLICYOURS|grep -o 'pub')" != 'pub' ]]
+do
+        echo
+        echo "Downloading Developer Terrence Houlahan GPG Public Key used to sign open-ipcamera tagged Git Releases"
+        gpg --keyserver hkp://keys.gnupg.net:80 --recv $GPGKEYIDPUBLICYOURS
+        echo
+        echo "Script will retry every 5 seconds until Key successfully downloaded"
+        echo
+        echo "If failing continuously exit script and check GPG KeyID correct in variable GPGKEYIDPUBLICYOURS"
+        echo "Also check port TCP/80 is open for keyserver connectivity"
+        echo
+        sleep 5
+done
+
+fi

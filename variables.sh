@@ -3,10 +3,8 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.06
-# "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application related camera Kernel module and motion detection alerts
-#   Hardware:   Raspberry Pi 2/3B+
-#   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
+# Version 01.66.00
+# "variables.sh": supplies open-ipcamera-config.sh and other scripts with config values unique to your installation
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
 # License: GPL 3:
