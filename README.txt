@@ -2,7 +2,7 @@
 # Developer:  Terrence Houlahan
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.04
+# Version 01.65.05
 
 # "open-ipcamera-config.sh" installs & configs Raspberry Pi as a Motion Detection Camera,
 #  and upon a detection event uploads images to Dropbox and emails an alert
@@ -74,8 +74,9 @@
 #	c. Enable SSH:
 #   		"5 Interfacing Options" > "P2 SSH" > Choose "Yes" to enable SSH using your TAB key
 #      NOTE: Default SSH user is "pi" with default passwd is "raspberry"
-#	d. Connect Pi to Internet (requires DHCP to be enabled on your network) either Wired or Wirelessly:
-#		1. WIRED: Plug a cable from a switch
+#	d. Connect Pi to Internet (requires DHCP- most routers already have this configured) either Wired or Wirelessly:
+#		1. WIRED: Use Pi's Ethernet Port to connect it to a switch
+#				  POE Users:  Suggested *minimum* Ethernet cable spec: CAT6 AWG 24
 #		2. WiFi: Click the little WiFi symbol at top RIGHT of your screen and choose a network and set a password to join it
 #	e. variables.sh: Populate the variables files with your data:
 #			cd /home/pi/open-ipcamera

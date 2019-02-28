@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.04
+# Version 01.65.05
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+
 #   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
@@ -30,7 +30,7 @@ GPGKEYIDPUBLICYOURS='YourGPGkeyIDhere'
 GPGKEYIDPUBLICYOURSEMAIL='emailAddressAssociatedWithGPGkeyIDHere'
 ############## Linux OS VARIABLES:  ##############
 OURHOSTNAME='pi3Bplus-camera1'
-OURDOMAIN='f1linux.com'
+OURDOMAIN='yourDomainGoesHere.com'
 # Set a threshold value to be notified when Pi temperature exceeds it:
 HEATTHRESHOLDWARN='60'
 # WARNING: Do NOT set SHUTDOWN threshold too low or test will evaluate true as soon as pi boots causing it to just keep rebooting
