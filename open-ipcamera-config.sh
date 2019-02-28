@@ -7,12 +7,12 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.04
+# Version 01.65.05
 
 ######  COMPATIBILITY: ######
 # "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
 #   Hardware:   Raspberry Pi 2/3B+
-#   OS:         Raspbian "Stretch" 9.6 (lsb_release -a)
+#   OS:         Raspbian "Stretch" 9.8 (lsb_release -a)
 
 ######  LICENSE: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -108,7 +108,7 @@ echo '##########################################################################
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo "$0 open-ipcamera v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
-echo 'Only events related to open-ipcamera write here.' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
+echo 'Only events related to open-ipcamera installation write here.' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo "Applications log to: $PATHLOGSAPPS" >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 
@@ -153,7 +153,7 @@ echo '##########################################################################
 echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo "$0 v$VERSIONLATEST STARTED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
-echo 'Only events related to open-ipcamera write here.' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
+echo 'Only events related to open-ipcamera applications write here.' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo "Install-related operations log to: $PATHLOGINSTALL" >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 
@@ -335,8 +335,8 @@ echo "$(tput setaf 5)****** CONFIGURE USERS:  ******$(tput sgr 0)"
 echo
 
 
-# Test if the script configuring Linux users run previously by the presence of the authorized_keys file:
-if [ ! -s /home/pi/.ssh/authorized_keys ]; then
+# The .ssh folder in user pi home directory does not exist by default: we test for its presence to determine if user config has been done previously and do it if not
+if [ ! -d /home/pi/.ssh ]; then
 	./users-linux.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 	wait $!
 fi
