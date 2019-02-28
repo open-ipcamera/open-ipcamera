@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.05
+# Version 01.65.06
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -23,6 +23,9 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
+
+# NOTE: "variables-secure.sh" copied to $PATHSCRIPTS/ by "variables-secure.sh_backup.sh"
+# "variables-secure.sh" only used on first FULL install and deleted afterwards: no need to re-copy it to $PATHSCRIPTS/ as with "variables.sh" which is used for upgrades
 
 
 # Copy unique data FROM INSTALL directory TO SCRIPTS dir to ensure remains persistent for upgrades:
