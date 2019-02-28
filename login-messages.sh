@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.05
+# Version 01.65.06
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -39,7 +39,7 @@ echo >> /etc/motd
 echo >> /etc/motd
 echo "To UPGRADE your open-ipcamera installation:" >> /etc/motd
 echo "     cd /home/pi/open-ipcamera-scripts/" >> /etc/motd
-echo "     ./open-ipcamera_upgrade.sh" >> /etc/motd
+echo "     sudo ./open-ipcamera_upgrade.sh" >> /etc/motd
 echo >> /etc/motd
 echo 'Troubleshooting: Execute below script to gather data to investigate the fault:' >> /etc/motd
 echo "     cd $PATHSCRIPTS" >> /etc/motd

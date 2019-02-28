@@ -2,7 +2,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.65.05
+# Version 01.65.06
 
 
 GNU GENERAL PUBLIC LICENSE
