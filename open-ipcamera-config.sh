@@ -7,12 +7,8 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.66.00
+# Version 01.68.00
 
-######  COMPATIBILITY: ######
-# "open-ipcamera-config.sh": Installs and configs Raspberry Pi camera application, related camera Kernel module and motion detection alerts
-#   Hardware:   Raspberry Pi 2/3B+
-#   OS:         Raspbian "Stretch" 9.8 (lsb_release -a)
 
 ######  LICENSE: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -46,10 +42,10 @@ source "${BASH_SOURCE%/*}/functions.sh"
 #########################################
 
 echo
-echo "$(tput setaf 5)******  LICENSE:  ******$(tput sgr 0)"
+echo "$(tput setaf 5)******  GPL3 LICENSE:  ******$(tput sgr 0)"
 echo
 
-echo '*open-ipcamera-config.sh* and all related scripts in this repository are Copyright (C) 2018 2019 Terrence Houlahan'
+echo 'All scripts/files in the open-ipcamera repository are Copyright (C) 2018 2019 Terrence Houlahan'
 echo
 echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
@@ -452,7 +448,6 @@ echo '' >> $PATHLOGSAPPS/install_v$VERSIONLATEST.log
 
 
 echo
-echo 'System will reboot in 10 seconds'
-sleep 10
+echo 'System will now be rebooted'
 
 systemctl reboot
