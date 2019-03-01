@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)
 Contact: terrence.houlahan@open-ipcamera.net
-Version 01.68.00
+Version 01.68.01
 
 NOTE: This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on open-ipcamera's project's Github home.
 Viewing it in _**vi**_ will obviously display all the underlying markups.
