@@ -1,7 +1,7 @@
-[open-ipcamera Project](https://github.com/f1linux/open-ipcamera)
-[Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)
-Contact: terrence.houlahan@open-ipcamera.net
-Version 01.68.01
+[open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
+[Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
+Contact: terrence.houlahan@open-ipcamera.net\
+Version 01.68.02
 
 NOTE: This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on open-ipcamera's project's Github home.
 Viewing it in _**vi**_ will obviously display all the underlying markups.
@@ -21,10 +21,10 @@ Viewing it in _**vi**_ will obviously display all the underlying markups.
 
 # 1. What is open-ipcamera?
 ---
-- a collection of bash scripts that act as a wrapper to configure a comprehensive Linux _**Streaming & Motion Detection Camera System**_.
+- A collection of bash scripts that act as a wrapper to configure a comprehensive Linux _**Streaming & Motion Detection Camera System**_.
 Upon a detection event it automatically uploads images to _**Dropbox**_ and emails an alert (if the user has specified an SMTP relay).
 
-- a great tool for either learning Linux or transitioning your existing Linux skills from _**sysVinit**_ to _**SystemD**_.
+- A great tool for either learning Linux or transitioning your existing Linux skills from _**sysVinit**_ to _**SystemD**_.
 
 _**Why use bash in lieu of a higher level programming language for open-ipcamera?:**_
 - Bash is a lowest common denominator skillset for Linux-heads
@@ -50,7 +50,7 @@ Full LICENSE found [HERE](./LICENSE)
 
 # 3. HARDWARE REQUIREMENTS:
 ---
-open-ipcamera has been tested and known to work with the following combinations of OS & hardware, but may work with different configuration versions:
+open-ipcamera has been tested and known to work with following combinations of OS & hardware, but may work with different configurations:
 - Hardware:   Raspberry Pi 2/3B+
 - OS:         Raspbian "Stretch" 9.8 (lsb_release -a)
 
@@ -59,7 +59,7 @@ open-ipcamera has been tested and known to work with the following combinations 
 ---
 You don't have to be a Linux Guru to use _**open-ipcamera**_.  It's beneficial to have functional Linux skills, but not _required_.
 In fact you only need to supply values for variables in (2) files and execute the install script.  **HOWEVER** you still must
-understand what values you are being asked to supply data for.  But video tutorials on using _**open-ipcamera**_ itself, GPG encryption, 
+understand what values you are being asked to supply data for.  But video tutorials on using _**open-ipcamera**_ itself, GPG encryption,
 formatting storage and other skills which _**open-ipcamera**_ require knowledge of can be found [HERE](www.YouTube.com/user/LinuxEngineer)
 
 
@@ -110,35 +110,41 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 # 8. INSTRUCTIONS: Installation & Upgrades
 ## INSTALLATION:
 ---
-*NOTE:* Detailed  _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)
+*NOTE:* Detailed  _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
 With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the Pi on and:
 1. Start a terminal session
 2. Execute "sudo raspi-config"
-3. Enable SSH:
-    "5 Interfacing Options" > "P2 SSH" > Choose "Yes" to enable SSH using your TAB key
+3. Enable SSH:\
+    "5 Interfacing Options" > "P2 SSH" > Choose "Yes" to enable SSH using your TAB key\
 *NOTE:* Default SSH user is "pi" with default password "raspberry"
 4. Connect Pi to Internet (requires DHCP- most routers already have this configured):
-- WIRED: Use Pi's Ethernet Port to connect it to a switch
+- WIRED: Use Pi's Ethernet Port to connect it to a switch\
 	POE Users:  Suggested _**MINIMUM**_ Ethernet cable spec: *CAT6 AWG 24*
 - WiFi: Click the little WiFi symbol at top RIGHT of your screen and choose a network and set a password to join it
-5. Set Variables: Supply the required values in variables in (2) files:
-    cd /home/pi/open-ipcamera
-    nano variables.sh
-    nano variables-secure.sh
-*WARNING 1:* Be careful to *NOT* backspace encasing single/double quotation marks when deleting default variable values to replace them with your own
+5. Set Variables: Supply the required values in variables in (2) files:\
+    cd /home/pi/open-ipcamera\
+    nano variables.sh\
+    nano variables-secure.sh\
+*WARNING 1:* Be careful to *NOT* backspace encasing single/double quotation marks when deleting default variable values to replace them with your own\
 *WARNING 2:* Remember to set *UNIQUE* hostnames for each Pi
 6. open-ipcamera-config.sh:  *ONLY* script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts
-    cd open-ipcamera/
+    cd open-ipcamera/\
     sudo ./open-ipcamera-config.sh
 7. Configure firewall rules: after the open-ipcamera-config.sh completes restrict access to your camera by setting appropriate FW rules.
 
 ## UPGRADE:
 ---
-Once _**open-ipcamera**_ is installed, future upgrades are managed by the _**open-ipcamera_upgrade.sh**_ script:
+Once _**open-ipcamera**_ is installed, subsequent upgrades are managed by the _**open-ipcamera_upgrade.sh**_ script:\
 
-To UPGRADE your open-ipcamera installation:
-    cd /home/pi/open-ipcamera-scripts/
+To UPGRADE your open-ipcamera installation:\
+    cd /home/pi/open-ipcamera-scripts/\
     sudo ./open-ipcamera_upgrade.sh
+
+open-ipcamera uses Semantic Versioning:\
+    `Major/Minor/Patch`
+
+When upgrade script is executed it downloads the latest GPG signed Git Tagged version available, prints the comments and pauses.\
+If after reviewing changes you're not happy with them, just CTRL C to exit upgrade. Otherwise press *RETURN* to proceed with upgrade.
 
 
 # 9. TROUBLESHOOTING:
@@ -152,7 +158,7 @@ If so, just fix the error and re-execute _**open-ipcamera-config.sh**_ again to 
 
 # 10. USEFUL LINKS:
 ---
-[Motion" Project Documentation](https://motion-project.github.io/motion_guide.html)
-[Motion" Config Options](https://motion-project.github.io/motion_config.html)
-[Standard PiCam vs Pi NOIR PiCam](https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/)
-[Pi NoIR: What is that blue film included with the camera?](https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/)
+[Motion" Project Documentation](https://motion-project.github.io/motion_guide.html)\
+[Motion" Config Options](https://motion-project.github.io/motion_config.html)\
+[Standard PiCam vs Pi NOIR PiCam](https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/)\
+[Pi NoIR: What is that blue film included with the camera?](https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/)\

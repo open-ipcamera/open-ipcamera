@@ -1,7 +1,8 @@
-[open-ipcamera Project](https://github.com/f1linux/open-ipcamera)
-[Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)
-Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.68.01
+[open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
+[Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
+Contact: terrence.houlahan@open-ipcamera.net\
+# Version 01.68.02
+
 
 # Contributing to open-ipcamera Project:
 
@@ -44,11 +45,11 @@ README Translation file naming conventions:
     `README.2Letter-CountryCode.md`
 [List of ISO Country Codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)
 
-Please check your Markdown formatting before submission:
+Please check your Markdown formatting before submission:\
 [Online Markdown Checker](https://dillinger.io/)
 
-Markdown Language Guides:
-[Github Markdown Guide](https://guides.github.com/features/mastering-markdown/)
+Markdown Language Guides:\
+[Github Markdown Guide](https://guides.github.com/features/mastering-markdown/)\
 [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 
 _**Terrence Houlahan, open-ipcamera Project Developer**_
