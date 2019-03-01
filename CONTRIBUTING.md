@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)
 Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.68.00
+# Version 01.68.01
 
 # Contributing to open-ipcamera Project:
 

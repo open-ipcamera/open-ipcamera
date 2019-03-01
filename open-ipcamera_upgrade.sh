@@ -2,11 +2,13 @@
 
 source "${BASH_SOURCE%/*}/variables.sh"
 
+#set -x
+
 # The open-ipcamera Project: www.open-ipcamera.net
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.68.00
+# Version 01.68.01
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,8 +26,10 @@ source "${BASH_SOURCE%/*}/variables.sh"
 
 
 
-# Only need to test if INSTALLED version number is LESS THAN or EQUAL TO latest version available on GitHub:
-if [[ "$(echo $VERSIONREPO|tr -d '.')" -gt "$(echo $VERSIONINSTALLED|tr -d '.')" ]]; then
+# Only need to test if INSTALLED version number is LESS THAN or EQUAL TO latest version available on GitHub
+# NOTE: the curly braces around variables in comparative test which have #0 appended to them  used to stop shell from interpreting versions as octal values
+# Ref: https://stackoverflow.com/questions/24777597/value-too-great-for-base-error-token-is-08
+if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr -d '.')" ]]; then
 	echo
 	echo "Newer version of open-ipcamera downloaded:"
 	echo
@@ -47,7 +51,7 @@ if [[ "$(echo $VERSIONREPO|tr -d '.')" -gt "$(echo $VERSIONINSTALLED|tr -d '.')"
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	# Rename PRODUCTION version of variables.sh file to preclude it from overwriting LATEST version of variables.sh just downloaded:
 	mv $PATHSCRIPTS/variables.sh $PATHSCRIPTS/variables.sh.PRODUCTION
-	cp $PATHSCRIPTS/variables.sh.PRODUCTION $PATHLOGINSTALL/	
+	cp $PATHSCRIPTS/variables.sh.PRODUCTION $PATHINSTALLDIR/
 	# Create variable that diffs PRODUCTION and UPGRADE copies of variables.sh line-by-line and only print lines NOT beginning with hashtag and lines NOT present in BOTH files:
 	VARIABLESMODIFIED=$(cd $PATHINSTALLDIR;diff --new-line-format="" --unchanged-line-format="" ./variables.sh.PRODUCTION ./variables.sh| grep "^[^#].*")	
 	# If files differ perform 2-way merge of lines NOT shared:
