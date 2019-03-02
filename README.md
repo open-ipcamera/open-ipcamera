@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-Version 01.68.02
+Version 01.68.03
 
 NOTE: This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on open-ipcamera's project's Github home.
 Viewing it in _**vi**_ will obviously display all the underlying markups.
@@ -122,14 +122,14 @@ With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the 
 	POE Users:  Suggested _**MINIMUM**_ Ethernet cable spec: *CAT6 AWG 24*
 - WiFi: Click the little WiFi symbol at top RIGHT of your screen and choose a network and set a password to join it
 5. Set Variables: Supply the required values in variables in (2) files:\
-    cd /home/pi/open-ipcamera\
-    nano variables.sh\
-    nano variables-secure.sh\
+    `cd /home/pi/open-ipcamera`\
+    `nano variables.sh`\
+    `nano variables-secure.sh`\
 *WARNING 1:* Be careful to *NOT* backspace encasing single/double quotation marks when deleting default variable values to replace them with your own\
 *WARNING 2:* Remember to set *UNIQUE* hostnames for each Pi
-6. open-ipcamera-config.sh:  *ONLY* script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts
-    cd open-ipcamera/\
-    sudo ./open-ipcamera-config.sh
+6. open-ipcamera-config.sh:  *ONLY* script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts\
+    `cd open-ipcamera/`\
+    `sudo ./open-ipcamera-config.sh`
 7. Configure firewall rules: after the open-ipcamera-config.sh completes restrict access to your camera by setting appropriate FW rules.
 
 ## UPGRADE:
@@ -137,8 +137,8 @@ With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the 
 Once _**open-ipcamera**_ is installed, subsequent upgrades are managed by the _**open-ipcamera_upgrade.sh**_ script:\
 
 To UPGRADE your open-ipcamera installation:\
-    cd /home/pi/open-ipcamera-scripts/\
-    sudo ./open-ipcamera_upgrade.sh
+    `cd /home/pi/open-ipcamera-scripts/`\
+    `sudo ./open-ipcamera_upgrade.sh`
 
 open-ipcamera uses Semantic Versioning:\
     `Major/Minor/Patch`
