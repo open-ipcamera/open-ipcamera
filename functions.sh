@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.68.03
+# Version 01.69.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -39,4 +39,3 @@ fi
 apt-cmd-last () {
 tail -5 /var/log/apt/history.log|grep -i "Commandline"|cut -d ':' -f2
 }
-
