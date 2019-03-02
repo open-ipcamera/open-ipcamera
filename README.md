@@ -1,10 +1,10 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-Version 01.68.03
+# Version 01.69.00
 
-NOTE: This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on open-ipcamera's project's Github home.
-Viewing it in _**vi**_ will obviously display all the underlying markups.
+**NOTE:** This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
+Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display all the underlying markups.
 
 # README CONTENTS:
 1. What is open-ipcamera?
@@ -23,11 +23,11 @@ Viewing it in _**vi**_ will obviously display all the underlying markups.
 ---
 - A collection of bash scripts that act as a wrapper to configure a comprehensive Linux _**Streaming & Motion Detection Camera System**_.
 Upon a detection event it automatically uploads images to _**Dropbox**_ and emails an alert (if the user has specified an SMTP relay).
-
 - A great tool for either learning Linux or transitioning your existing Linux skills from _**sysVinit**_ to _**SystemD**_.
+- Additionally _**open-ipcamera**_ offers numerous opportunities as a tool to teach IPv4/IPv6 network fundamentals using cheap Raspberry Pi's
 
 _**Why use bash in lieu of a higher level programming language for open-ipcamera?:**_
-- Bash is a lowest common denominator skillset for Linux-heads
+- Bash is a lowest common denominator skillset for Linux-heads. Maybe some know Perl, others Python, but all _**should**_ have bash skills :wink:
 - Less chance of breakage due to deprecation and headaches from different versions of dependent librairies, yada yada yada...
 
 
@@ -62,10 +62,13 @@ In fact you only need to supply values for variables in (2) files and execute th
 understand what values you are being asked to supply data for.  But video tutorials on using _**open-ipcamera**_ itself, GPG encryption,
 formatting storage and other skills which _**open-ipcamera**_ require knowledge of can be found [HERE](www.YouTube.com/user/LinuxEngineer)
 
+The install process was designed to reduce complexity, the instructions are consequently simple, but if you make an error, don't sweat it:\
+Just format the MicroSD Card and make a another clean run at installing open-ipcamera.  **DON'T worry about making Errors!**
+
 
 # 5. open-ipcamera REQUIREMENTS:
 ---
-- Raspberry Pi with a Pi-cam connected to it- the _**Pi NoIR**_recommended as it can video in low-light conditions with IR light
+- Raspberry Pi with a Pi-cam connected to it- the _**Pi NoIR**_ recommended as it can video in low-light conditions with IR light
 - keyboard, mouse & HDMI cable
 - DHCP IP addressing: If the Pi can just catch an address open-ipcamera will take care of the rest of the IP details for you
 - Internet connection (wired or Ethernet)
@@ -110,24 +113,24 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 # 8. INSTRUCTIONS: Installation & Upgrades
 ## INSTALLATION:
 ---
-*NOTE:* Detailed  _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
+**NOTE:** Detailed  _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
 With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the Pi on and:
 1. Start a terminal session
 2. Execute "sudo raspi-config"
 3. Enable SSH:\
     "5 Interfacing Options" > "P2 SSH" > Choose "Yes" to enable SSH using your TAB key\
-*NOTE:* Default SSH user is "pi" with default password "raspberry"
+**NOTE:** Default SSH user is "pi" with default password "raspberry"
 4. Connect Pi to Internet (requires DHCP- most routers already have this configured):
 - WIRED: Use Pi's Ethernet Port to connect it to a switch\
-	POE Users:  Suggested _**MINIMUM**_ Ethernet cable spec: *CAT6 AWG 24*
+	POE Users:  Suggested _**MINIMUM**_ Ethernet cable spec: **CAT6 AWG 24**
 - WiFi: Click the little WiFi symbol at top RIGHT of your screen and choose a network and set a password to join it
 5. Set Variables: Supply the required values in variables in (2) files:\
     `cd /home/pi/open-ipcamera`\
     `nano variables.sh`\
     `nano variables-secure.sh`\
-*WARNING 1:* Be careful to *NOT* backspace encasing single/double quotation marks when deleting default variable values to replace them with your own\
-*WARNING 2:* Remember to set *UNIQUE* hostnames for each Pi
-6. open-ipcamera-config.sh:  *ONLY* script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts\
+*WARNING 1:* Be careful to **NOT** backspace encasing single/double quotation marks when deleting default variable values to replace them with your own\
+*WARNING 2:* Remember to set **UNIQUE** hostnames for each Pi
+6. open-ipcamera-config.sh:  **ONLY** script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts\
     `cd open-ipcamera/`\
     `sudo ./open-ipcamera-config.sh`
 7. Configure firewall rules: after the open-ipcamera-config.sh completes restrict access to your camera by setting appropriate FW rules.
@@ -144,7 +147,7 @@ open-ipcamera uses Semantic Versioning:\
     `Major/Minor/Patch`
 
 When upgrade script is executed it downloads the latest GPG signed Git Tagged version available, prints the comments and pauses.\
-If after reviewing changes you're not happy with them, just CTRL C to exit upgrade. Otherwise press *RETURN* to proceed with upgrade.
+If after reviewing changes you're not happy with them, just `CTRL C` to exit upgrade. Otherwise press *RETURN* to proceed with upgrade.
 
 
 # 9. TROUBLESHOOTING:
@@ -158,7 +161,7 @@ If so, just fix the error and re-execute _**open-ipcamera-config.sh**_ again to 
 
 # 10. USEFUL LINKS:
 ---
-[Motion" Project Documentation](https://motion-project.github.io/motion_guide.html)\
-[Motion" Config Options](https://motion-project.github.io/motion_config.html)\
+["Motion" Project Documentation](https://motion-project.github.io/motion_guide.html)\
+["Motion" Config Options](https://motion-project.github.io/motion_config.html)\
 [Standard PiCam vs Pi NOIR PiCam](https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/)\
-[Pi NoIR: What is that blue film included with the camera?](https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/)\
+[Pi NoIR: What is that blue film thingy included with the Pi camera?](https://www.raspberrypi.org/blog/whats-that-blue-thing-doing-here/)
