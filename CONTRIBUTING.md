@@ -1,7 +1,11 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.69.01
+# Version 01.69.02
+
+
+**NOTE:** This CONTRIBUTING.md file is formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
+Viewing it in a CLI editor such as _**vi**_ or _**nano**_ will obviously display all the underlying markups.
 
 
 # Contributing to open-ipcamera Project:
@@ -21,7 +25,7 @@ Contact: terrence.houlahan@open-ipcamera.net\
 Although extensive unit testing has been performed as _**open-ipcamera**_ has been developed, the only real validation comes when putting code out into the wild.
 If you find a bug, either:
 1. **REQUIRED:** Create an **ISSUE** for this project on Github, detailing:
-- version of open-ipcamera: 	/home/pi/open-ipcamera-scripts/version.txt
+- Version of open-ipcamera: 	/home/pi/open-ipcamera-scripts/version.txt
 - Version of Raspbian:  		lsb\_release -a
 - File where the offending code lives
 - How it's reproducible
@@ -32,6 +36,19 @@ If you find a bug, either:
 The organization of _**open-ipcamera**_ is *EXTREMELY* modular.  Adding features _**should be**_ reasonably straightforward.
 Depending on both their merit and quality of coding, your feature may be pulled into the open-ipcamera repo.
 Attribution will of course be given for your feature.
+
+
+### HARDWARE DRIVERS:
+---
+If you have drivers you wish to be packaged with future _**open-ipcamera**_ releases, to be considered these *MUST* be:
+- Opensource
+- *UNCOMPILED*
+- Supplied with specimen hardware with most current firmware for validation
+
+This process is _**VALIDATION ONLY**_-NOT _**DEBUGGING**_.\
+Ensure everything has been rigorously tested before seeking inclusion.\
+*Policy on Failures:*  Minimum 3 months before reconsideration of your drivers.
+
 
 
 ### TRANSLATIONS:

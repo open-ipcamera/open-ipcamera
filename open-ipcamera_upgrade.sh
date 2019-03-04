@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.69.01
+# Version 01.69.02
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -59,11 +59,10 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	# Remove previous version number from the merged file:
 	sed -i "/# Version $VERSIONINSTALLED/d" $PATHINSTALLDIR/variables.sh
 	# Create variable to show new *variables* in variables.sh that require a user-provided value prior before executing any upgrade. This will ignore new comments made to variables.sh:
-	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")	
+	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")
+	cd $PATHINSTALLDIR
 	# Execute upgrade if variables.sh in LATEST release does NOT include unpopulated- not empty- variables. Else show empty variables then notify user to complete them and exit:
-	if [[ "$VARIABLESEMPTY" != '' ]]; then cd $PATHINSTALLDIR;./open-ipcamera-config.sh; else echo "Provide values for empty variables in variables.sh" && echo && echo "$VARIABLESEMPTY" && echo && echo "Re-execute upgrade script after completed" && exit; fi
-	# Delete the pre-merged copy of variables.sh- we made a backup of this before the merge:
-	rm $PATHSCRIPTS/variables.sh
+	if [[ "$VARIABLESEMPTY" != '' ]]; then ./open-ipcamera-config.sh; else echo "Provide values for variables shown below in $PATHSCRIPTS/variables.sh:" && echo "$VARIABLESEMPTY" && echo "Re-execute $PATHSCRIPTS/open-ipcamera_upgrade.sh after providing required values" && ./open-ipcamera_delete.sh && exit; fi
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo "$0 v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
