@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.69.00
+# Version 01.69.01
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -53,14 +53,14 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	cp -p $PATHSCRIPTS/variables.sh $PATHSCRIPTS/variables.sh.BAK_`date +%Y-%m-%d_%H-%M-%S`
 	# BACKUP UPGRADE version -which has no unique user values- of variables.sh before 2-way merge:
 	cp -p $PATHINSTALLDIR/variables.sh $PATHINSTALLDIR/variables.sh.BAK_`date +%Y-%m-%d_%H-%M-%S`
-	# Create a variable that contains the results of a diff between PRODUCTION and UPGRADE copies of variables.sh line-by-line and only print lines NOT beginning with hashtag and lines NOT present in BOTH files:
-	VARIABLESMODIFIED=$(diff --new-line-format="" --unchanged-line-format="" $PATHSCRIPTS/variables.sh $PATHINSTALLDIR/variables.sh| grep "^[^#].*")	
-	# If files differ THEN perform 2-way merge of lines NOT shared:
-	if [[ $(echo $VARIABLESMODIFIED) = '' ]]; then paste -d'\n' $PATHSCRIPTS/variables.sh $PATHINSTALLDIR/variables.sh|awk -F'=' '!seen[$1]++' >$PATHINSTALLDIR/variables.sh; fi
-	# NOTE: The new MERGED variables.sh file will be copied to a persistent location $PATHSCRIPTS/ by open-ipcamera_delete.sh before it deletes the open-ipcamera repo	
-	# Create variable to show new variables- not comments- in variables.sh require values prior to upgrading open-ipcamera:
+	# Perform 2-way merge of lines NOT shared between the Production copy and the upgrade version of variables.sh just downloaded:
+	# NOTE: The new MERGED file will be copied $PATHSCRIPTS/ by open-ipcamera_delete.sh before deleting the open-ipcamera repo	
+	paste -d'\n' $PATHSCRIPTS/variables.sh $PATHINSTALLDIR/variables.sh|awk -F'=' '!seen[$1]++' >$PATHINSTALLDIR/variables.sh
+	# Remove previous version number from the merged file:
+	sed -i "/# Version $VERSIONINSTALLED/d" $PATHINSTALLDIR/variables.sh
+	# Create variable to show new *variables* in variables.sh that require a user-provided value prior before executing any upgrade. This will ignore new comments made to variables.sh:
 	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")	
-	# Execute upgrade if variables.sh in LATEST release do NOT include unpopulated- not empty- variables. Else show empty variables notify user to complete them and exit:
+	# Execute upgrade if variables.sh in LATEST release does NOT include unpopulated- not empty- variables. Else show empty variables then notify user to complete them and exit:
 	if [[ "$VARIABLESEMPTY" != '' ]]; then cd $PATHINSTALLDIR;./open-ipcamera-config.sh; else echo "Provide values for empty variables in variables.sh" && echo && echo "$VARIABLESEMPTY" && echo && echo "Re-execute upgrade script after completed" && exit; fi
 	# Delete the pre-merged copy of variables.sh- we made a backup of this before the merge:
 	rm $PATHSCRIPTS/variables.sh
