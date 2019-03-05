@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.70.00
+# Version 01.75.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -62,7 +62,7 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")
 	cd $PATHINSTALLDIR
 	# Execute upgrade if variables.sh in LATEST release does NOT include unpopulated- not empty- variables. Else show empty variables then notify user to complete them and exit:
-	if [[ "$(echo $VARIABLESEMPTY)" != '' ]]; then ./open-ipcamera-config.sh; else echo "Provide values for variables shown below in $PATHSCRIPTS/variables.sh:" && echo "$VARIABLESEMPTY" && echo "Re-execute $PATHSCRIPTS/open-ipcamera_upgrade.sh after providing required values" && ./open-ipcamera_delete.sh && exit; fi
+	if [[ "$(echo $VARIABLESEMPTY)" = '' ]]; then ./open-ipcamera-config.sh; else echo "Provide values for variables shown below in $PATHSCRIPTS/variables.sh:" && echo "$VARIABLESEMPTY" && echo "Re-execute $PATHSCRIPTS/open-ipcamera_upgrade.sh after providing required values" && ./open-ipcamera_delete.sh && exit; fi
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo "$0 v$VERSIONLATEST COMPLETED:: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log

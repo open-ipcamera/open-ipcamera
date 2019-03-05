@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.70.00
+# Version 01.75.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -25,7 +25,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 
 
 # Restore configuration to a predictable known state:
-if [ -f /etc/modules-load.d/bcm2835-v4l2.conf  ]; then
+if [ -f /etc/modules-load.d/bcm2835-v4l2.conf ]; then
 	rm /etc/modules-load.d/bcm2835-v4l2.conf
 fi
 
