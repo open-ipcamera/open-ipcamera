@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.75.00
+# Version 01.75.01
 
 **NOTE:** This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
 Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display all the underlying markups.
@@ -116,31 +116,33 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 ---
 **NOTE:** Detailed _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
 With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the Pi on and:
-1. Start a terminal session
-2. Execute "sudo raspi-config"
-3. Enable SSH:\
+1. *Install Time:* Longest part of Full install is downloading packages- can take 8 minutes and another 2-3 minutes for the OS upgrade at end.
+2. Start a terminal session
+3. Execute "sudo raspi-config"
+4. Enable SSH:\
     "5 Interfacing Options" > "P2 SSH" > Choose "Yes" to enable SSH using your TAB key\
 **NOTE:** Default SSH user is "pi" with default password "raspberry"
-4. Connect Pi to Internet (requires DHCP- most routers already have this configured):
+5. Connect Pi to Internet (requires DHCP- most routers already have this configured):
 - WIRED: Use Pi's Ethernet Port to connect it to a switch\
 	POE Users:  Suggested _**MINIMUM**_ Ethernet cable spec: **CAT6 AWG 24**
 - WiFi: Click the little WiFi symbol at top RIGHT of your screen and choose a network and set a password to join it
-5. Set Variables: Supply the required values in variables in (2) files:\
+6. Set Variables: Supply required values for variables in following (2) files:\
     `cd /home/pi/open-ipcamera`\
     `nano variables.sh`\
     `nano variables-secure.sh`\
 *WARNING 1:* Be careful **NOT** to backspace encasing single/double quotation marks when deleting default variable values when replacing them with your own\
 *WARNING 2:* Remember to set **UNIQUE** hostnames for each Pi
 *WARNING 3:* The file **variables-secure.sh** will be encrypted at end of install if GPG key provided or deleted if not: keep copy of passwords off the Pi!
-6. open-ipcamera-config.sh:  **ONLY** script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts\
+7. open-ipcamera-config.sh:  **ONLY** script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts\
     `cd open-ipcamera/`\
     `sudo ./open-ipcamera-config.sh`
-7. Configure firewall rules: after the open-ipcamera-config.sh completes restrict access to your camera by setting appropriate FW rules.
+8. Configure firewall rules: after the open-ipcamera-config.sh completes restrict access to your camera by setting appropriate FW rules.
 
 ## UPGRADE:
 ---
 Once _**open-ipcamera**_ is installed, subsequent upgrades are managed by the _**open-ipcamera_upgrade.sh**_ script:\
 
+Upgrades are easier and quicker than a full install: the **variables.sh** & **variables-secure.sh** files were completed and packages downloaded.\
 To UPGRADE your open-ipcamera installation:\
     `cd /home/pi/open-ipcamera-scripts/`\
     `sudo ./open-ipcamera_upgrade.sh`
