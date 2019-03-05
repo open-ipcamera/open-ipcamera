@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.00
+# Version 01.75.01
 # "variables-secure.sh": supplies open-ipcamera-config.sh and other scripts with password data on initial install ONLY.  File is encrypted afterwards
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 ##############  Dropbox VARIABLES:Access Token  ##############
-# Dropbox used to shift video and pics to cloud precluding evidence being destroyed or stolen Please consult "README.txt" for how to obtain the value for below variable
+# Dropbox used to shift video and pics to cloud precluding evidence being destroyed or stolen Please consult "README.md" for how to obtain the value for below variable
 # open-ipcamera configures automatic uploading of motion detection images to dropbox if you provide an access token in the below variable:
 DROPBOXACCESSTOKEN='ReplaceThisStringWithYourAccessToken'
 ##############  USER VARIABLES: Linux  ##############

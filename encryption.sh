@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.00
+# Version 01.75.01
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -35,7 +35,7 @@ echo
 
 # The gnupg keyserver can be flaky so we have to engineer reliability to keep trying to download the requested KeyID:
 
-while [[ "$(gpg --list-keys $GPGPUBKEYIDDEVELOPERTERRENCE|grep -o 'pub')" != 'pub' ]]
+while [[ "$(su pi -c "gpg --list-keys $GPGPUBKEYIDDEVELOPERTERRENCE"|grep -o 'pub')" != 'pub' ]]
 do
         echo
         echo "Downloading Developer Terrence Houlahan GPG Public Key used to sign open-ipcamera tagged Git Releases"
@@ -52,7 +52,7 @@ done
 # Check for a value in variable GPGKEYIDPUBLICYOURS is neither empty or the default value:  If not attempt to download the user Public Key
 if [[ "$(echo $GPGKEYIDPUBLICYOURS)" != 'YourGPGkeyIDhere' ]] && [[ "$(echo $GPGKEYIDPUBLICYOURS)" != '' ]]; then
 
-while [[ "$(gpg --list-keys $GPGKEYIDPUBLICYOURS|grep -o 'pub')" != 'pub' ]]
+while [[ "$(su pi -c "gpg --list-keys $GPGKEYIDPUBLICYOURS"|grep -o 'pub')" != 'pub' ]]
 do
         echo
         echo "Downloading Developer Terrence Houlahan GPG Public Key used to sign open-ipcamera tagged Git Releases"
