@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.01
+# Version 01.75.02
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -91,6 +91,10 @@ chmod 700 $PATHSCRIPTS/heat-alert.sh
 chown pi:pi $PATHSCRIPTS/heat-alert.sh
 
 
+echo "Created: $PATHSCRIPTS/heat-alert.sh"
+
+
+
 cat <<EOF> /etc/systemd/system/heat-alert.service
 [Unit]
 Description=Email Heat Alerts
@@ -114,6 +118,9 @@ chmod 644 /etc/systemd/system/heat-alert.service
 systemctl enable heat-alert.service
 
 
+echo "Created: /etc/systemd/system/heat-alert.service"
+
+
 
 cat <<'EOF'> /etc/systemd/system/heat-alert.timer
 [Unit]
@@ -132,3 +139,7 @@ EOF
 chmod 644 /etc/systemd/system/heat-alert.timer
 
 systemctl enable heat-alert.timer
+
+
+echo "Created: /etc/systemd/system/heat-alert.timer"
+echo

@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.01
+# Version 01.75.02
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -81,6 +81,8 @@ EOF
 chmod 700 $PATHSCRIPTS/motion-detection-camera-address.sh
 chown pi:pi $PATHSCRIPTS/motion-detection-camera-address.sh
 
+echo "Created: $PATHSCRIPTS/motion-detection-camera-address.sh"
+
 
 
 cat <<EOF> /etc/systemd/system/motion-detection-camera-address.service
@@ -103,3 +105,7 @@ EOF
 chmod 644 /etc/systemd/system/motion-detection-camera-address.service
 
 systemctl enable motion-detection-camera-address.service
+
+
+echo "Created: /etc/systemd/system/motion-detection-camera-address.service"
+echo
