@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.69.02
+# Version 01.70.00
 
 
 ######  LICENSE: ######
@@ -137,8 +137,13 @@ echo
 echo "$(tput setaf 5)****** IMAGE STORAGE CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
-./storage.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
+# Test if automount1 configured and if so then other aoutmounts will have also been done:
+if [[ "$(systemctl is-active media-automount1.automount)" != "active" ]]; then
+	./storage.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+else
+	echo "Storage Already Configured"
+fi
 
 
 
@@ -228,9 +233,14 @@ echo
 echo "$(tput setaf 5)****** DROPBOX CONFIGURATION  ******$(tput sgr 0)"
 echo
 
-./service-dropboxUploader.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
+#
+if [[ "$(systemctl is-active Dropbox-Uploader.service)" != "active" ]]; then
+	./service-dropboxUploader.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+else
+	echo "Dropbox Service Already Configured"
+fi
 
 
 echo

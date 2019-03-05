@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.69.02
+# Version 01.70.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,7 +24,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-if [ "$(systemctl is-active snmpd.service)" = "active" ]; then
+if [[ "$(systemctl is-active snmpd.service)" = "active" ]]; then
 	systemctl stop snmpd.service
 fi
 
