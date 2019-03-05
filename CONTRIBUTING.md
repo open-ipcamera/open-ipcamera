@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.70.00
+# Version 01.75.00
 
 
 **NOTE:** This CONTRIBUTING.md file is formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
@@ -20,16 +20,17 @@ Viewing it in a CLI editor such as _**vi**_ or _**nano**_ will obviously display
 ## WHAT to Contribute:
 ---
 
-### BUG FIXES:
+### BUG FIXES/SECURITY VULNERABILITIES:
 ---
 Although extensive unit testing has been performed as _**open-ipcamera**_ has been developed, the only real validation comes when putting code out into the wild.
-If you find a bug, either:
-1. **REQUIRED:** Create an **ISSUE** for this project on Github, detailing:
+If you identify a bug or security vulnerability:
+1. Create an **ISSUE** for this project on Github, detailing:
 - Version of open-ipcamera: 	/home/pi/open-ipcamera-scripts/version.txt
 - Version of Raspbian:  		lsb\_release -a
-- File where the offending code lives
-- How it's reproducible
-2. **OPTIONAL:** Create a **FIX** and send _**open-ipcamera**_ a Pull Request!
+- Filename where offending code lives
+- How fault is reproducible
+2. **OPTIONAL:** Create a **FIX** and send _**open-ipcamera**_ a PR (Pull Request)!
+
 
 ### FEATURES:
 ---
@@ -41,13 +42,14 @@ Attribution will of course be given for your feature.
 ### HARDWARE DRIVERS:
 ---
 If you have drivers you wish to be packaged with future _**open-ipcamera**_ releases, to be considered these *MUST* be:
-- Opensource
-- *UNCOMPILED*
-- Supplied with specimen hardware with most current firmware for validation
+- *Related to operation of an IP camera:* ie drivers for a barcode scanner wouldn't be accepted
+- *Broad Interest:* Should be functionality useful to many users, not special-use fringe cases.
+- *Opensource:* Please provide _Github_ or _Bitbucket_ URL where *UNCOMPILED* your uncompiled code can be downloaded
+- *Loadable as a Kernel Module*
+- *Specimen Hardware Supplied for Testing:*
+- *RIGOROUSLY TESTED:*  Should work in the intended way and not crash the OS :wink:
 
-This process is _**VALIDATION ONLY**_-NOT _**DEBUGGING**_.\
-Ensure everything has been rigorously tested before seeking inclusion.\
-*Policy on Failures:*  Minimum 3 months before reconsideration of your drivers.
+*Policy on Failures:*  Min. 3 months before reconsideration; very avoidable if tested rigorously with latest version of _**open-ipcamera**_
 
 
 
@@ -58,21 +60,23 @@ _**open-ipcamera**_ requires translations of the _**README.md**_ & _**CONTRIBUTI
 As the `.md` file extensions indicate, these files make use of _**Markdown Language**_. which is simple and easy to learn.\
 Please maintain the Markdown formatting when translatting the documents.
 
-Please check your Markdown formatting before submission:\
-[Online Markdown Checker](https://dillinger.io/)
-
-Also, please observe below _**file naming convention**_ when creating translations of _**README**_ & _**CONTRIBUTING**_:
-    `README.2Letter-CountryCode.md`
-[List of ISO Country Codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)
-
 
 **Submitting Translations:**
-* email your README translation: `terrence.houlahan@open-ipcamera.net`
-* Generate a Pull Request
+- *UTF-8 Encoding:* Documents should be UTF-8 encoded files as they use special non-English Character sets (_Linux_ & _OSX_ use *UTF-8* by default; nothing need be changed)
+- *File Naming Conventions: `filename.2Letter-CountryCode.md`  [List of ISO Country Codes](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes)
+- *Check Markdown Formatting:* [Online Markdown Checker](https://dillinger.io/)
 
+Send Documents TO:
+- `terrence.houlahan@open-ipcamera.net`
 
-Useful Markdown Language Guides & References:\
-[Github Markdown Guide](https://guides.github.com/features/mastering-markdown/)\
-[Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
+*Markdown Language Guides & References:*\
+- [Github Markdown Guide](https://guides.github.com/features/mastering-markdown/)\
+- [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
+
+*UTF Encoding:* Setting to *UTF-8* on Windows\
+- Check default encoding with **PowerShell**:  `[System.Text.Encoding]::Default`
 
 _**Terrence Houlahan, open-ipcamera Project Developer**_
+
+How to Change Default Encoding on Windows 10:\
+![Screenshot of path to change default Encoding to UTF-8](https://imgur.com/gallery/FuyN1Sy | height = 500px)

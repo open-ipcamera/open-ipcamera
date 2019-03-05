@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.70.00
+# Version 01.75.00
 
 
 ######  LICENSE: ######
@@ -28,11 +28,11 @@ source "${BASH_SOURCE%/*}/functions.sh"
 ######  INSTALL INSTRUCTIONS: ######
 
 # WARNING:  Before executing this script please Edit:
-#	  variables.sh*
+#	  variables.sh
 #	  variables-secure.sh
 #  with your unique data info before executing this script
 
-# README.txt file distributed with this script has instructions on how to install open-ipcamera
+# README.md file distributed with this script contains full installation instructions for open-ipcamera
 
 ######  DEVELOPER BEER-FUND: ######
 
@@ -51,7 +51,7 @@ echo "This program comes with ABSOLUTELY NO WARRANTY express or implied."
 echo "This is free software and you are welcome to redistribute it under certain conditions."
 echo "Consult * LICENSE.txt * for terms of GPL 3 License and conditions of use."
 
-read -p "Press ENTER to accept license and warranty terms to continue or close this bash shell to exit script"
+read -p "Press ENTER to accept GPL v3 license terms to continue or terminate this bash shell to exit script"
 
 
 echo
@@ -117,6 +117,7 @@ echo
 echo 'Elapsed Time for Package Management will be printed after this section completes:'
 echo
 
+
 time ./packages.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
 
@@ -126,6 +127,7 @@ wait $!
 echo
 echo "$(tput setaf 5)****** GPG: Import open-ipcamera Developers Public Key  ******$(tput sgr 0)"
 echo
+
 
 ./encryption.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
@@ -165,8 +167,12 @@ echo
 echo "$(tput setaf 5)****** CONFIGURE LOGGING:  ******$(tput sgr 0)"
 echo
 
-./log-config.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
+
+# Only configure logging is storage has not already been configured to be persistent
+if [[ "$(grep -o 'Storage=persistent' /etc/systemd/journald.conf)" != '' ]]; then
+	./log-config.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -204,8 +210,12 @@ echo
 echo "$(tput setaf 5)****** CAMERA KERNEL DRIVER: Load on Boot  ******$(tput sgr 0)"
 echo
 
-./kernel-drivers.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
+
+if [ ! -f /etc/modules-load.d/bcm2835-v4l2.conf ]; then
+	./kernel-drivers.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
+
 
 
 
@@ -214,8 +224,13 @@ echo
 echo "$(tput setaf 5)****** Create Graph of Dependent Relationships Between Services on Boot:  ******$(tput sgr 0)"
 echo
 
-./service-graphServices.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
+
+
+if [ ! -f $PATHSCRIPTS/boot_service_order_dependencies_graph.sh ]; then
+	./service-graphServices.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
+
 
 
 
@@ -234,7 +249,7 @@ echo "$(tput setaf 5)****** DROPBOX CONFIGURATION  ******$(tput sgr 0)"
 echo
 
 
-#
+# Skip downloading and configuring DropboxUploader if the service is found and it is enabled
 if [[ "$(systemctl is-active Dropbox-Uploader.service)" != "active" ]]; then
 	./service-dropboxUploader.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 	wait $!
@@ -246,6 +261,8 @@ fi
 echo
 echo "$(tput setaf 5)****** Camera Software *MOTION* Configuration  ******$(tput sgr 0)"
 echo
+
+# The below scripts just execute sed expressions, so if they don not match they do nothing
 
 ./service-motion.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
@@ -260,9 +277,11 @@ echo
 echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: SMTP Relay Configuration  ******$(tput sgr 0)"
 echo
 
-./smtpRelay-msmtp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-
+# MSMTP does not ship with a default config file: if it exists it implies MSMTP already configured
+if [ ! -f /etc/msmtprc ]; then
+	./smtpRelay-msmtp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -270,24 +289,23 @@ echo
 echo "$(tput setaf 5)****** MAIL ALERTS CONFIGURATION: IP Address and Heat  ******$(tput sgr 0)"
 echo
 
-./service-emailCameraAddress.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
-./service-emailMotionDetectionCameraAddress.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-
-./service-heatAlert.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
+if [ ! -f $PATHSCRIPTS/email-camera-address.sh ]; then
+	./service-emailCameraAddress.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
+if [ ! -f $PATHSCRIPTS/motion-detection-camera-address.sh ]; then
+	./service-emailMotionDetectionCameraAddress.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
-echo
-echo "$(tput setaf 5)****** open-ipcamera Services: Show Services Created Executing on Timers  ******$(tput sgr 0)"
-echo
-
-systemctl list-timers --all
-
+if [ ! -f $PATHSCRIPTS/heat-alert.sh ]; then
+	./service-heatAlert.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -296,9 +314,11 @@ echo
 echo "$(tput setaf 5)****** TROUBLESHOOTING SCRIPT:  ******$(tput sgr 0)"
 echo
 
-./troubleshooting.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
+if [ ! -f $PATHSCRIPTS/troubleshooting-helper.sh ]; then
+	./troubleshooting.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -306,9 +326,11 @@ echo
 echo "$(tput setaf 5)****** SET CPU AFFINITY:  ******$(tput sgr 0)"
 echo
 
-./service-CPUaffinity.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
+if [ ! -f $PATHSCRIPTS/set-cpu-affinity.sh ]; then
+	./service-CPUaffinity.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 echo
@@ -324,7 +346,6 @@ echo
 echo
 echo "$(tput setaf 5)****** SET DROPBOX ACCESS TOKEN:  ******$(tput sgr 0)"
 echo
-
 
 
 # Test if a Dropbox Access Token has previously saved and if not only then execute the script:
@@ -353,26 +374,19 @@ echo
 echo "$(tput setaf 5)****** SNMP CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
-./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
 
-
-# Test if an SNMP v3 ro user has been created by the presence of /usr/share/snmp/snmpd.conf and if not execute the script:
-if [ ! -f /usr/share/snmp/snmpd.conf ]; then
-	./users-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+if [[ "$(systemctl is-active snmpd.service)" != 'active' ]]; then
+	./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 	wait $!
 fi
 
 
 
-
-echo
-echo "$(tput setaf 5)****** Backup and Encrypt *variables-secure.sh* File: ******$(tput sgr 0)"
-echo
-
-./variables-secure.sh_backup.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-echo
+# Test if an SNMP v3 ro user has been created by the presence of /usr/share/snmp/snmpd.conf and if not then execute the script:
+if [ ! -f /usr/share/snmp/snmpd.conf ]; then
+	./users-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
 
 
 
@@ -383,21 +397,9 @@ echo
 echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
 echo
 
+
 time ./os-upgrade.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
-
-
-
-
-
-echo
-echo "$(tput setaf 5)****** DELETE Repo: open-ipcamera ******$(tput sgr 0)"
-echo
-
-# After open-ipcamera is configured the following script deletes the install directory containing the scripts:
-./open-ipcamera_delete.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-wait $!
-echo
 
 
 
@@ -405,7 +407,6 @@ echo
 echo
 echo "$(tput setaf 5)******  POST-INSTALL OPERATIONS:  ******$(tput sgr 0)"
 echo
-
 
 
 # Delete *version.txt* file so it can be replaced with an updated version reflecting this installs version number:
@@ -428,13 +429,47 @@ chattr +i $PATHSCRIPTS/version.txt
 
 
 
+echo
+echo "$(tput setaf 5)****** Show open-ipcamera Services Executing on Timers  ******$(tput sgr 0)"
+echo
+
+systemctl list-timers --all
+
+
 
 
 echo
 echo
-echo "$(tput setaf 1)** WARNING: REMEMBER TO CONFIGURE FIREWALL RULES TO RESTRICT ACCESS TO YOUR CAMERA ** $(tput sgr 0)"
+echo "$(tput setaf 1)** WARNING: * variables-secure.sh * will be encrypted when you press ENTER: Ensure passwords recorded elsewhere ** $(tput sgr 0)"
+echo
+echo "$(tput setaf 2)** Remember to configure firewall rules ** $(tput sgr 0)"
 echo
 read -p 'Press * Enter * to reboot Pi after reviewing open-ipcamera install script feedback'
+echo
+
+
+
+echo
+echo "$(tput setaf 5)****** Backup and Encrypt *variables-secure.sh* File: ******$(tput sgr 0)"
+echo
+
+
+# If an encrypted backup not found then execute the backup script:
+if [ ! -f $PATHSCRIPTS/variables-secure.sh.asc ]; then
+	./variables-secure.sh_backup.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+	wait $!
+fi
+
+
+
+
+echo
+echo "$(tput setaf 5)****** DELETE Repo: open-ipcamera ******$(tput sgr 0)"
+echo
+
+# After open-ipcamera is configured the following script deletes the install directory containing the scripts:
+./open-ipcamera_delete.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
 echo
 
 

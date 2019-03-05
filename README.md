@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.70.00
+# Version 01.75.00
 
 **NOTE:** This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
 Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display all the underlying markups.
@@ -21,8 +21,8 @@ Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display
 
 # 1. What is open-ipcamera?
 ---
-- A collection of bash scripts that act as a wrapper to configure a comprehensive Linux _**Streaming & Motion Detection Camera System**_.
-Upon a detection event it automatically uploads images to _**Dropbox**_ and emails an alert (if the user has specified an SMTP relay).
+- A collection of bash scripts that act as a wrapper to configure a Linux _**Streaming & Motion Detection Camera System**_ with cloud storage and email alerts.
+- An extensible, modular framework that makes it easy to add new functionality
 - A great tool for either learning Linux or transitioning your existing Linux skills from _**sysVinit**_ to _**SystemD**_.
 - Additionally _**open-ipcamera**_ offers numerous opportunities as a tool to teach IPv4/IPv6 network fundamentals using cheap Raspberry Pi's
 
@@ -87,8 +87,9 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 
 # 7. open-ipcamera FEATURES:
 ---
-- Automatically configures camera IPv4 & IPv6 addressing in any required config files
-- Camera emails you its address so you can find the pi on a network without a local connection to it
+- **Update in-place** functionality:  No need to uninstall/re-install when a new release is cut
+- Automatically configures IPv4 & IPv6 addressing in any required config files
+- Camera emails you its' address so you can locate it on a network without a local connection
 - Enables camera in Raspbian and disables red LED activity light
 - Sets Kernel driver for camera to automatically load on boot
 - Installs & configs _**Motion**_ video camera package
@@ -113,7 +114,7 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 # 8. INSTRUCTIONS: Installation & Upgrades
 ## INSTALLATION:
 ---
-**NOTE:** Detailed  _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
+**NOTE:** Detailed _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
 With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the Pi on and:
 1. Start a terminal session
 2. Execute "sudo raspi-config"
@@ -128,8 +129,9 @@ With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the 
     `cd /home/pi/open-ipcamera`\
     `nano variables.sh`\
     `nano variables-secure.sh`\
-*WARNING 1:* Be careful to **NOT** backspace encasing single/double quotation marks when deleting default variable values to replace them with your own\
+*WARNING 1:* Be careful **NOT** to backspace encasing single/double quotation marks when deleting default variable values when replacing them with your own\
 *WARNING 2:* Remember to set **UNIQUE** hostnames for each Pi
+*WARNING 3:* The file **variables-secure.sh** will be encrypted at end of install if GPG key provided or deleted if not: keep copy of passwords off the Pi!
 6. open-ipcamera-config.sh:  **ONLY** script required to be executed: it sources the variables & function files and calls all other _**open-ipcamera**_ scripts\
     `cd open-ipcamera/`\
     `sudo ./open-ipcamera-config.sh`
@@ -143,7 +145,8 @@ To UPGRADE your open-ipcamera installation:\
     `cd /home/pi/open-ipcamera-scripts/`\
     `sudo ./open-ipcamera_upgrade.sh`
 
-open-ipcamera uses Semantic Versioning:\
+Interpreting Release Numbers:\
+open-ipcamera uses **Semantic Versioning**:\
     `Major/Minor/Patch`
 
 When upgrade script is executed it downloads the latest GPG signed Git Tagged version available, prints the comments and pauses.\
@@ -156,7 +159,7 @@ If after reviewing changes you're not happy with them, just `CTRL C` to exit upg
 1. Executing _**troubleshooting-helper.sh**_ script in /home/pi/open-ipcamera-scripts directory & reviewing output to identify a fault
 2. Read the _**open-ipcamera**_ Wiki
 3. Check that you haven't inadvertently deleted one- or both- of single quotes encasing variables in _**open-ipcamera-config.sh**_
-If so, just fix the error and re-execute _**open-ipcamera-config.sh**_ again to rebuild everything
+If so, just resolve the fault and re-execute _**open-ipcamera-config.sh**_ again to rebuild everything
 
 
 # 10. USEFUL LINKS:
