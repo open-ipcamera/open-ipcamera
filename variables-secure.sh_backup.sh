@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.01
+# Version 01.75.02
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -39,7 +39,7 @@ if [[ "$(echo $GPGKEYIDPUBLICYOURS)" != 'YourGPGkeyIDhere' ]] && [[ "$(echo $GPG
 	# Update version number in header of variables-secure.sh to be consistent with other files in this tagged Git release:
 	sed -i "s/^# Version [0-9][0-9].[0-9][0-9].[0-9][0-9]/# Version $VERSIONLATEST/" $PATHSCRIPTS/variables-secure.sh
 	# Encrypt *variables-secure.sh*
-	$(command -v gpg) --batch --yes --trust-model always -r $GPGKEYIDPUBLICYOURSEMAIL -a -e $PATHSCRIPTS/variables-secure.sh
+	su pi -c "$(command -v gpg) --batch --yes --trust-model always -r $GPGKEYIDPUBLICYOURSEMAIL -a -e $PATHSCRIPTS/variables-secure.sh"
 	echo "variables-secure.sh has been encrypted with GPG Key $GPGKEYIDPUBLICYOURS"
 	# Delete *UNENCRYPTED* variables.sh file:
 	rm $PATHSCRIPTS/variables-secure.sh

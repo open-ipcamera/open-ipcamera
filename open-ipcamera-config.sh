@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.01
+# Version 01.75.02
 
 
 ######  LICENSE: ######
@@ -169,7 +169,7 @@ echo
 
 
 # Only configure logging is storage has not already been configured to be persistent
-if [[ "$(grep -o 'Storage=persistent' /etc/systemd/journald.conf)" != '' ]]; then
+if [[ "$(grep -o 'Storage=persistent' /etc/systemd/journald.conf)" = '' ]]; then
 	./log-config.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 	wait $!
 fi
@@ -375,11 +375,8 @@ echo "$(tput setaf 5)****** SNMP CONFIGURATION:  ******$(tput sgr 0)"
 echo
 
 
-if [[ "$(systemctl is-active snmpd.service)" != 'active' ]]; then
-	./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
-	wait $!
-fi
-
+./monitoring-snmp.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
 
 
 # Test if an SNMP v3 ro user has been created by the presence of /usr/share/snmp/snmpd.conf and if not then execute the script:
@@ -415,8 +412,11 @@ if [ -f $PATHSCRIPTS/version.txt ]; then
 	rm $PATHSCRIPTS/version.txt
 fi
 
+
 # Create *version.txt* echoing version number just installed into it:
 echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
+
+echo "Updated $PATHSCRIPTS/version.txt with version just installed"
 
 
 # Change ownership of all files created by this script FROM user *root* TO user *pi*:
@@ -427,7 +427,7 @@ chown -R pi:pi /home/pi 2> /dev/null
 chown pi:pi $PATHSCRIPTS/version.txt
 chattr +i $PATHSCRIPTS/version.txt
 
-
+echo "Changed perms on $PATHSCRIPTS/version.txt to IMMUTABLE"
 
 echo
 echo "$(tput setaf 5)****** Show open-ipcamera Services Executing on Timers  ******$(tput sgr 0)"
@@ -442,7 +442,7 @@ echo
 echo
 echo "$(tput setaf 1)** WARNING: * variables-secure.sh * will be encrypted when you press ENTER: Ensure passwords recorded elsewhere ** $(tput sgr 0)"
 echo
-echo "$(tput setaf 2)** Remember to configure firewall rules ** $(tput sgr 0)"
+echo "$(tput setaf 3)** Remember to configure firewall rules ** $(tput sgr 0)"
 echo
 read -p 'Press * Enter * to reboot Pi after reviewing open-ipcamera install script feedback'
 echo
@@ -464,7 +464,7 @@ fi
 
 
 echo
-echo "$(tput setaf 5)****** DELETE Repo: open-ipcamera ******$(tput sgr 0)"
+echo "$(tput setaf 5)****** DELETE open-ipcamera REPO ******$(tput sgr 0)"
 echo
 
 # After open-ipcamera is configured the following script deletes the install directory containing the scripts:
