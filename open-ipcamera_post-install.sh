@@ -1,7 +1,6 @@
 #!/bin/bash
 
 source "${BASH_SOURCE%/*}/variables.sh"
-source "${BASH_SOURCE%/*}/functions.sh"
 
 # The open-ipcamera Project: www.open-ipcamera.net
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
@@ -9,7 +8,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Contact: terrence.houlahan@open-ipcamera.net
 # Version 01.76.00
 
-######  License: ######
+##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
 # License: GPL 3:
 # This program is free software: you can redistribute it and/or modify
@@ -24,24 +23,26 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
 
-# Restore configuration to a predictable known state:
-if [ -f /etc/modules-load.d/bcm2835-v4l2.conf ]; then
-	rm /etc/modules-load.d/bcm2835-v4l2.conf
+
+# Delete *version.txt* file so it can be replaced with an updated version reflecting this installs version number:
+if [ -f $PATHSCRIPTS/version.txt ]; then
+	chattr -i $PATHSCRIPTS/version.txt
+	rm $PATHSCRIPTS/version.txt
 fi
 
 
-# Load Kernel module for Pi camera on boot:
-cat <<EOF> /etc/modules-load.d/bcm2835-v4l2.conf
-bcm2835-v4l2
+# Create *version.txt* echoing version number just installed into it:
+echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
 
-EOF
+echo "Updated $PATHSCRIPTS/version.txt with version just installed"
 
-echo 'File created to automatically load camera driver on boot:'
-echo "/etc/modules-load.d/bcm2835-v4l2.conf"
 
-# Rebuild Kernel modules dependencies map
-depmod -a
+# Change ownership of all files created by this script FROM user *root* TO user *pi*:
+# Redirect stderr to /dev/null to quiet "operation not permitted" error when recursively chown-ing /home/pi/: version.txt is set to immutable and not a valid error
+chown -R pi:pi /home/pi 2> /dev/null
 
-# Load Camera Kernel Module
-# Will automatically load on reboot at end of script- modprobe command disabled
-#modprobe bcm2835-v4l2
+# Set perms on *version.txt* to immutable so it cannot be deleted- inadvertently or intentionally
+chown pi:pi $PATHSCRIPTS/version.txt
+chattr +i $PATHSCRIPTS/version.txt
+
+echo "Changed perms on $PATHSCRIPTS/version.txt to IMMUTABLE"

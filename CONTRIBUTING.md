@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.75.02
+# Version 01.76.00
 
 
 **NOTE:** This CONTRIBUTING.md file is formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
@@ -69,8 +69,8 @@ Please maintain the Markdown formatting when translatting the documents.
 Send Documents TO:
 - `terrence.houlahan@open-ipcamera.net`
 
-*Markdown Language Guides & References:*\
-- [Github Markdown Guide](https://guides.github.com/features/mastering-markdown/)\
+*Markdown Language Guides & References:*
+- [Github Markdown Guide](https://guides.github.com/features/mastering-markdown/)
 - [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 
 *UTF Encoding:* Setting to *UTF-8* on Windows\
@@ -79,4 +79,4 @@ Send Documents TO:
 _**Terrence Houlahan, open-ipcamera Project Developer**_
 
 How to Change Default Encoding on Windows 10:\
-![Screenshot of path to change default Encoding to UTF-8](https://imgur.com/gallery/FuyN1Sy | height = 500px)
+![Screenshot of path to change default Encoding to UTF-8](https://imgur.com/gallery/FuyN1Sy)

@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.75.02
+# Version 01.76.00
 
 
 ######  LICENSE: ######
@@ -406,28 +406,11 @@ echo "$(tput setaf 5)******  POST-INSTALL OPERATIONS:  ******$(tput sgr 0)"
 echo
 
 
-# Delete *version.txt* file so it can be replaced with an updated version reflecting this installs version number:
-if [ -f $PATHSCRIPTS/version.txt ]; then
-	chattr -i $PATHSCRIPTS/version.txt
-	rm $PATHSCRIPTS/version.txt
-fi
+time ./open-ipcamera_post-install.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
 
 
-# Create *version.txt* echoing version number just installed into it:
-echo "$VERSIONLATEST" >> $PATHSCRIPTS/version.txt
 
-echo "Updated $PATHSCRIPTS/version.txt with version just installed"
-
-
-# Change ownership of all files created by this script FROM user *root* TO user *pi*:
-# Redirect stderr to /dev/null to quiet "operation not permitted" error when recursively chown-ing /home/pi/: version.txt is set to immutable and not a valid error
-chown -R pi:pi /home/pi 2> /dev/null
-
-# Set perms on *version.txt* to immutable so it cannot be deleted- inadvertently or intentionally
-chown pi:pi $PATHSCRIPTS/version.txt
-chattr +i $PATHSCRIPTS/version.txt
-
-echo "Changed perms on $PATHSCRIPTS/version.txt to IMMUTABLE"
 
 echo
 echo "$(tput setaf 5)****** Show open-ipcamera Services Executing on Timers  ******$(tput sgr 0)"
@@ -442,7 +425,7 @@ echo
 echo
 echo "$(tput setaf 1)** WARNING: * variables-secure.sh * will be encrypted when you press ENTER: Ensure passwords recorded elsewhere ** $(tput sgr 0)"
 echo
-echo "$(tput setaf 3)** Remember to configure firewall rules ** $(tput sgr 0)"
+echo "$(tput setaf 3)                              ** Remember to configure firewall rules ** $(tput sgr 0)"
 echo
 read -p 'Press * Enter * to reboot Pi after reviewing open-ipcamera install script feedback'
 echo
@@ -454,7 +437,7 @@ echo "$(tput setaf 5)****** Backup and Encrypt *variables-secure.sh* File: *****
 echo
 
 
-# If an encrypted backup not found then execute the backup script:
+# If an encrypted GPG backup of variables-secure.sh does not exist then execute the backup script:
 if [ ! -f $PATHSCRIPTS/variables-secure.sh.asc ]; then
 	./variables-secure.sh_backup.sh 2>&1 |tee -a $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 	wait $!
