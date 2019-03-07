@@ -1,7 +1,7 @@
-[open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
+[open-ipcamera Project](https://github.com/open-ipcamera/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.76.00
+# Version 01.77.00
 
 **NOTE:** This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
 Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display all the underlying markups.
@@ -22,9 +22,9 @@ Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display
 # 1. What is open-ipcamera?
 ---
 - A collection of bash scripts that act as a wrapper to configure a Linux _**Streaming & Motion Detection Camera System**_ with cloud storage and email alerts.
-- An extensible, modular framework that makes it easy to add new functionality
-- A great tool for either learning Linux or transitioning your existing Linux skills from _**sysVinit**_ to _**SystemD**_.
-- Additionally _**open-ipcamera**_ offers numerous opportunities as a tool to teach IPv4/IPv6 network fundamentals using cheap Raspberry Pi's
+- An extensible, modular framework that makes it easy to add new functionality to an open-ipcamera system
+- A great tool for either learning Linux or transitioning existing Linux skills from _**sysVinit**_ to _**SystemD**_.
+- Additionally _**open-ipcamera**_ offers numerous opportunities as a tool to teach IPv4/IPv6 network fundamentals using inexpensive Raspberry Pi's
 
 _**Why use bash in lieu of a higher level programming language for open-ipcamera?:**_
 - Bash is a lowest common denominator skillset for Linux-heads. Maybe some know Perl, others Python, but all _**should**_ have bash skills :wink:

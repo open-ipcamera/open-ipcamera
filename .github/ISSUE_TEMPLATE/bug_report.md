@@ -1,4 +1,5 @@
 ---
+# Version 01.77.00
 name: Bug report
 about: Create a Bug Report
 title: ''

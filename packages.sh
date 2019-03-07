@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.76.00
+# Version 01.77.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -200,9 +200,12 @@ done
 echo 
 
 
-
+echo "Updating the $(tput setaf 3)apt-file$(tput sgr 0) DB:"
+echo
 # Update apt-file DB with new packages installed so they can be searched with this utility:
 $(command -v apt-file) update > /dev/null
+
+echo "Updating the $(tput setaf 6)locate$(tput sgr 0) DB"
 
 # Populate the *locate* db:
 $(command -v updatedb)  > /dev/null

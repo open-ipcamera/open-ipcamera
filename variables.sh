@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.76.00
+# Version 01.77.00
 # "variables.sh": supplies open-ipcamera-config.sh and other scripts with config values unique to your installation
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -92,10 +92,10 @@ CAMERAIPV6="$(ip -6 addr|awk '{print $2}'|grep -P '^(?!fe80)[[:alnum:]]{4}:.*/64
 # VERSIONLATEST variable used to determine the latest version actually downloaded to system and available to use as a patching end-point
 VERSIONLATEST="$(grep -m1 '# Version' $0|awk '{print $3}'| cut -d 'v' -f2)"
 # VERSIONREPO variable used to determine most current version on REPO- this used to determine whether or not to commence an upgrade
-VERSIONREPO=$(curl -s 'https://github.com/f1linux/open-ipcamera/tags/'|grep -o "$Version v[0-9][0-9].[0-9][0-9].[0-9][0-9]"|sort -r|head -n1|cut -d 'v' -f2)
+VERSIONREPO=$(curl -s 'https://github.com/open-ipcamera/open-ipcamera/tags/'|grep -o "$Version v[0-9][0-9].[0-9][0-9].[0-9][0-9]"|sort -r|head -n1|cut -d 'v' -f2)
 # To check the version of a previously installed version we go outside the repo path to a script installed by HereDoc:
 VERSIONINSTALLED="$(cat /home/pi/open-ipcamera-scripts/version.txt 2>/dev/null)"
-PATHOPENIPCAMERAREPO='https://github.com/f1linux/'
+PATHOPENIPCAMERAREPO='https://github.com/open-ipcamera/'
 PATHSCRIPTS='/home/pi/open-ipcamera-scripts'
 # Only logging relate to installing/upgrading of open-ipcamera will live here. No subsequent logging writes here to provide a starting point for analyzing change from a clean build
 PATHLOGINSTALL='/home/pi/open-ipcamera-logs'
