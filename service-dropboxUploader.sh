@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.76.00
+# Version 01.77.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -104,6 +104,8 @@ systemctl daemon-reload
 systemctl enable Dropbox-Uploader.service
 systemctl enable Dropbox-Uploader.timer
 
-
+echo
+echo "For Further info on the Dropbox-Uploader repo open-ipcamera uses to cloud-shift images:"
+echo
 echo 'https://github.com/andreafabrizi/Dropbox-Uploader/blob/master/README.md'
 echo

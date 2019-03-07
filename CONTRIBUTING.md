@@ -1,7 +1,7 @@
-[open-ipcamera Project](https://github.com/f1linux/open-ipcamera)\
+[open-ipcamera Project](https://github.com/open-ipcamera/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.76.00
+# Version 01.77.00
 
 
 **NOTE:** This CONTRIBUTING.md file is formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
@@ -29,6 +29,8 @@ If you identify a bug or security vulnerability:
 - Version of Raspbian:  		lsb\_release -a
 - Filename where offending code lives
 - How fault is reproducible
+- Specific error messages generated
+- Last time known to work correctly before breakage: ie, before an upgrade...
 2. **OPTIONAL:** Create a **FIX** and send _**open-ipcamera**_ a PR (Pull Request)!
 
 
@@ -79,4 +81,4 @@ Send Documents TO:
 _**Terrence Houlahan, open-ipcamera Project Developer**_
 
 How to Change Default Encoding on Windows 10:\
-![Screenshot of path to change default Encoding to UTF-8](https://imgur.com/gallery/FuyN1Sy)
+[Screenshot of path to change Windows default Encoding to UTF-8](https://www.dropbox.com/sh/y61netrhtlpa5i9/AAAfobvf7PPMCUOUhH7mn-gMa?dl=0)

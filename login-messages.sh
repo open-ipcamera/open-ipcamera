@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.76.00
+# Version 01.77.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -55,7 +55,7 @@ echo 'Step 1: sudo systemctl stop motion' >> /etc/motd
 echo 'Step 2: sudo v4l2-ctl --set-fmt-video=width=1920,height=1080,pixelformat=4' >> /etc/motd
 echo >> /etc/motd
 echo 'To edit or delete these login messages:vi /etc/motd' >> /etc/motd
-echo '     vi /etc/motd' >> /etc/motd
+echo '     sudo vi /etc/motd' >> /etc/motd
 echo >> /etc/motd
 echo '###############################################################################' >> /etc/motd
 echo >> /etc/motd

@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.76.00
+# Version 01.77.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -31,10 +31,10 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Ref: https://stackoverflow.com/questions/24777597/value-too-great-for-base-error-token-is-08
 if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr -d '.')" ]]; then
 	echo
-	echo "Newer version of open-ipcamera downloaded:"
+	echo "Latest version of open-ipcamera downloaded:"
 	echo
 	cd /home/pi/
-	git clone https://github.com/f1linux/open-ipcamera.git
+	git clone https://github.com/open-ipcamera/open-ipcamera.git
 	cd $PATHINSTALLDIR
 	echo
 	git tag -l -n20 $(git describe)
