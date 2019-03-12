@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/open-ipcamera/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
-Contact: terrence.houlahan@open-ipcamera.net\
-# Version 01.77.00
+Contact: terrence.houlahan@open-ipcamera.net
+# Version 01.78.00
 
 **NOTE:** This README formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
 Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display all the underlying markups.
@@ -20,7 +20,6 @@ Viewing it in a cli editor such as _**vi**_ or _**nano**_ will obviously display
 
 
 # 1. What is open-ipcamera?
----
 - A collection of bash scripts that act as a wrapper to configure a Linux _**Streaming & Motion Detection Camera System**_ with cloud storage and email alerts.
 - An extensible, modular framework that makes it easy to add new functionality to an open-ipcamera system
 - A great tool for either learning Linux or transitioning existing Linux skills from _**sysVinit**_ to _**SystemD**_.
@@ -32,7 +31,6 @@ _**Why use bash in lieu of a higher level programming language for open-ipcamera
 
 
 # 2. LICENSE: GPL Version 3
----
 Copyright (C) 2018 2019 Terrence Houlahan
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,14 +47,12 @@ Full LICENSE found [HERE](./LICENSE)
 
 
 # 3. HARDWARE REQUIREMENTS:
----
 open-ipcamera has been tested and known to work with following combinations of OS & hardware, but may work with different configurations:
 - Hardware:   Raspberry Pi 2/3B+
 - OS:         Raspbian "Stretch" 9.8 (lsb_release -a)
 
 
 # 4. SKILLS REQUIREMENTS:
----
 You don't have to be a Linux Guru to use _**open-ipcamera**_.  It's beneficial to have functional Linux skills, but not _required_.
 In fact you only need to supply values for variables in (2) files and execute the install script.  **HOWEVER** you still must
 understand what values you are being asked to supply data for.  But video tutorials on using _**open-ipcamera**_ itself, GPG encryption,
@@ -67,7 +63,6 @@ Just format the MicroSD Card and make a another clean run at installing open-ipc
 
 
 # 5. open-ipcamera REQUIREMENTS:
----
 - Raspberry Pi with a Pi-cam connected to it- the _**Pi NoIR**_ recommended as it can video in low-light conditions with IR light
 - keyboard, mouse & HDMI cable
 - DHCP IP addressing: If the Pi can just catch an address open-ipcamera will take care of the rest of the IP details for you
@@ -78,7 +73,6 @@ The token *MUST* be created & pasted into _**variables-secure.sh**_ **BEFORE** e
 
 
 # 6. OPTIONAL FUNCTIONALITY:
----
 1.  GPG Public Key: _**variables-secure.sh**_ contains cleartext passwords. Supply a GPG Public KeyID in _**variables.sh**_ to
 have ***variables-secure.sh**_ encrypted & cleartext copy deleted
 2. To receive email alerts for motion detection events an SMTP server with both an MX and PTR DNS record to relay alert emails from the Pi
@@ -86,7 +80,6 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 
 
 # 7. open-ipcamera FEATURES:
----
 - **Update in-place** functionality:  No need to uninstall/re-install when a new release is cut
 - Automatically configures IPv4 & IPv6 addressing in any required config files
 - Camera emails you its' address so you can locate it on a network without a local connection
@@ -113,8 +106,7 @@ Either use your own SMTP server to relay alerts or a PAID business Gmail hosted 
 
 # 8. INSTRUCTIONS: Installation & Upgrades
 ## INSTALLATION:
----
-**NOTE:** Detailed _**open-ipcamera**_ video tutorials can be found [HERE](https://www.YouTube.com/user/LinuxEngineer)\
+**NOTE:** Detailed _**open-ipcamera**_ video tutorials can be found [HERE](https://www.youtube.com/channel/UCDCqFD71kgL347W6a9RwtmQ)\
 With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the Pi on and:
 1. *Install Time:* Longest part of Full install is downloading packages- can take 8 minutes and another 2-3 minutes for the OS upgrade at end.
 2. Start a terminal session
@@ -139,7 +131,6 @@ With a keyboard, mouse & HDMI cable connected your to Pi and monitor, power the 
 8. Configure firewall rules: after the open-ipcamera-config.sh completes restrict access to your camera by setting appropriate FW rules.
 
 ## UPGRADE:
----
 Once _**open-ipcamera**_ is installed, subsequent upgrades are managed by the _**open-ipcamera_upgrade.sh**_ script:\
 
 Upgrades are easier and quicker than a full install: the **variables.sh** & **variables-secure.sh** files were completed and packages downloaded.\
@@ -156,7 +147,6 @@ If after reviewing changes you're not happy with them, just `CTRL C` to exit upg
 
 
 # 9. TROUBLESHOOTING:
----
 *BEFORE* posting an issue in the ***open-ipcamera*** Github repo, please try to self-resolve issues first by:
 1. Executing _**troubleshooting-helper.sh**_ script in /home/pi/open-ipcamera-scripts directory & reviewing output to identify a fault
 2. Read the _**open-ipcamera**_ Wiki
@@ -165,7 +155,7 @@ If so, just resolve the fault and re-execute _**open-ipcamera-config.sh**_ again
 
 
 # 10. USEFUL LINKS:
----
+[open-ipcamera Wiki](https://github.com/open-ipcamera/open-ipcamera/wiki)
 ["Motion" Project Documentation](https://motion-project.github.io/motion_guide.html)\
 ["Motion" Config Options](https://motion-project.github.io/motion_config.html)\
 [Standard PiCam vs Pi NOIR PiCam](https://pimylifeup.com/raspberry-pi-camera-vs-noir-camera/)\
