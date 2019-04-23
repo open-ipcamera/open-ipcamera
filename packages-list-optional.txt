@@ -1,3 +1,4 @@
+dnsutils
 mutt
 apt-file
 locate
@@ -13,4 +14,5 @@ dstat
 ipcalc
 ipv6calc
 vlc
+fritzing
 vokoscreen
