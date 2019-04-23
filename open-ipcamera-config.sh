@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.78.00
+# Version 01.80.00
 
 
 ######  LICENSE: ######
@@ -397,6 +397,24 @@ echo
 
 time ./os-upgrade.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
 wait $!
+
+
+
+
+
+
+echo
+echo "$(tput setaf 5)****** Config Local DNS Caching Stub Resolver and Networking: ******$(tput sgr 0)"
+echo
+echo "Elapsed Time to execute UPGRADE will be printed after it completes:"
+echo
+
+
+time ./networking.sh 2>> $PATHLOGINSTALL/install_v$VERSIONLATEST.log&
+wait $!
+
+
+
 
 
 
