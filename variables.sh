@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.78.00
+# Version 01.80.00
 # "variables.sh": supplies open-ipcamera-config.sh and other scripts with config values unique to your installation
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -29,6 +29,12 @@ GPGKEYIDPUBLICYOURSEMAIL='emailAddressAssociatedWithGPGkeyIDHere'
 ############## Linux OS VARIABLES:  ##############
 OURHOSTNAME='pi3Bplus-camera1'
 OURDOMAIN='yourDomainGoesHere.com'
+# Below IPv4/IPv6 Resolver addresses belong to Google and will work for everybody.
+# HOWEVER: If your gateway router is configured to cache DNS requests you should specify the GW IP of your Pi for DNSRESOLVERIPV41
+DNSRESOLVERIPV41="8.8.8.8"
+DNSRESOLVERIPV42="8.8.4.4"
+DNSRESOLVERIPV61="2001:4860:4860::8888"
+DNSRESOLVERIPV62="2001:4860:4860::8844"
 # Set a threshold value to be notified when Pi temperature exceeds it:
 HEATTHRESHOLDWARN='60'
 # WARNING: Do NOT set SHUTDOWN threshold too low or test will evaluate true as soon as pi boots causing it to just keep rebooting
