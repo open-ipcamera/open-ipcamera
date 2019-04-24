@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.80.00
+# Version 01.81.00
 
 
 ######  LICENSE: ######
@@ -40,6 +40,16 @@ source "${BASH_SOURCE%/*}/functions.sh"
 #   paypal.me/TerrenceHoulahan
 
 #########################################
+
+
+# Check that this script is being executed using sudo: if not then warn and exit
+if [ "$(whoami)" != "root" ]; then
+        echo "This script has insufficient perms to continue:"
+        echo "Please re-execute it with sudo"
+        exit 1
+fi
+
+
 
 echo
 echo "$(tput setaf 5)******  GPL3 LICENSE:  ******$(tput sgr 0)"
