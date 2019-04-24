@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.83.00
+# Version 01.83.01
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -55,6 +55,7 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 		cp -p $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh
 		echo "open-ipcamera_upgrade.sh has changed and has been upgraded."
 		echo "After this script exits please re-execute it"
+		exit
 	fi
 	echo
 	echo
