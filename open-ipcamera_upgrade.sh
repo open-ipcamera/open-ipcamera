@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.82.00
+# Version 01.83.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -47,6 +47,16 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	git tag -l -n20 $(git describe)
 	echo
 	read -p "Press ENTER to UPGRADE current open-ipcamera installation or CTRL C to exit it"
+	echo
+	echo
+	# Below is a mechanism to upgrade the upgrade script.  Obviously this needs to be a 2-step process as the script will itself have to be downloaded in an upgrade.
+	# We test the new upgrade script against the persistent one in /home/pi/open-ipcamera-scripts for changes. If any detected the newer version overwrites the legacy one and exits
+	if [[ "$(diff $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh)" != '' ]]; then
+		cp -p $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh
+		echo "open-ipcamera_upgrade.sh has changed and has been upgraded."
+		echo "After this script exits please re-execute it"
+	fi
+	echo
 	echo
 	# Set markers in *UPGRADE* logs
 	echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
