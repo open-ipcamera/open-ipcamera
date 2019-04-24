@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.80.00
+# Version 01.81.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -24,6 +24,13 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
 
+
+# Check that this script is being executed using sudo: if not then warn and exit
+if [ "$(whoami)" != "root" ]; then
+        echo "This script has insufficient perms to continue:"
+        echo "Please re-execute it with sudo"
+        exit 1
+fi
 
 
 # Only need to test if INSTALLED version number is LESS THAN or EQUAL TO latest version available on GitHub
