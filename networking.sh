@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.83.00
+# Version 01.83.01
 
 ###### RASBIAN NETWORKING: #####
 #
@@ -28,6 +28,12 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # "systemd-resolved" installed by default
 # To find related files ("locate" command requires the "mlocate" package to be installed):
 #    locate resolved
+
+
+# Below is a key dependency *NOT* installed by default:
+if [[ "$( dpkg -l |grep libnss-resolve )" = '' ]]; then
+	apt-get install -y libnss-resolve
+fi
 
 
 # The below future-proofs this script as the dependent pkg "systemd-resolvconf" is required post systemd v239
@@ -65,20 +71,30 @@ if [[ "$(cat /etc/systemd/resolved.conf|grep 'DNSOverTLS=opportunistic')" = '' ]
 fi
 
 
-# Config /etc/nsswitch :
-sed -i -E 's/hosts:[[:blank:]]+files mdns4_minimal \[NOTFOUND=return\] dns/hosts:          dns files mdns4_minimal [NOTFOUND=return]/' /etc/nsswitch.conf
+# Config /etc/nsswitch : "resolve" must be first in list of DNS resources consulted
+sed -i -E 's/hosts:[[:blank:]]+files mdns4_minimal \[NOTFOUND=return\] dns/hosts:          resolv dns files mdns4_minimal [NOTFOUND=return]/' /etc/nsswitch.conf
 
 systemctl daemon-reload
+
+echo "systemd-resolved stats *BEFORE* testing:"
+echo
+systemd-resolve --statistics
 
 # Restart systemd-resolved stub resolver:
 systemctl restart systemd-resolved
 
-# Run a few tests which require DNS:
+# Run a few ping tests which require DNS:
 ping -c1 www.google.com
 ping6 -c1 www.google.com
 
-# Execute tests directly against stub resolver on 127.0.0.1 to validate it can correctly resolve names:
-systemd-resolve www.microsoft.com 127.0.0.1
-systemd-resolve www.microsoft.co.uk 127.0.0.1
+ping -c1 www.amazon.com
+ping6 -c1 www.amazon.com
 
+# Execute tests directly against stub resolver on 127.0.0.1 to validate it can correctly resolve names:
+systemd-resolve www.amazon.com 127.0.0.1
+systemd-resolve www.google.com 127.0.0.1
+
+echo "systemd-resolved stats *AFTER* testing:"
+echo "Numbers should increment after the tests"
+echo
 systemd-resolve --statistics

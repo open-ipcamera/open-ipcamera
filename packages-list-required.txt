@@ -1,4 +1,5 @@
 debconf-utils
+libnss-resolve
 raspberrypi-kernel-headers
 git
 bc
@@ -16,5 +17,5 @@ gnupg
 gnupg-agent
 dirmngr
 diffutils
-parallel
 expect
+parallel
