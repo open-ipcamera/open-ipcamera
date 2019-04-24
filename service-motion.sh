@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.83.00
+# Version 01.83.01
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -21,19 +21,6 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not see <https://www.gnu.org/licenses/>.
-
-
-# Restore configuration to a predictable known state if a backup exists:
-if [ -f /etc/motion/motion.conf.ORIGINAL ]; then
-	mv /etc/motion/motion.conf.ORIGINAL /etc/motion/motion.conf
-fi
-
-
-# Make a backup of the default config file- once taken all subsequent tests will fail so backup not overwritten
-if [ ! -f /etc/motion/motion.conf.ORIGINAL ]; then
-	cp -p /etc/motion/motion.conf /etc/motion/motion.conf.ORIGINAL
-fi
-
 
 
 # Configure *MINIMAL* Settings: Lots of tweaking possible for any use-case
