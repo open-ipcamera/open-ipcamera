@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.80.00
+# Version 01.81.00
 
 ###### RASBIAN NETWORKING: #####
 #
@@ -53,28 +53,20 @@ sed -i "s/#DNS=/DNS=$DNSRESOLVERIPV41 $DNSRESOLVERIPV61/" /etc/systemd/resolved.
 # Below Google IPs for directive "FallbackDNS" are default. 
 sed -i "s/#FallbackDNS=8.8.8.8 8.8.4.4 2001:4860:4860::8888 2001:4860:4860::8844/FallbackDNS=$DNSRESOLVERIPV42 $DNSRESOLVERIPV62/" /etc/systemd/resolved.conf
 
-# Below directives are *NOT*- as of systemd v232- present in default "resolved.conf" config file
-if [[ "$(cat /etc/systemd/resolved.conf|grep 'Cache=yes')" = '' ]];then
-	echo "Cache=yes" >> /etc/systemd/resolved.conf
-fi
+sed -i "s/#LLMNR=yes/LLMNR=yes/" /etc/systemd/resolved.conf
+sed -i "s/#DNSSEC=no/DNSSEC=no/" /etc/systemd/resolved.conf
+sed -i "s/#Cache=yes/Cache=yes/" /etc/systemd/resolved.conf
+sed -i "s/#DNSStubListener=udp/DNSStubListener=udp/" /etc/systemd/resolved.conf
 
-
-if [[ "$(cat /etc/systemd/resolved.conf|grep 'DNSStubListener=udp')" = '' ]];then
-	echo "DNSStubListener=udp" >> /etc/systemd/resolved.conf
-fi
-
-# Note: DNS server queried must support DNS over TLS or systemd-resolved will disable DNS over TLS for the connection.
+# Below directive(s) are *NOT*- as of systemd v232- present in default "resolved.conf" config file
 
 if [[ "$(cat /etc/systemd/resolved.conf|grep 'DNSOverTLS=opportunistic')" = '' ]];then
 	echo "DNSOverTLS=opportunistic" >> /etc/systemd/resolved.conf
 fi
 
-if [[ "$(cat /etc/systemd/resolved.conf|grep 'DNSSEC=no')" = '' ]];then
-	echo "DNSSEC=no" >> /etc/systemd/resolved.conf
-fi
 
 # Config /etc/nsswitch :
-sed -E 's/hosts:[[:blank:]]+files mdns4_minimal \[NOTFOUND=return\] dns/hosts:          dns files mdns4_minimal [NOTFOUND=return]/' /etc/nsswitch.conf
+sed -i -E 's/hosts:[[:blank:]]+files mdns4_minimal \[NOTFOUND=return\] dns/hosts:          dns files mdns4_minimal [NOTFOUND=return]/' /etc/nsswitch.conf
 
 systemctl daemon-reload
 
@@ -87,6 +79,6 @@ ping6 -c1 www.google.com
 
 # Execute tests directly against stub resolver on 127.0.0.1 to validate it can correctly resolve names:
 systemd-resolve www.microsoft.com 127.0.0.1
-systemd-resolve www.microsoft.co.uk 127.0.0,1
+systemd-resolve www.microsoft.co.uk 127.0.0.1
 
 systemd-resolve --statistics
