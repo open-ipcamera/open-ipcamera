@@ -14,5 +14,5 @@ dstat
 ipcalc
 ipv6calc
 vlc
-vokoscreen
 fritzing
+vokoscreen

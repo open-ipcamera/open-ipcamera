@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/variables.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.81.00
+# Version 01.82.00
 
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -62,7 +62,8 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	cp -p $PATHINSTALLDIR/variables.sh $PATHINSTALLDIR/variables.sh.BAK_`date +%Y-%m-%d_%H-%M-%S`
 	# Perform 2-way merge of lines NOT shared between the Production copy and the upgrade version of variables.sh just downloaded:
 	# NOTE: The new MERGED file will be copied $PATHSCRIPTS/ by open-ipcamera_delete.sh before deleting the open-ipcamera repo	
-	paste -d'\n' $PATHSCRIPTS/variables.sh $PATHINSTALLDIR/variables.sh|awk -F'=' '!seen[$1]++' >$PATHINSTALLDIR/variables.sh
+	paste -d'\n' $PATHSCRIPTS/variables.sh $PATHINSTALLDIR/variables.sh|awk -F'=' '!seen[$1]++' >$PATHINSTALLDIR/variables-merged.sh
+	mv $PATHINSTALLDIR/variables-merged.sh $PATHINSTALLDIR/variables.sh
 	# Remove previous version number from the merged file:
 	sed -i "/# Version $VERSIONINSTALLED/d" $PATHINSTALLDIR/variables.sh
 	# Create variable to show new *variables* in variables.sh that require a user-provided value prior before executing any upgrade. This will ignore new comments made to variables.sh:
