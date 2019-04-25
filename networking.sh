@@ -76,25 +76,42 @@ sed -i -E 's/hosts:[[:blank:]]+files mdns4_minimal \[NOTFOUND=return\] dns/hosts
 
 systemctl daemon-reload
 
-echo "systemd-resolved stats *BEFORE* testing:"
-echo
-systemd-resolve --statistics
-
 # Restart systemd-resolved stub resolver:
 systemctl restart systemd-resolved
+
+echo "####################################################################################"
+echo
+echo "systemd-resolved stats $(tput setaf 1)*BEFORE*$(tput sgr 0) testing:"
+echo
+systemd-resolve --statistics
 
 # Run a few ping tests which require DNS:
 ping -c1 www.google.com
 ping6 -c1 www.google.com
 
+echo
+
 ping -c1 www.amazon.com
 ping6 -c1 www.amazon.com
 
+echo
+
 # Execute tests directly against stub resolver on 127.0.0.1 to validate it can correctly resolve names:
+echo "OUTPUT OF: systemd-resolve www.amazon.com 127.0.0.1 "
+echo
 systemd-resolve www.amazon.com 127.0.0.1
+echo
+echo
+echo "OUTPUT OF: systemd-resolve www.google.com 127.0.0.1 "
+echo
 systemd-resolve www.google.com 127.0.0.1
 
-echo "systemd-resolved stats *AFTER* testing:"
-echo "Numbers should increment after the tests"
+echo
+echo
+echo "####################################################################################"
+echo
+echo "systemd-resolved stats $(tput setaf 6)*AFTER*$(tput sgr 0) testing:"
+echo
+echo "NOTE: Numbers should increment after executing tests requiring name resolution above"
 echo
 systemd-resolve --statistics
