@@ -7,9 +7,9 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.84.00
+# Version 01.85.00
 
-###### RASBIAN NETWORKING: #####
+###### RASPBIAN NETWORKING: #####
 #
 # Dynamic Networking: "NetworkManager" *NOT* installed by default (unlike most distros)
 
@@ -72,7 +72,26 @@ fi
 
 
 # Config /etc/nsswitch : "resolve" must be first in list of DNS resources consulted
-sed -i -E 's/hosts:[[:blank:]]+files mdns4_minimal \[NOTFOUND=return\] dns/hosts:          resolv dns files mdns4_minimal [NOTFOUND=return]/' /etc/nsswitch.conf
+# "hosts" directive is a mess: new entries can be- and have been- dynamically prepended before the "resolve" target and break our stub resolver.
+# SO: we wipe "hosts" directive and append a correct line at bottom of nsswitch.conf :
+
+sed -i sed "/hosts.*/d" /etc/nsswitch.conf
+echo "hosts:          resolve [!UNAVAIL=return] dns files mdns4_minimal [NOTFOUND=return]" >> /etc/nsswitch.conf
+echo ''  >> /etc/nsswitch.conf
+echo "NOTICE: FILE HAS BEEN MADE IMMUTABLE TO STOP DYNAMIC MODIFICATION of HOST DIRECTIVE BREAKING SYSTEMD-RESOLVED STUB RESOLVER" >> /etc/nsswitch.conf
+echo '' >> /etc/nsswitch.conf
+
+# Make nsswitch.conf immutable to stop it from being dynamically modified:
+chattr +i /etc/nsswitch.conf
+
+echo
+echo 'OUTPUT OF "lsattr /etc/nsswitch.conf" :'
+echo
+lsattr /etc/nsswitch.conf
+echo
+echo 'Expected Result of "lsattr":  "i" should be reported reflecting file made immutable'
+echo
+
 
 systemctl daemon-reload
 
