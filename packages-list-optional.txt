@@ -13,6 +13,6 @@ iptraf-ng
 dstat
 ipcalc
 ipv6calc
-fritzing
 vlc
 vokoscreen
+fritzing
