@@ -6,7 +6,7 @@ source "${BASH_SOURCE%/*}/variables-secure.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.86.00
+# Version 01.86.01
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan

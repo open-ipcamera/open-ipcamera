@@ -1,7 +1,7 @@
 [open-ipcamera Project](https://github.com/open-ipcamera/open-ipcamera)\
 [Developer: Terrence Houlahan](https://www.linkedin.com/in/terrencehoulahan/)\
 Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.86.00
+# Version 01.86.01
 
 
 **NOTE:** This CONTRIBUTING.md file is formatted in [Markdown language](https://guides.github.com/features/mastering-markdown/) for ease of reading on _**open-ipcamera's**_ project's Github home.
