@@ -3,10 +3,11 @@
 source "${BASH_SOURCE%/*}/variables.sh"
 source "${BASH_SOURCE%/*}/functions.sh"
 
+# The open-ipcamera Project: www.open-ipcamera.net
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.83.01
+# Version 01.84.00
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
