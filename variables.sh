@@ -3,7 +3,7 @@
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.85.00
+# Version 01.86.00
 # "variables.sh": supplies open-ipcamera-config.sh and other scripts with config values unique to your installation
 ##############  License: ##############
 # Copyright (C) 2018 2019 Terrence Houlahan
