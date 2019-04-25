@@ -48,17 +48,28 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	echo
 	read -p "Press ENTER to UPGRADE current open-ipcamera installation or CTRL C to exit it"
 	echo
+
+else
 	echo
-	# Below is a mechanism to upgrade the upgrade script.  Obviously this needs to be a 2-step process as the script will itself have to be downloaded in an upgrade.
-	# We test the new upgrade script against the persistent one in /home/pi/open-ipcamera-scripts for changes. If any detected the newer version overwrites the legacy one and exits
-	if [[ "$(diff $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh)" != '' ]]; then
-		cp -p $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh
-		echo "open-ipcamera_upgrade.sh has changed and has been upgraded."
-		echo "After this script exits please re-execute it"
-		exit
-	fi
+	echo "No upgrade required: open-ipcamera $VERSIONINSTALLED installed is current version"
 	echo
+	exit
+fi
+
+
+
+# Mechanism to upgrade the upgrade script itself.  This must be a 2-step process as the script itself will have to be downloaded in an upgrade.
+# We test new upgrade script against persistent copy in /home/pi/open-ipcamera-scripts for changes. If any detected newer version overwrites legacy copy and this script exits
+if [[ "$(diff $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh)" != '' ]]; then
+	cp -p $PATHINSTALLDIR/open-ipcamera_upgrade.sh $PATHSCRIPTS/open-ipcamera_upgrade.sh
+	echo "open-ipcamera_upgrade.sh has been upgraded."
+	echo "After this script exits please re-execute it"
 	echo
+	exit
+fi
+
+
+
 	# Set markers in *UPGRADE* logs
 	echo '####################################################################################################################' >> $PATHLOGINSTALL/install_v$VERSIONLATEST.log
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
@@ -67,29 +78,33 @@ if [[ "$(echo ${VERSIONREPO#0}|tr -d '.')" -gt "$(echo ${VERSIONINSTALLED#0}|tr 
 	echo 'Only events related to open-ipcamera write here.' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo "Applications log to: $PATHLOGSAPPS" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
+
+
 	# BACKUP PRODUCTION version- which HAS unique user values- of variables.sh file before doing a 2-way merge of this file with the newest version of variables.sh in the upgrade:
 	cp -p $PATHSCRIPTS/variables.sh $PATHSCRIPTS/variables.sh.BAK_`date +%Y-%m-%d_%H-%M-%S`
 	# BACKUP UPGRADE version -which has no unique user values- of variables.sh before 2-way merge:
 	cp -p $PATHINSTALLDIR/variables.sh $PATHINSTALLDIR/variables.sh.BAK_`date +%Y-%m-%d_%H-%M-%S`
+
+
 	# Perform 2-way merge of lines NOT shared between the Production copy and the upgrade version of variables.sh just downloaded:
 	# NOTE: The new MERGED file will be copied $PATHSCRIPTS/ by open-ipcamera_delete.sh before deleting the open-ipcamera repo	
 	paste -d'\n' $PATHSCRIPTS/variables.sh $PATHINSTALLDIR/variables.sh|awk -F'=' '!seen[$1]++' >$PATHINSTALLDIR/variables-merged.sh
 	mv $PATHINSTALLDIR/variables-merged.sh $PATHINSTALLDIR/variables.sh
+
+
 	# Remove previous version number from the merged file:
 	sed -i "/# Version $VERSIONINSTALLED/d" $PATHINSTALLDIR/variables.sh
+
+
 	# Create variable to show new *variables* in variables.sh that require a user-provided value prior before executing any upgrade. This will ignore new comments made to variables.sh:
 	VARIABLESEMPTY=$(cat $PATHINSTALLDIR/variables.sh|grep -o ".*='' ")
 	cd $PATHINSTALLDIR
 	# Execute upgrade if variables.sh in LATEST release does NOT include unpopulated- not empty- variables. Else show empty variables then notify user to complete them and exit:
 	if [[ "$(echo $VARIABLESEMPTY)" = '' ]]; then ./open-ipcamera-config.sh; else echo "Provide values for variables shown below in $PATHSCRIPTS/variables.sh:" && echo "$VARIABLESEMPTY" && echo "Re-execute $PATHSCRIPTS/open-ipcamera_upgrade.sh after providing required values" && ./open-ipcamera_delete.sh && exit; fi
+
+
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo "$0 v$VERSIONLATEST COMPLETED: `date +%Y-%m-%d_%H-%M-%S`" >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo '####################################################################################################################' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
 	echo '' >> $PATHLOGINSTALL/upgrade_v$VERSIONLATEST.log
-else
-	echo
-	echo "No upgrade required: open-ipcamera $VERSIONINSTALLED installed is current version"
-	echo
-	exit
-fi
