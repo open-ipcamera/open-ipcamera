@@ -114,6 +114,9 @@ echo
 echo "Script may appear to hang.  Just takes several minutes to install the Required and Optional packages"
 echo
 
+# NOTE: The following greps are not unduly complex:
+# They are organized to ensure a package with the same prefix-name does not match
+# The omission of the '-o' switch with grep is by design
 
 readarray arrayPackagesListRequired < $PATHINSTALLDIR/packages-list-required.txt
 
@@ -176,7 +179,7 @@ echo
 readarray arrayPackagesListFailedInstallRequired < $PATHINSTALLDIR/packages-list-required.txt
 
 for i in ${arrayPackagesListFailedInstallRequired[@]}; do
-if [[ $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
+if [[ $(dpkg -l | grep "^ii  $i[[:space:]]\|ii  $i:armhf") = '' ]]; then
 	echo "$(tput setaf 1)$i$(tput sgr 0)"
 fi
 done
@@ -191,7 +194,7 @@ echo
 readarray arrayPackagesListFailedInstallOptional < $PATHINSTALLDIR/packages-list-optional.txt
 
 for i in ${arrayPackagesListFailedInstallOptional[@]}; do
-if [[ $(dpkg -l | grep "^ii  $i[[:space:]]") = '' ]]; then
+if [[ $(dpkg -l | grep "^ii  $i[[:space:]]\|ii  $i:armhf") = '' ]]; then
 	echo "$(tput setaf 1)$i$(tput sgr 0)"
 fi
 done
