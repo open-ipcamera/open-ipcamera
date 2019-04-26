@@ -8,7 +8,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.86.01
+# Version 01.86.02
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
