@@ -7,7 +7,7 @@ source "${BASH_SOURCE%/*}/functions.sh"
 # Developer:  Terrence Houlahan Linux Engineer F1Linux.com
 # https://www.linkedin.com/in/terrencehoulahan/
 # Contact: terrence.houlahan@open-ipcamera.net
-# Version 01.86.01
+# Version 01.86.02
 
 ######  License: ######
 # Copyright (C) 2018 2019 Terrence Houlahan
@@ -94,7 +94,7 @@ fi
 # Test if this operation previously completed by determining if file already immutable :
 if [[ "$(lsattr -l /etc/nsswitch.conf | grep -o 'Immutable')" = '' ]]; then
 
-sed -i sed "/hosts.*/d" /etc/nsswitch.conf
+sed -i "/hosts.*/d" /etc/nsswitch.conf
 echo "hosts:          resolve [!UNAVAIL=return] dns files mdns4_minimal [NOTFOUND=return]" >> /etc/nsswitch.conf
 echo ''  >> /etc/nsswitch.conf
 echo "NOTICE: FILE HAS BEEN MADE IMMUTABLE TO STOP DYNAMIC MODIFICATION of HOST DIRECTIVE BREAKING SYSTEMD-RESOLVED STUB RESOLVER" >> /etc/nsswitch.conf
@@ -104,11 +104,15 @@ echo '' >> /etc/nsswitch.conf
 chattr +i /etc/nsswitch.conf
 
 echo
+echo '"resolve" target prepended to "hosts" directive sources in /etc/nsswitch.conf and file made immutable'
+echo
+
+echo
 echo 'OUTPUT OF "lsattr /etc/nsswitch.conf" :'
 echo
-lsattr /etc/nsswitch.conf
+lsattr -l /etc/nsswitch.conf
 echo
-echo 'Expected Result of "lsattr":  "i" should be reported reflecting file made immutable'
+echo 'Expected Result of "lsattr" above:  "Immutable" should be reported ensuring "hosts" directive cannot be dynamically modified'
 echo
 
 fi
